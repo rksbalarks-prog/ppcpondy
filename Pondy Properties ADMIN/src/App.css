@@ -1,0 +1,363 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+
+*{
+  font-family:'DM Sans', sans-serif;
+}
+html{
+  scrollbar-width: none;
+}
+
+*input{
+  border-left: none;
+  border-top: none;
+  border-right: none;
+   box-shadow: 'none';
+  outline: 'none'
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+
+
+
+.hamburger-menu {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none; 
+}
+
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #202022;
+  border-radius: 15px;
+  height: 95vh;
+  position: fixed;
+  overflow-y: auto;
+  left: 0;
+  top: 0;
+  padding-top: 60px; 
+  transition: transform 0.3s ease-in-out;
+  scrollbar-width: none; 
+  z-index: 999;
+}
+.sidebar::-webkit-scrollbar {
+  display: none; 
+}
+.sidebar ul li:hover {
+  background-color: rgb(75, 75, 75); 
+font-weight: bold;
+border-radius: 8px;
+/* color: #ffffff !important; */
+}
+
+.sidebar ul li:hover a {
+color: #ffffff ;
+} 
+.sidebar-open {
+  transform: translateX(0); 
+}
+
+.sidebar nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0; 
+}
+
+.sidebar nav ul li {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 100%; 
+}
+
+
+.sidebar nav ul li a {
+  text-decoration: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px; 
+  font-size: 14px;
+  padding: 16px; 
+  width: 100%; 
+  transition: all 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 250px; 
+  padding: 2rem;
+  height: 100vh;
+  overflow-y: auto;
+  /* scrollbar-width: none;  */
+}
+
+ .sidebar nav ul li a.active-link {
+  font-family: "Roboto", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  color: #FFFFFF; 
+  background: linear-gradient(195deg, rgb(73, 163, 241), rgb(26, 115, 232)); }
+.sidebar nav ul li a.active-link svg {
+  color: #FFFFFF; 
+}
+.gradient-text{
+  background: linear-gradient(195deg, rgb(73, 163, 241), rgb(26, 115, 232)); /* Gradient colors */
+  -webkit-background-clip: text; 
+  color: transparent;
+}
+
+.logo-size {
+  width: 20%; 
+  border-radius: 10px; /* Set image width to 20% */
+}
+
+@media (max-width: 768px) {
+  .hamburger-menu {
+    display: block; 
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px; 
+    left: -250px; 
+    width: 250px;
+    z-index: 999;
+  }
+
+  .sidebar.sidebar-open {
+    left: 0; 
+  }
+
+  .main-content {
+    margin-left: 0; 
+  }
+}
+
+
+
+.navbarstyle{
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 14px 17px 40px 4px rgba(112, 144, 176, 0.08);
+
+}
+
+/* login page */
+
+
+
+.logintalblestyle{
+  box-shadow: 14px 17px 40px 4px rgba(112, 144, 176, 0.08);
+  background-color: #ffffff;
+    border-radius: 15px;
+}
+
+
+.custom-input {
+  background: transparent;
+  outline: none;
+  border: none;
+  color: #1b2559;
+  font-weight: bold;
+  padding: 8px 10px;
+  border-bottom: 2px solid #1b2559;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.custom-input:focus {
+  border-bottom: 2px solid #007bff; 
+}
+
+.custom-input::placeholder {
+  color: #9aa0ac; 
+  font-weight: normal;
+}
+
+/* Propert form */
+
+.propertyform input{
+border-top: none;
+border-left: none;
+border-right: none;
+}
+.propertyform input:focus{
+ outline: none;
+ box-shadow: none;
+
+}
+  
+.propertyform select:focus{
+    outline: none;
+    box-shadow: none;
+}
+
+.propertyform select{
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.propertyform label{
+      color: #9aa0ac;
+}
+.addpropertyphoto{
+       
+        border-radius: 10px;
+        background-color: #B9D9EB;
+}
+.apppropertybtn{
+        border: none;
+        background-color: #0070BB;
+        color: #ffffff;
+        height: 60px;
+        width: 120px;
+        font-weight: bold;
+}
+.apppropertybtn:hover{
+        background-color: #76ABDF;
+}
+
+.radioform{
+        background-color: #333;
+}
+
+.photoupload{
+        background-color: #76ABDF;
+}
+
+/* Admin login page */
+
+.Admininput{
+  outline: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid white;
+  background: transparent;
+  color: white;
+  font-weight: bold;
+  border-top: none;
+}
+
+.Admininput:focus{
+  outline: none;
+  box-shadow: none;
+  background: none;
+  color: white;
+}
+.glass{
+  background: rgba( 255, 255, 255, 0.1 );
+  box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+  backdrop-filter: blur( 11px );
+  -webkit-backdrop-filter: blur( 11px );
+  border-radius: 10px;
+  border: 1px solid rgba( 255, 255, 255, 0.18 );
+}
+.adminbtn{
+  border:1px solid #020329;
+  border-radius: 25px;
+  background: transparent;
+color: #020329;
+font-size: 18px;
+}
+.adminbtn:hover{
+  background-image: linear-gradient(to top, #48c6ef 0%, #6f86d6 100%);}
+
+
+
+
+
+      /* LoginReport page */
+.loginformsearch{
+background: #ffffff;
+border-radius: 16px;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+backdrop-filter: blur(4.7px);
+-webkit-backdrop-filter: blur(4.7px);
+border: 1px solid rgba(255, 255, 255, 0.23);
+} 
+
+.loginformsearch input:focus{
+outline: none;
+box-shadow: none;
+}
+          
+.loginformsearch input::placeholder{
+color: rgb(52, 60, 106);
+  }
+
+.table-responsive {
+height: 500px; 
+overflow-y: auto; 
+box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+background: #ffffff;
+}
+.table-responsive::-webkit-scrollbar {
+  width: 8px; 
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: #C1C1C1; 
+  /* border-radius: 4px;  */
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background-color: #6e6e6e; 
+  cursor: pointer;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background-color: rgb(244, 235, 235); 
+}
+.logtable{
+  background-color: transparent !important;
+
+}
+td {
+  background-color: white !important;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #555555 !important;
+  font-size: 14px !important;
+}
+th{
+  color: #31353D !important;
+  font-size: 14px !important;
+background-color: #ECF3FA !important;
+}
+.my-table td,
+.my-table th {
+  border: none !important;
+  border-bottom: 1px solid #dee2e6 !important; /* Bootstrap’s default light gray */
+}
+
+.my-table{
+  padding: 5px !important;
+  border-radius: 20px  !important;
+}
+.sticky-top{
+  border-radius: none !important;
+position: sticky;
+top: 0; 
+}
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-col-1 {
+  left: 0  !important;
+}
+
+.sticky-col-2 {
+  left: 40px  !important; /* Adjust based on width of first sticky column */
+}
+ 

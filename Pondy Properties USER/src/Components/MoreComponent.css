@@ -1,0 +1,22 @@
+
+
+
+
+.custom-list-group {
+    margin-top: 10px;
+}
+
+.custom-list-item {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.nav-tabs .nav-link {
+    font-weight: bold;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #30747F;
+    color: white;
+}

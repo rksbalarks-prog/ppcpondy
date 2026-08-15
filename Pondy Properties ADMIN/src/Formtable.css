@@ -1,0 +1,36 @@
+.box {
+    height: auto;
+    width: 500px;
+    background-color:black;
+    border-radius: 20px;
+    padding: 20px;
+box-sizing: border-box;
+color: white;
+font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;}
+
+.btnn{
+    height: 50px;
+    width: 50px;
+    border: none;
+    border-radius: 50%;
+    background-color: aquamarine;
+ margin: 10px;
+}
+.inp{
+border: 1px solid white;
+outline: none;
+height: 50px;
+width: 80px;
+font-size: 30px;
+color: aqua;
+background: transparent;
+margin-bottom: 10px;
+}
+.btsub{
+height: 50px;
+width: 100px;
+background-color: rgb(99, 234, 234);
+border: none;
+color: darkblue;
+}
+

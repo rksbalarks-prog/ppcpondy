@@ -1,0 +1,115 @@
+
+  
+  
+  .login .back > * {
+    position: relative;
+    z-index: 2; 
+  }
+  
+ 
+
+  .login .custom-background {
+    background-color: transparent !important;
+    outline: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid white;
+    background: transparent;
+    color: white;
+    font-weight: bold;
+    border-top: none;
+    cursor: pointer;
+  }
+  .login .custom-background:hover
+  {
+    border-bottom: 1px solid white;
+
+  }
+
+  .login .custom-background:focus
+  {
+    outline: none;
+    box-shadow: none;
+    background: none;
+    color: white;
+  }
+  
+
+  
+  .login .small-input {
+  height: 35px;
+  font-size: 14px;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+
+.login .custom-background::placeholder {
+  color: white;
+}
+
+
+.login .btn-small {
+  font-size: 13px;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-weight: normal;
+} 
+
+.login .captcha-small {
+  transform: scale(0.85); 
+  transform-origin: 0 0; 
+}
+
+.login .mb-2 {
+  margin-bottom: 8px !important;
+}
+
+
+.login .d-flex {
+  gap: 10px; 
+}
+ 
+
+.login .footer-text
+{
+  margin-top: 180px;
+} 
+
+
+
+/* Login Container */
+.login-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  height: 100vh;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.9); /* Semi-transparent background */
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  color: black;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcuV4KOIIk3EuvX9hVPSTszzfiPqalO5Oipbfm5wXCPVFgtWiFpMEiO3K2GpjuV87G61Y&usqp=CAU'); /* Replace with your image URL */
+  background-size: cover;
+  background-position: center;
+}
+
+/* Buttons */
+.btn-login {
+  background-color: orangered;
+  color: white;
+  border: 2px solid orangered;
+  border-radius: 25px;
+}
+
+.btn-skip {
+  background-color: white;
+  color: orangered;
+  border: 2px solid orangered;
+  border-radius: 25px;
+}
+ 

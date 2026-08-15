@@ -1,0 +1,70 @@
+.my .property-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+ .my .property-details h5 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+ .my .property-details p {
+    margin: 2px 0;
+    font-size: 14px;
+    color: #555;
+    justify-content: space-between;
+  }
+
+ .my .property-image .incomplete-button {
+    position: absolute;
+    bottom: 10px;
+    transform: translateX(-50%);
+    background-color: orangered; 
+    color: white;
+    border: none;
+    padding: 3px 3px;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    left: 20%;
+  }
+
+  
+.my .nav-link:hover {
+    color: white;
+    background-color: rgb(47,116,127);
+  }
+  
+  .my .nav-link
+  {
+    color: rgb(47,116,127);
+    font-weight: bold;
+    
+  } 
+  
+
+  .no-data-message {
+    text-align: center;
+    padding: 20px;
+    color: #777;
+    font-size: 18px;
+  }
+  
+
+  .fixed-nav {
+    position: fixed;
+    top: 160px;
+    /* width: 100%; */
+    z-index: 10; 
+    background-color: #fff; /* Ensures the background is consistent */
+    border-bottom: 1px solid #ccc; /* Optional: Adds a bottom border for separation */
+    padding-top: 10px; /* Adjust padding as needed */
+    padding-bottom: 10px;
+  }
+  

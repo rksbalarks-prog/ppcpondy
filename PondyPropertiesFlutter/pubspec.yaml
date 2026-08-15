@@ -1,0 +1,76 @@
+name: pondy_properties
+description: "Pondy Properties — Flutter user app (same API / DB as the React web app)."
+publish_to: 'none'
+version: 1.0.0+36
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Networking — Dio gives us the same request-interceptor model the web app
+  # uses with axios (auto-appending ?base=PY|CH to every backend call).
+  dio: ^5.7.0
+
+  # localStorage equivalent (phoneNumber, activeBase, lastActiveContent, ...)
+  shared_preferences: ^2.3.3
+
+  # App-wide session/state (mirrors the redux userSlice + PhoneNumberContext)
+  provider: ^6.1.2
+
+  cached_network_image: ^3.4.1
+  url_launcher: ^6.3.1
+  intl: ^0.20.2
+  image_picker: ^1.1.2
+  share_plus: ^10.1.2
+
+  # PayU needs an auto-submitting POST form, exactly like the web PayUForm.
+  webview_flutter: ^4.10.0
+
+  # Property map (OpenStreetMap tiles — no API key needed).
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
+
+  video_player: ^2.9.2
+
+  # ── AI assistant (voice + chat) ───────────────────────────────────────────
+  # The assistant talks to its own backend over SSE, which Dio buffers away, so
+  # it uses package:http directly for streaming + multipart upload.
+  http: ^1.2.2
+  http_parser: ^4.0.2
+  # Microphone capture (STT upload to /transcribe) and mp3 playback of the
+  # /speak reply. Both use the platform's built-in codecs (MediaRecorder /
+  # ExoPlayer on Android) — no NDK/native compile step.
+  # record 7.x: the 5.x set shipped a stale record_linux (0.7.2) that fails to
+  # implement the streaming interface, breaking the Android build; 7.x's
+  # endorsed impls are mutually consistent.
+  record: ^7.0.0
+  audioplayers: ^6.1.0
+  # Temp dir for the recorded voice clip.
+  path_provider: ^2.1.4
+  # Web-only: reads back the blob: URL record_web hands out instead of a path.
+  web: ^1.1.1
+  clarity_flutter: ^1.9.0
+
+  # ── Push notifications (FCM) ──────────────────────────────────────────────
+  # Firebase project: notification-5fb49 (see PPC/fcm/pushApp.js). The app
+  # degrades gracefully when android/app/google-services.json is absent —
+  # PushService.init() catches the failure and every method becomes a no-op.
+  # flutter_local_notifications shows the banner for FOREGROUND messages, which
+  # FCM does not display itself on Android.
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.3
+  flutter_local_notifications: ^18.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

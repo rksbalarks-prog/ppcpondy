@@ -1,0 +1,232 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 100%;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.form-container h2 {
+    margin-bottom: 10px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-container button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #ff4081;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #e91e63;
+}
+
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.export-print {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.export-print a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.export-print a:hover {
+    text-decoration: underline;
+}
+
+.table-container {
+    margin-bottom: 20px;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th, .table-container td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.table-container th {
+    background-color: #f9f9f9;
+}
+
+.edit, .delete {
+    cursor: pointer;
+    color: #007bff;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 100%;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.form-container h2 {
+    margin-bottom: 10px;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-container button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #ff4081;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #e91e63;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative;
+    margin-left: 30%;
+    width: 40%;
+    border-radius: 50%;
+    margin-top: 30px;
+}
+
+.search-container .search-input {
+    width: 100%;
+    padding: 10px 20px 10px 40px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.search-container .search-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 18px;
+    color: #888;
+}
+
+.export-print {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.export-print a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.export-print a:hover {
+    text-decoration: underline;
+}
+
+.table-container {
+    margin-bottom: 20px;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-container th, .table-container td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.table-container th {
+    background-color: #f9f9f9;
+}
+
+.edit, .delete {
+    cursor: pointer;
+    color: #007bff;
+}
+
+.edit:hover, .delete:hover {
+    text-decoration: underline;
+}
+
+.edit:hover, .delete:hover {
+    text-decoration: underline;
+}

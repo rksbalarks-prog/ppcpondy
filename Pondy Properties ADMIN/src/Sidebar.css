@@ -1,0 +1,74 @@
+Sidebar styles
+.sidebar {
+    width: 250px;
+    background-color: #f4f4f4;
+    height: 100vh;
+    position: fixed;
+    overflow-y: auto;
+    left: 0;
+    top: 0;
+    padding-top: 60px; /* To avoid overlapping with navbar */
+    transition: transform 0.3s ease-in-out;
+    z-index: 999;
+  }
+  
+  .sidebar nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0; /* Remove margin from the ul */
+  }
+  
+  .sidebar nav ul li {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    width: 100%; /* Ensure each li takes up the full width */
+  }
+  
+  .sidebar nav ul li a {
+    text-decoration: none;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between the icon and the text */
+    font-size: 16px;
+    padding-right: 10px; /* Adding padding-right for the border */
+    width: 100%; /* Make sure the link takes up full width of li */
+    transition: all 0.3s ease;
+  }
+  
+  /* Active Link Style */
+  .sidebar nav ul li a.active-link {
+    font-weight: bold; /* Make text bold */
+    color: black; /* Text color black */
+    border-right: 3px solid #422AFB; /* Right border with color */
+  }
+  
+  /* Change the icon color when the link is active */
+  .sidebar nav ul li a.active-link svg {
+    color: #422AFB; /* Change icon color */
+  }
+  
+  /* Responsive styles remain the same */
+  @media (max-width: 768px) {
+    .hamburger-menu {
+      display: block; /* Show hamburger on mobile */
+    }
+  
+    .sidebar {
+      position: fixed;
+      top: 60px; /* Height of the navbar */
+      left: -250px; /* Initially hidden */
+      width: 250px;
+      z-index: 999;
+    }
+  
+    .sidebar.sidebar-open {
+      left: 0; /* Show sidebar when open */
+    }
+  
+    .main-content {
+      margin-left: 0; /* Remove margin for mobile */
+    }
+  }
+  

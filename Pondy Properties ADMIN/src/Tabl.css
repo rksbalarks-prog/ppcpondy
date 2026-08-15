@@ -1,0 +1,33 @@
+.box{
+    height: auto;
+    width: 500px;
+    background-color:white;
+    box-shadow: 3px 3px rgb(194, 194, 194);
+    padding: 30px;
+    box-sizing: border-box;
+    border-radius: 20px;
+}
+.btt{
+    height: 30px;
+    width: 80px;
+    border: none;
+    background-color: aquamarine;
+}
+.bt{
+    height: 50px;
+    width: 50px;
+    border: none;
+    border-radius: 50%;
+    background-color: rgb(214, 255, 255);}
+.inner1{
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+margin-bottom: 20px;
+}
+.inner2{
+    display: grid;
+ grid-template-columns: 25% 25% 25% 25%;
+grid-gap: 20px;
+
+}

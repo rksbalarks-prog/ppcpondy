@@ -1,0 +1,277 @@
+/* AI assistant widget — self-contained styles, prefixed ppc- to avoid collisions.
+   Restyled to match the Flutter app's assistant panel (rentpondy_flutter/lib/
+   assistant/assistant_widget.dart), which is the design source of truth: a
+   bottom sheet over a dark scrim, green gradient header, purple user bubbles,
+   and a borderless filled composer. Colour/size values below are the Flutter
+   constants, so keep the two in step when either changes. */
+
+/* Flutter palette (assistant_widget.dart)
+   _green      #30747F   header gradient -> #3E8E99
+   _panelBg    #F7F8FA
+   _userBubble #4F4B7E
+   hairline    #E6E8EC   card hairline #DDE7E9
+   input fill  #F1F3F5   mic idle #EAF2F3   recording #D32F2F */
+
+/* Stacked directly ABOVE the Search FAB (AllProperty.jsx / PropertyCards.jsx):
+   50px wide, right: calc(50% - 187.5px + 10px), bottom: 15%, and it rises
+   translateY(-50px) on its animation cycle.
+
+   Both offsets must therefore hang off the SAME anchors as that button:
+
+   right — the search FAB is 50px and this one is 58px, so shifting its offset
+     by (50-58)/2 = -4px centres the two on one vertical line. max() keeps the
+     button on-screen on viewports under 375px, where the calc goes negative.
+
+   bottom — 15% (search base) + 50px (its height) + 14px gap. The search button
+     no longer lifts, so no lift allowance is needed; if that animation is ever
+     restored, add its travel back in here or the two will collide again.
+     The original value mixed anchors — 8% + 82px against the search button's
+     15% — so the two overlapped at EVERY viewport height (e.g. 800px tall:
+     search 120-170px, assistant 146-204px), not just on some screens. */
+.ppc-fab {
+  position: fixed;
+  right: max(6px, calc(50% - 187.5px + 6px));
+  bottom: calc(15% + 64px);
+  z-index: 4000;
+  width: 58px; height: 58px; border-radius: 50%;
+  border: none;
+  background: #30747F;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(48,116,127,.5);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.ppc-fab-icon { display: block; }
+.ppc-fab:hover { background: #3A8894; }
+.ppc-fab:active { transform: scale(.96); }
+
+/* Tap-anywhere-to-dismiss scrim — Flutter's Positioned.fill GestureDetector. */
+.ppc-scrim {
+  position: fixed; inset: 0; z-index: 4001;
+  background: rgba(0,0,0,.35);
+  border: none; padding: 0; margin: 0;
+  cursor: pointer;
+}
+
+/* Bottom sheet at every width (Flutter has no desktop variant): centred,
+   capped at 470px, 82% of the viewport height, rounded on top only. */
+.ppc-panel {
+  position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto;
+  z-index: 4002;
+  width: 100%; max-width: 470px;
+  height: 82vh;
+  height: 82dvh;  /* dvh: excludes mobile browser chrome */
+  background: #F7F8FA;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.28);
+  display: flex; flex-direction: column; overflow: hidden;
+  font-family: inherit;
+}
+
+.ppc-head {
+  display: flex; align-items: center; gap: 4px;
+  padding: 12px 8px 12px 16px;
+  background: linear-gradient(90deg, #30747F, #3E8E99);
+  color: #fff;
+}
+.ppc-head-title {
+  flex: 1; min-width: 0;
+  font-weight: 700; font-size: 16px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ppc-head-tools { display: flex; gap: 4px; flex: 0 0 auto; }
+/* Flat by default, translucent white only while active — matches Flutter's
+   `active ? Colors.white24 : Colors.transparent`. */
+.ppc-ic {
+  min-width: 34px; height: 30px; padding: 0 6px; border-radius: 8px; cursor: pointer;
+  background: transparent; color: #fff; border: none;
+  font-size: 13px; font-weight: 700; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ppc-ic:hover { background: rgba(255,255,255,.14); }
+.ppc-ic.on { background: rgba(255,255,255,.24); }
+.ppc-ic.on:hover { background: rgba(255,255,255,.32); }
+/* Close is a plain ✕ like the other header icons (Flutter Icons.close). */
+.ppc-ic.ppc-close { font-size: 15px; }
+
+.ppc-body {
+  flex: 1; overflow-y: auto; padding: 14px 12px;
+  background: #F7F8FA;
+  overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+}
+
+/* Greeting card — no divider above the mic hint (Flutter uses plain spacing). */
+.ppc-hi {
+  background: #fff; color: #1A1A1A; font-size: 14px; line-height: 1.4;
+  padding: 14px; border-radius: 14px; border: 1px solid #E6E8EC;
+}
+.ppc-hi-mic { margin-top: 8px; color: #30747F; font-size: 12.5px; font-weight: 600; }
+
+.ppc-msg { margin-bottom: 10px; display: flex; flex-direction: column; }
+.ppc-msg.ppc-user { align-items: flex-end; }
+.ppc-msg.ppc-assistant { align-items: flex-start; }
+/* Uniform 14px radius — Flutter draws no tail on either side. */
+.ppc-bubble {
+  max-width: 330px; padding: 9px 13px; border-radius: 14px;
+  font-size: 14px; line-height: 1.38;
+  white-space: pre-wrap; word-break: break-word;
+}
+.ppc-user .ppc-bubble { background: #4F4B7E; color: #fff; }
+.ppc-assistant .ppc-bubble { background: #fff; color: #1A1A1A; border: 1px solid #E6E8EC; }
+
+/* Streaming cursor — Flutter appends a '▍' glyph in the bubble's text colour. */
+.ppc-caret {
+  display: inline-block; width: 6px; height: 14px; margin-left: 3px;
+  background: currentColor; vertical-align: text-bottom;
+  animation: ppc-blink 1s steps(2) infinite;
+}
+@keyframes ppc-blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+.ppc-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.ppc-card {
+  width: 300px; max-width: 100%;
+  background: #fff; border: 1px solid #DDE7E9; border-radius: 12px;
+  padding: 12px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
+}
+.ppc-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.10); border-color: #30747F; }
+.ppc-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ppc-card-type { font-weight: 700; font-size: 14px; color: #1A1A1A; }
+.ppc-card-rent { font-weight: 800; font-size: 14px; color: #30747F; white-space: nowrap; }
+.ppc-card-area { font-size: 12.5px; color: rgba(0,0,0,.87); margin-top: 3px; }
+.ppc-card-meta { font-size: 12px; color: rgba(0,0,0,.54); margin-top: 3px; }
+.ppc-card-cta { font-size: 12px; color: #30747F; font-weight: 600; margin-top: 6px; }
+
+/* Action card: text block stacked above a right-aligned button (Flutter puts
+   the button on its own row via Align(centerRight)), not side by side. */
+.ppc-action {
+  display: flex; flex-direction: column; align-items: stretch; gap: 9px;
+  width: 320px; max-width: 100%; margin-top: 8px;
+  background: #fff; border: 1px solid #E6E8EC; border-radius: 12px; padding: 11px;
+}
+.ppc-action > .ppc-chip { align-self: flex-end; }
+.ppc-action.spend { background: #FFF7E6; border-color: #FFD98A; }
+.ppc-action-label { font-weight: 700; font-size: 13.5px; color: #1A1A1A; }
+.ppc-action-sum { font-size: 12px; color: rgba(0,0,0,.54); margin-top: 3px; }
+.ppc-action-warn { font-size: 11.5px; color: #B26A00; margin-top: 3px; font-weight: 600; }
+
+.ppc-chip {
+  border: none; background: #30747F; color: #fff; border-radius: 8px;
+  padding: 9px 18px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+.ppc-chip:disabled { opacity: .6; cursor: default; }
+/* Flutter renders the settled states as bare text, not filled chips. */
+.ppc-chip.done { background: none; color: #30747F; font-weight: 700; font-size: 13px; padding: 0; }
+.ppc-chip.err { background: none; color: #D32F2F; font-weight: 600; font-size: 12.5px; padding: 0; }
+/* Navigate actions share the green button (Flutter has no separate nav colour). */
+.ppc-chip.nav { background: #30747F; }
+
+.ppc-tapplay {
+  margin: 8px auto 0; display: block;
+  background: transparent; color: #30747F; border: 1px solid #30747F;
+  border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.ppc-tapplay:hover { background: rgba(48,116,127,.08); }
+
+/* Onboarding quick-reply chips (rendered by onboarding.js) — retinted to the
+   Flutter palette; layout unchanged. */
+.ppc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; width: 100%; }
+.ppc-quick {
+  display: inline-flex; flex-direction: column; align-items: flex-start;
+  background: #fff; color: #30747F; border: 1px solid #E6E8EC; border-radius: 12px;
+  padding: 9px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.ppc-quick:hover { background: #30747F; color: #fff; border-color: #30747F; }
+.ppc-quick-sub { font-size: 11px; font-weight: 500; opacity: .8; margin-top: 1px; }
+.ppc-summary { margin-top: 8px; background: #fff; border: 1px solid #E6E8EC; border-radius: 12px; padding: 11px; width: 320px; max-width: 100%; }
+.ppc-summary-line { font-size: 13px; color: #1A1A1A; padding: 2px 0; }
+
+/* Hands-free status strip shown between the body and the composer. */
+.ppc-voicebar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; background: #30747F; color: #fff;
+  font-size: 13px; font-weight: 600;
+}
+.ppc-voicebar-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; opacity: .5; }
+.ppc-voicebar.listening .ppc-voicebar-dot { opacity: 1; }
+.ppc-voicebar-end {
+  margin-left: auto; background: rgba(255,255,255,.24); border: none; color: #fff;
+  border-radius: 12px; padding: 4px 12px; cursor: pointer; font-weight: 700; font-size: 12.5px;
+}
+
+.ppc-input {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-top: 1px solid #E6E8EC; background: #fff;
+}
+.ppc-mic {
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: #EAF2F3; color: #30747F; font-size: 19px; cursor: pointer; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ppc-mic.rec { background: #D32F2F; color: #fff; animation: ppc-pulse 1.2s infinite; }
+@keyframes ppc-pulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,.5); } 70% { box-shadow: 0 0 0 10px rgba(211,47,47,0); } 100% { box-shadow: 0 0 0 0 rgba(211,47,47,0); } }
+/* Filled, borderless pill — Flutter's InputDecoration(filled, borderSide.none). */
+.ppc-text {
+  flex: 1; min-width: 0; border: none; background: #F1F3F5;
+  border-radius: 22px; padding: 11px 14px; font-size: 14px; outline: none; color: #1A1A1A;
+}
+.ppc-text::placeholder { color: rgba(0,0,0,.45); }
+.ppc-send {
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: #30747F; color: #fff; font-size: 17px; cursor: pointer; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ppc-send:disabled { opacity: .5; cursor: default; }
+
+/* Centred voice call-to-action (shown before a voice session). Sizes and
+   typography come from Flutter's _voiceCta; the float/shimmer/tap-finger
+   animations are web-only polish kept from the original widget. */
+.ppc-callcta { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; margin: 24px auto; }
+.ppc-aibtn {
+  position: relative; width: 88px; height: 88px; padding: 0; border: none; background: transparent; cursor: pointer;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  animation: ppc-aifloat 3s ease-in-out infinite;
+}
+/* rotating shimmer ring */
+.ppc-aibtn::before {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(48,116,127,0), rgba(126,212,220,.95), rgba(48,116,127,0) 55%);
+  animation: ppc-aispin 3.4s linear infinite; z-index: 0;
+}
+.ppc-aibtn-core {
+  position: relative; z-index: 1; width: 76px; height: 76px; border-radius: 50%;
+  background: #30747F;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(48,116,127,.45);
+}
+.ppc-aibtn:hover .ppc-aibtn-core { filter: brightness(1.06); }
+.ppc-aibtn:active { transform: scale(.95); }
+.ppc-aibtn-wrap { position: relative; display: inline-flex; }
+/* Animated finger nudging the user to tap the AI orb */
+.ppc-tapfinger {
+  position: absolute; right: -14px; bottom: -10px; font-size: 32px; line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.28)); pointer-events: none;
+  animation: ppc-tap 1.15s ease-in-out infinite;
+}
+@keyframes ppc-tap {
+  0%, 100% { transform: translate(0, 0) rotate(-12deg); }
+  45%      { transform: translate(-10px, -14px) rotate(-12deg); }
+  60%      { transform: translate(-10px, -14px) rotate(-12deg); }
+}
+.ppc-callcta-label { margin-top: 12px; font-size: 15px; font-weight: 700; color: #1A1A1A; }
+.ppc-callcta-hint { margin-top: 2px; font-size: 12.5px; color: rgba(0,0,0,.54); }
+@keyframes ppc-aifloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes ppc-aispin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ppc-aibtn, .ppc-aibtn::before { animation: none; }
+  .ppc-tapfinger { animation: none; }
+  .ppc-mic.rec { animation: none; }
+}
+
+/* Phone: the sheet geometry already matches Flutter, so this only bumps a few
+   controls to thumb size. The 16px composer font is a web-only requirement —
+   iOS Safari auto-zooms the page on focus for anything smaller. */
+@media (max-width: 480px) {
+  .ppc-input { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .ppc-text { font-size: 16px; }
+  .ppc-ic { min-width: 36px; height: 34px; }
+  .ppc-bubble { max-width: 88%; }
+}

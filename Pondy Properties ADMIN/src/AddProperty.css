@@ -1,0 +1,151 @@
+
+  
+  .addForm input[type="file"] {
+    padding: 0;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+  
+  
+  /* Photo Upload Container */
+  .addForm
+  .photo-upload-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 20px;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;}
+  
+  /* Custom File Input */
+  .addForm
+  .photo-upload-input {
+    display: none;
+  }
+  
+  .addForm
+  .photo-upload-label {
+    display: inline-block;
+    background-color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    width: 100%;
+    height: 80px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    /* border: 1px solid ; */
+    box-shadow: 1px 1px 2px gainsboro ;
+    padding-top: 25px;
+  }
+  
+  
+  
+  /* Uploaded Photos Section */
+  .addForm
+  .uploaded-photos {
+    margin-top: 20px;
+  }
+  
+  .addForm
+  .uploaded-photos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+  }
+  
+  .addForm
+  .uploaded-photo-item {
+    position: relative;
+    text-align: center;
+  }
+  
+  .addForm
+  .uploaded-photo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+   
+    transition: transform 0.2s ease;
+  }
+  
+  .addForm
+  .uploaded-photo:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Remove Photo Button */
+  .addForm
+  .remove-photo-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background-color: rgba(255, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 4px 9px;
+    border-radius: 10%;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }fff
+  
+  .addForm
+  .remove-photo-btn:hover {
+    background-color: rgba(255, 0, 0, 1);
+  }
+  
+  /* Container for the video upload section */
+  .addForm
+  .form-group {
+  margin-bottom: 20px;
+  }
+  
+  /* Style for the label */
+  .addForm
+  .form-group label {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+  color: #333;
+  }
+  
+  /* Style for file input */
+  .addForm
+  input[type="file"] {
+  display: none; /* Hide the default file input */
+  }
+  
+  .addForm
+  .file-upload-label {
+  display: inline-block;
+  background-color: white;
+  padding: 20px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  }
+  
+ 
+  
+  /* Style for the selected video container */
+  .addForm
+  .selected-video-container {
+  margin-top: 20px;
+  text-align: center;
+  }
+  
+  /* Video element styling */
+  .addForm
+  video {
+  border-radius: 10px;
+  max-width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  
+  

@@ -1,0 +1,94 @@
+# ---------------------------------------------------------------
+# PondyProperties monorepo — root ignore rules
+# Covers: PPC (Node backend), Pondy Properties ADMIN / USER (React),
+#         PondyPropertiesFlutter (Flutter app)
+# ---------------------------------------------------------------
+
+# --- Dependencies -----------------------------------------------
+node_modules/
+.pnp/
+.pnp.js
+jspm_packages/
+
+# --- Build / compiled output ------------------------------------
+build/
+dist/
+out/
+.next/
+.nuxt/
+.parcel-cache/
+
+# --- Flutter / Dart ---------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.iml
+**/android/.gradle/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/App.framework
+**/ios/Flutter/ephemeral/
+
+# --- Secrets / credentials (NEVER commit) -----------------------
+.env
+.env.*
+!.env.example
+*serviceAccountKey*.json
+*service-account*.json
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# --- Runtime user data --------------------------------------------
+PPC/uploads/
+uploads/
+
+# --- Database dumps (contain production PII) --------------------
+DBBACKUP/
+*.gz
+*.dump
+*.sql
+
+# --- Release archives -------------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+# ...but keep archives that are genuine project assets
+!Pondy Properties USER/skills/**/*.tar.gz
+
+# --- Logs / crash dumps -----------------------------------------
+*.log
+hs_err_pid*.log
+replay_pid*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# --- Editor / OS ------------------------------------------------
+.idea/
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.swp
+*~
+
+# --- Test / coverage --------------------------------------------
+coverage/
+.nyc_output/

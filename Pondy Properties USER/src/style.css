@@ -1,0 +1,12 @@
+body {
+    font-family: Arial, sans-serif;
+  }
+  
+  .alert {
+    margin-top: 10px;
+  }
+  
+  button {
+    cursor: pointer;
+  }
+  

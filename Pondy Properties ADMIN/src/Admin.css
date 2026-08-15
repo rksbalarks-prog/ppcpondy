@@ -1,0 +1,69 @@
+.Admininput{
+  outline: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid white;
+  background: transparent;
+  color: white;
+  font-weight: bold;
+  border-top: none;
+}
+
+.Admininput:focus{
+  outline: none;
+  box-shadow: none;
+  background: none;
+  color: white;
+}
+.glass{
+  background: rgba( 255, 255, 255, 0.1 );
+  box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+  backdrop-filter: blur( 11px );
+  -webkit-backdrop-filter: blur( 11px );
+  border-radius: 10px;
+  border: 1px solid rgba( 255, 255, 255, 0.18 );
+}
+.adminbtn{
+  border:1px solid #020329;
+  border-radius: 25px;
+  background: transparent;
+color: #020329;
+font-size: 18px;
+}
+.adminbtn:hover{
+  /* background-color: #77125e; */
+  background-image: linear-gradient(to top, #48c6ef 0%, #6f86d6 100%);}
+
+
+
+  /* Admin.css */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.footer {
+  background-color: #f8f9fa;
+  padding: 20px 0;
+}
+
+.footer div {
+  display: flex;
+  justify-content: center;
+}
+
+.footer div > * {
+  font-size: 1.5rem;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+.footer p {
+  margin: 0;
+}

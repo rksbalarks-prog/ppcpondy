@@ -1,0 +1,137 @@
+.App {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 400px;
+    margin-bottom: 20px;
+}
+
+form input, form textarea, form select, form button {
+    margin-bottom: 10px;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+button {
+    padding: 10px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button.edit {
+    background-color: #FFA500;
+}
+
+button.delete {
+    background-color: #f44336;
+}
+
+button.toggle {
+    background-color: #008CBA;
+}
+
+button.edit:hover {
+    background-color: #FF8C00;
+}
+
+button.delete:hover {
+    background-color: #d32f2f;
+}
+
+button.toggle:hover {
+    background-color: #007B9A;
+}
+
+
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+    /* color: #007B9A; */
+}
+
+.form-row input, .form-row select, .form-row textarea {
+    flex: 1;
+    min-width: 100px; /* Minimum width for responsive layout */
+}
+
+form button {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+
+
+
+
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between the form elements */
+}
+
+.status-container, .checkbox-container {
+    display: flex;
+    align-items: center;
+}
+
+.ms-4 {
+    margin-left: 1rem;
+}

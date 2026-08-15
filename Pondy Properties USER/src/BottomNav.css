@@ -1,0 +1,87 @@
+
+
+
+ :root {
+    --bg-body: hsl(184, 78%, 93%);
+    --bg-nav: white;
+    --color-nav: #30747F;
+    --color-nav-active: #30747F;
+}
+.nav {
+    position: relative;
+  }
+#filter-svg {
+    position: absolute;
+    width: 40px !;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: transparent;
+    pointer-events: none; /* Prevents SVG from blocking user interactions */
+  }
+.MuiBottomNavigation-root {
+    background-color: var(--bg-nav) !important;
+     height: 80px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    filter: url("#goo");
+    margin-bottom: 5px;
+     box-sizing: border-box;
+}
+
+.MuiBottomNavigationAction-root {
+    color: var(--color-nav) !important;
+    font-size: 24px !important;
+    flex: 1;
+}
+
+.MuiBottomNavigationAction-root:hover {
+    color: grey !important;
+}
+
+.MuiBottomNavigationAction-root.Mui-selected {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: var(--bg-nav);
+    color: var(--color-nav-active) !important;
+    transform: translateY(-20%) !important;
+    font-size: 36px !important;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .MuiBottomNavigation-root {
+        height: 60px !important;
+        padding: 0 5px;
+    }
+
+    .MuiBottomNavigationAction-root {
+        font-size: 20px !important;
+    }
+
+    .MuiBottomNavigationAction-root.Mui-selected {
+        width: 60px;
+        height: 60px;
+        font-size: 30px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .MuiBottomNavigation-root {
+        height: 50px !important;
+        padding: 0 2px;
+    }
+
+    .MuiBottomNavigationAction-root {
+        font-size: 16px !important;
+    }
+
+    .MuiBottomNavigationAction-root.Mui-selected {
+        width: 50px;
+        height: 50px;
+        font-size: 24px !important;
+    }
+}

@@ -1,0 +1,14 @@
+ 
+
+   .custom-carousel-image {
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    z-index: 0;
+  }
+  
+ 
+  .carousel-item.active .custom-carousel-image {
+    opacity: 1;
+    z-index: 1;
+  }
+  

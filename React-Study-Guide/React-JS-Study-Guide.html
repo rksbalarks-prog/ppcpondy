@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React &amp; JavaScript — From Basics to Advanced (PondyProperties Study Guide)</title>
+<style>
+  :root{
+    --ink:#1a2230; --muted:#5b6577; --line:#d8dee9; --accent:#2563eb;
+    --accent2:#7c3aed; --code-bg:#f6f8fa; --code-ink:#0f172a; --warn:#b45309;
+    --good:#0f766e; --bad:#b91c1c; --chip:#eef2ff;
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    font-family:"Segoe UI", Inter, Arial, sans-serif;
+    color:var(--ink); line-height:1.5; font-size:11pt; margin:0;
+  }
+  h1,h2,h3,h4{ line-height:1.2; color:var(--ink); }
+  h1{ font-size:22pt; margin:0 0 6px; }
+  h2{ font-size:17pt; border-bottom:3px solid var(--accent); padding-bottom:6px; margin:0 0 14px; color:#12204a; }
+  h3{ font-size:13.5pt; margin:20px 0 6px; color:#1e293b; }
+  h4{ font-size:11.5pt; margin:14px 0 4px; color:#334155; }
+  p{ margin:7px 0; }
+  ul,ol{ margin:7px 0 7px 0; padding-left:22px; }
+  li{ margin:3px 0; }
+  code{ font-family:"Cascadia Code","Consolas",monospace; font-size:9.5pt;
+    background:var(--code-bg); padding:1px 5px; border-radius:4px; color:#9333ea; }
+  pre{ background:var(--code-bg); border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:6px; padding:11px 13px; overflow:auto; margin:9px 0; break-inside:avoid; }
+  pre code{ background:none; padding:0; color:var(--code-ink); font-size:9pt; line-height:1.45; }
+  .tok-c{ color:#6b7280; font-style:italic; } /* comment */
+  .muted{ color:var(--muted); }
+  a{ color:var(--accent); text-decoration:none; }
+
+  /* Cover */
+  .cover{ height:9.6in; display:flex; flex-direction:column; justify-content:center;
+    padding:0 0.7in; page-break-after:always;
+    background:linear-gradient(135deg,#0b1220 0%,#12204a 55%,#3b1d6e 100%); color:#fff; }
+  .cover h1{ color:#fff; font-size:34pt; line-height:1.1; }
+  .cover .sub{ font-size:15pt; color:#c7d2fe; margin-top:10px; font-weight:500; }
+  .cover .meta{ margin-top:30px; font-size:11pt; color:#a5b4fc; }
+  .cover .rule{ width:90px; height:5px; background:#60a5fa; margin:18px 0; border-radius:3px; }
+  .cover .stack{ margin-top:26px; display:flex; flex-wrap:wrap; gap:8px; }
+  .cover .pill{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    padding:5px 11px; border-radius:20px; font-size:9.5pt; color:#e0e7ff; }
+
+  /* Layout helpers */
+  .part{ page-break-before:always; }
+  .lead{ font-size:11pt; color:var(--muted); margin:2px 0 16px; }
+  .callout{ border:1px solid var(--line); border-left:4px solid var(--accent2);
+    background:#faf5ff; border-radius:6px; padding:9px 13px; margin:11px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--warn); background:#fffbeb; }
+  .callout.good{ border-left-color:var(--good); background:#f0fdfa; }
+  .callout.bad{ border-left-color:var(--bad); background:#fef2f2; }
+  .callout .tag{ font-weight:700; font-size:9pt; letter-spacing:.04em; text-transform:uppercase; }
+  .callout.warn .tag{ color:var(--warn); }
+  .callout.good .tag{ color:var(--good); }
+  .callout.bad  .tag{ color:var(--bad); }
+  .callout.tip  .tag{ color:var(--accent2); }
+  table{ border-collapse:collapse; width:100%; margin:11px 0; font-size:9.5pt; break-inside:avoid; }
+  th,td{ border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+  th{ background:#eef2ff; color:#1e293b; }
+  .two{ display:flex; gap:12px; }
+  .two > div{ flex:1; }
+  .chip{ display:inline-block; background:var(--chip); color:#3730a3; border-radius:5px;
+    padding:1px 7px; font-size:8.5pt; font-weight:600; }
+  .concept{ break-inside:avoid; }
+  hr{ border:none; border-top:1px solid var(--line); margin:18px 0; }
+
+  /* TOC */
+  .toc{ page-break-after:always; }
+  .toc ol{ list-style:none; padding-left:0; counter-reset:sec; }
+  .toc > ol > li{ counter-increment:sec; margin:8px 0; font-weight:700; font-size:11.5pt; }
+  .toc > ol > li::before{ content:counter(sec) ".  "; color:var(--accent); }
+  .toc ul{ list-style:none; padding-left:22px; margin:4px 0; }
+  .toc ul li{ font-weight:400; font-size:10pt; color:var(--muted); margin:2px 0; }
+
+  @page{ size:A4; margin:16mm 15mm 16mm 15mm; }
+  @media print{
+    .cover{ height:9.6in; }
+    a{ color:var(--ink); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<section class="cover">
+  <div class="chip" style="align-self:flex-start;background:rgba(255,255,255,.15);color:#e0e7ff;">STUDY GUIDE · 2026</div>
+  <h1>React &amp; JavaScript<br>From Basics to Advanced</h1>
+  <div class="rule"></div>
+  <div class="sub">The complete concept map — every piece of JavaScript you need for React,<br>then React itself from your first component to production patterns.</div>
+  <div class="meta">Tailored to the <strong>PondyProperties</strong> codebase<br>USER app · ADMIN app · React 18 + Create React App</div>
+  <div class="stack">
+    <span class="pill">React 18.3</span>
+    <span class="pill">Function Components + Hooks</span>
+    <span class="pill">React Router v7</span>
+    <span class="pill">Redux Toolkit</span>
+    <span class="pill">axios</span>
+    <span class="pill">socket.io</span>
+    <span class="pill">MUI + Bootstrap</span>
+    <span class="pill">ES2020+ JavaScript</span>
+  </div>
+</section>
+
+<!-- ===================== TOC ===================== -->
+<section class="toc">
+  <h2>What's inside</h2>
+  <p class="lead">Read it top to bottom the first time. After that, use it as a reference — every concept is a self-contained card with an explanation, a runnable example, and where it shows up in your project.</p>
+  <ol>
+    <li>How to use this guide &amp; the mental model
+      <ul><li>What React actually is · SPA vs. server-rendered pages · the render loop</li></ul>
+    </li>
+    <li>JavaScript you must know for React
+      <ul><li>let/const · arrow functions · template literals · destructuring · spread/rest · default params · ternary &amp; short-circuit · optional chaining &amp; nullish · array methods (map/filter/reduce…) · objects · modules · truthy/falsy · immutability · closures · promises &amp; async/await · JSON</li></ul>
+    </li>
+    <li>React fundamentals
+      <ul><li>Components · JSX · props · rendering lists &amp; keys · conditional rendering · events · state with useState · controlled forms · lifting state · composition &amp; children</li></ul>
+    </li>
+    <li>Hooks in depth
+      <ul><li>useState deep · useEffect (lifecycle, dependencies, cleanup) · fetching data · useRef · useContext · useReducer · useMemo · useCallback · custom hooks · Rules of Hooks</li></ul>
+    </li>
+    <li>Routing, data &amp; state management
+      <ul><li>React Router v7 · axios patterns · environment variables · Redux Toolkit (store, slices, useSelector/useDispatch) · Context vs. Redux · real-time with socket.io</li></ul>
+    </li>
+    <li>Advanced React &amp; performance
+      <ul><li>Re-render model · React.memo · memo/callback in practice · lazy &amp; Suspense (code splitting) · error boundaries · portals · forwardRef · HOCs &amp; render props · stale closures · Strict Mode</li></ul>
+    </li>
+    <li>Your project, mapped to concepts
+      <ul><li>Where each idea lives in USER &amp; ADMIN · patterns you already use · things worth refactoring</li></ul>
+    </li>
+    <li>Appendix
+      <ul><li>Rules of Hooks cheat-sheet · common mistakes · glossary · what to learn next</li></ul>
+    </li>
+  </ol>
+</section>
+
+<!-- ===================== PART 1 ===================== -->
+<section class="part">
+  <h2>1 · How to use this guide &amp; the mental model</h2>
+
+  <h3>What React actually is</h3>
+  <p>React is a JavaScript library for building <strong>user interfaces out of components</strong>. A component is a function that takes some data (<em>props</em> and <em>state</em>) and returns a description of what the screen should look like (JSX). You never touch the DOM directly with <code>document.getElementById</code>; instead you change data, and React figures out the minimal DOM updates for you.</p>
+
+  <div class="callout tip">
+    <span class="tag">The one idea that unlocks React</span>
+    <p style="margin-bottom:0">UI is a <strong>function of state</strong>: <code>UI = f(state)</code>. You don't write "when the button is clicked, find the counter span and set its text to 5." You write "the screen shows <code>count</code>," then "clicking the button sets <code>count</code> to 5." React re-runs your component and updates the screen. Stop thinking in <em>steps to mutate the page</em>; start thinking in <em>what the page should be for this data</em>.</p>
+  </div>
+
+  <h3>SPA vs. server-rendered pages</h3>
+  <p>Both your USER and ADMIN apps are <strong>Single Page Applications (SPA)</strong> built with Create React App (<code>react-scripts</code>). The browser loads one HTML shell and a JavaScript bundle; React then renders everything and React Router swaps "pages" without a full reload. That's why navigating feels instant and why there's no separate <code>.html</code> file per screen.</p>
+
+  <h3>The render loop (memorize this)</h3>
+  <ol>
+    <li>React calls your component function → it returns JSX.</li>
+    <li>React builds a virtual tree and compares it to the previous one (<em>reconciliation</em>).</li>
+    <li>Only the differences are written to the real DOM.</li>
+    <li>Later, some <strong>state</strong> changes (a <code>setState</code> call) → React re-runs the component from step 1.</li>
+  </ol>
+  <p>A "re-render" just means "React called your function again." It is cheap and normal. It does <strong>not</strong> mean the whole page is thrown away.</p>
+
+  <h3>How to read the examples</h3>
+  <ul>
+    <li><span class="chip">JS</span> blocks are plain JavaScript — run them in the browser console or Node.</li>
+    <li><span class="chip">JSX</span> blocks are React component code — they live inside <code>.jsx</code>/<code>.js</code> files.</li>
+    <li><span class="chip">In your project</span> notes point at real files in the USER/ADMIN apps.</li>
+  </ul>
+</section>
+
+<!-- ===================== PART 2: JAVASCRIPT ===================== -->
+<section class="part">
+  <h2>2 · JavaScript you must know for React</h2>
+  <p class="lead">React is "just JavaScript." Nearly every confusing React bug is actually a JavaScript misunderstanding. Master this section and React gets dramatically easier. Everything here is used constantly in your codebase.</p>
+
+  <div class="concept">
+  <h3>2.1 · <code>let</code> and <code>const</code> (never <code>var</code>)</h3>
+  <p><code>const</code> = a name you won't reassign. <code>let</code> = a name you will. Both are <em>block-scoped</em> (they only exist inside the nearest <code>{ }</code>). Default to <code>const</code>; switch to <code>let</code> only when you must reassign.</p>
+  <pre><code>const name = "Pondy";
+let count = 0;
+count = count + 1;      <span class="tok-c">// ok — let can be reassigned</span>
+<span class="tok-c">// name = "x";          // ERROR — const can't be reassigned</span>
+
+<span class="tok-c">// const protects the binding, not the contents:</span>
+const user = { id: 1 };
+user.id = 2;            <span class="tok-c">// ok — we mutated the object, didn't reassign the name</span></code></pre>
+  <div class="callout"><span class="tag">Why React cares</span><p style="margin-bottom:0">Every hook value you'll write is a <code>const</code>: <code>const [count, setCount] = useState(0)</code>. Understanding that <code>const</code> forbids reassignment (but not object mutation) explains why you call <code>setCount(...)</code> instead of <code>count = ...</code>.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.2 · Arrow functions</h3>
+  <p>A shorter function syntax. Arrow functions also don't have their own <code>this</code> — they inherit it from where they're defined, which is exactly what you want inside components.</p>
+  <pre><code><span class="tok-c">// classic</span>
+function add(a, b){ return a + b; }
+
+<span class="tok-c">// arrow, block body</span>
+const add = (a, b) =&gt; { return a + b; };
+
+<span class="tok-c">// arrow, implicit return (no braces, no 'return')</span>
+const add = (a, b) =&gt; a + b;
+const double = n =&gt; n * 2;              <span class="tok-c">// one param, parens optional</span>
+const makeUser = id =&gt; ({ id });        <span class="tok-c">// return an object → wrap in ( )</span></code></pre>
+  <div class="callout warn"><span class="tag">Gotcha</span><p style="margin-bottom:0">To return an object literal implicitly you must wrap it in parentheses: <code>() =&gt; ({ a: 1 })</code>. Without the parens, <code>{ }</code> is read as a function body, not an object.</p></div>
+  <p class="muted">In your project: every event handler is an arrow function, e.g. <code>const handleChange = (e) =&gt; {…}</code> in <em>ContactUs.jsx</em>.</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.3 · Template literals (backtick strings)</h3>
+  <p>Strings with embedded expressions using <code>`${ }`</code>. Cleaner than <code>+</code> concatenation and they allow multi-line strings.</p>
+  <pre><code>const city = "Pondicherry";
+const url = `${process.env.REACT_APP_API_URL}/property/${id}`;
+const msg = `Found ${list.length} results in ${city}`;</code></pre>
+  <p class="muted">You use this for every API URL, e.g. <code>axios.post(`${process.env.REACT_APP_API_URL}/contactUs`, formData)</code>.</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.4 · Destructuring</h3>
+  <p>Pull values out of objects/arrays into named variables in one line. This is <em>everywhere</em> in React.</p>
+  <pre><code><span class="tok-c">// object destructuring</span>
+const user = { name: "Bala", phone: "99999", city: "Pondy" };
+const { name, city } = user;            <span class="tok-c">// name = "Bala", city = "Pondy"</span>
+const { phone: mobile } = user;         <span class="tok-c">// rename → mobile = "99999"</span>
+const { role = "guest" } = user;        <span class="tok-c">// default if missing</span>
+
+<span class="tok-c">// array destructuring (position matters, names are yours)</span>
+const [first, second] = [10, 20];       <span class="tok-c">// first=10, second=20</span>
+const [count, setCount] = useState(0);  <span class="tok-c">// THIS is why hooks look like they do</span>
+
+<span class="tok-c">// nested + in function params</span>
+function Card({ property: { title, price } }) { /* … */ }</code></pre>
+  <div class="callout good"><span class="tag">This is why hooks read the way they do</span><p style="margin-bottom:0"><code>useState</code> returns an array <code>[value, setter]</code>. <code>const [count, setCount] = useState(0)</code> is just array destructuring. Props are read with object destructuring: <code>function Header({ title })</code>.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.5 · Spread <code>...</code> and rest <code>...</code></h3>
+  <p>Same three dots, two jobs. <strong>Spread</strong> expands a collection; <strong>rest</strong> gathers leftovers into one. Spread is the backbone of immutable updates in React.</p>
+  <pre><code><span class="tok-c">// SPREAD — copy + override (make a NEW object/array)</span>
+const base = { name: "Bala", city: "Pondy" };
+const updated = { ...base, city: "Chennai" };  <span class="tok-c">// {name:"Bala", city:"Chennai"}</span>
+const more = [...[1,2], 3, 4];                  <span class="tok-c">// [1,2,3,4]</span>
+
+<span class="tok-c">// REST — collect the rest</span>
+const [head, ...tail] = [1,2,3,4];              <span class="tok-c">// head=1, tail=[2,3,4]</span>
+function sum(...nums){ return nums.reduce((a,b)=&gt;a+b, 0); }</code></pre>
+  <p>This is exactly the pattern in your form handler:</p>
+  <pre><code><span class="tok-c">// ContactUs.jsx — update one field without mutating the old state</span>
+const handleChange = (e) =&gt; {
+  setFormData({ ...formData, [e.target.name]: e.target.value });
+};</code></pre>
+  <div class="callout warn"><span class="tag">Golden rule</span><p style="margin-bottom:0">In React you <strong>never mutate</strong> state. You make a <em>copy</em> with spread and change the copy. <code>{ ...old, field: newValue }</code> for objects, <code>[...old, item]</code> for arrays.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.6 · Default parameters &amp; computed property names</h3>
+  <pre><code><span class="tok-c">// default parameter</span>
+function greet(name = "there"){ return `Hi ${name}`; }
+
+<span class="tok-c">// computed property name — the [ ] means "use this variable as the key"</span>
+const field = "email";
+const patch = { [field]: "a@b.com" };   <span class="tok-c">// { email: "a@b.com" }</span></code></pre>
+  <p class="muted">Computed keys are what make <code>{ [e.target.name]: e.target.value }</code> work for a single generic <code>handleChange</code> across every input.</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.7 · Ternary &amp; short-circuit logic</h3>
+  <p>These are how you make decisions <em>inside JSX</em>, where you can't use <code>if</code> statements.</p>
+  <pre><code><span class="tok-c">// ternary:  condition ? whenTrue : whenFalse</span>
+const label = isLoggedIn ? "Logout" : "Login";
+
+<span class="tok-c">// && — render the right side only if the left is truthy</span>
+error &amp;&amp; console.log(error);
+
+<span class="tok-c">// || — fall back to the right side if the left is falsy</span>
+const name = user.name || "Guest";
+
+<span class="tok-c">// ?? (nullish) — fall back ONLY for null/undefined (not for 0 or "")</span>
+const count = value ?? 0;   <span class="tok-c">// keeps 0; || would replace 0 with 0 too, but ?? keeps "" and 0</span></code></pre>
+  <div class="callout warn"><span class="tag"><code>||</code> vs <code>??</code></span><p style="margin-bottom:0"><code>0 || 5</code> is <code>5</code> (because <code>0</code> is falsy). <code>0 ?? 5</code> is <code>0</code>. Use <code>??</code> when <code>0</code>, <code>""</code>, or <code>false</code> are valid values you want to keep.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.8 · Optional chaining <code>?.</code></h3>
+  <p>Safely read deep properties that might not exist yet — very common while data is still loading.</p>
+  <pre><code>const price = property?.details?.price;      <span class="tok-c">// undefined instead of a crash</span>
+const first = list?.[0];                     <span class="tok-c">// safe array access</span>
+onClose?.();                                 <span class="tok-c">// call only if the function exists</span>
+
+<span class="tok-c">// Without ?. this throws if error.response is undefined:</span>
+setError(error.response?.data?.error || "Submission failed");</code></pre>
+  <p class="muted">That last line is literally your ContactUs error handling made safe. Before data arrives from axios, nested fields are <code>undefined</code>; <code>?.</code> prevents "Cannot read properties of undefined."</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.9 · Array methods — the heart of rendering lists</h3>
+  <p>You will use these constantly to transform API data into UI. They <strong>return new arrays</strong> and never mutate the original (perfect for React).</p>
+  <table>
+    <tr><th>Method</th><th>Returns</th><th>Use it for</th></tr>
+    <tr><td><code>map</code></td><td>new array, same length</td><td>Turn each item into JSX / another shape</td></tr>
+    <tr><td><code>filter</code></td><td>new, shorter array</td><td>Keep only items matching a test</td></tr>
+    <tr><td><code>find</code></td><td>one item (or undefined)</td><td>Get the first match</td></tr>
+    <tr><td><code>reduce</code></td><td>a single value</td><td>Totals, grouping, folding a list into one thing</td></tr>
+    <tr><td><code>some</code> / <code>every</code></td><td>boolean</td><td>"any match?" / "all match?"</td></tr>
+    <tr><td><code>includes</code></td><td>boolean</td><td>"is this value in the array?"</td></tr>
+    <tr><td><code>sort</code></td><td>the array (mutates!)</td><td>Ordering — copy first: <code>[...arr].sort()</code></td></tr>
+  </table>
+  <pre><code>const props = [
+  { id:1, city:"Pondy",   price:2500000, sold:false },
+  { id:2, city:"Chennai", price:4200000, sold:true  },
+  { id:3, city:"Pondy",   price:1800000, sold:false },
+];
+
+<span class="tok-c">// map → render a list (returns JSX per item)</span>
+props.map(p =&gt; &lt;Card key={p.id} data={p} /&gt;);
+
+<span class="tok-c">// filter → only unsold Pondy listings</span>
+const available = props.filter(p =&gt; p.city === "Pondy" &amp;&amp; !p.sold);
+
+<span class="tok-c">// find → one property by id</span>
+const one = props.find(p =&gt; p.id === 2);
+
+<span class="tok-c">// reduce → total value of all listings</span>
+const total = props.reduce((sum, p) =&gt; sum + p.price, 0);
+
+<span class="tok-c">// chaining — the everyday combo</span>
+const pondyTotal = props
+  .filter(p =&gt; p.city === "Pondy")
+  .reduce((s, p) =&gt; s + p.price, 0);</code></pre>
+  <div class="callout"><span class="tag">The #1 React list pattern</span>
+  <pre style="margin:8px 0 0"><code>{properties.map(p =&gt; (
+  &lt;PropertyCard key={p._id} property={p} /&gt;
+))}</code></pre>
+  <p style="margin:6px 0 0">You'll write this hundreds of times. Note the <code>key</code> — covered in §3.4.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.10 · Working with objects</h3>
+  <pre><code>const user = { name:"Bala", city:"Pondy", plan:"pro" };
+
+Object.keys(user);     <span class="tok-c">// ["name","city","plan"]</span>
+Object.values(user);   <span class="tok-c">// ["Bala","Pondy","pro"]</span>
+Object.entries(user);  <span class="tok-c">// [["name","Bala"], ["city","Pondy"], …]</span>
+
+<span class="tok-c">// render an object as a list of rows</span>
+Object.entries(user).map(([key, value]) =&gt; (
+  &lt;tr key={key}&gt;&lt;td&gt;{key}&lt;/td&gt;&lt;td&gt;{value}&lt;/td&gt;&lt;/tr&gt;
+));</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>2.11 · ES Modules — <code>import</code> / <code>export</code></h3>
+  <p>How files share code. Two kinds of exports: <strong>default</strong> (one per file) and <strong>named</strong> (many per file).</p>
+  <pre><code><span class="tok-c">// ---- Button.jsx ----</span>
+export default function Button(){ /* … */ }        <span class="tok-c">// default export</span>
+export const COLORS = ["red","blue"];              <span class="tok-c">// named export</span>
+
+<span class="tok-c">// ---- App.jsx ----</span>
+import Button from "./Button";                     <span class="tok-c">// default: any name, no braces</span>
+import { COLORS } from "./Button";                 <span class="tok-c">// named: exact name, braces</span>
+import Button, { COLORS } from "./Button";         <span class="tok-c">// both together</span>
+import axios from "axios";                          <span class="tok-c">// from node_modules (no ./)</span></code></pre>
+  <p class="muted">Your <em>store.js</em> shows both: <code>import { configureStore } from '@reduxjs/toolkit'</code> (named) and <code>import userReducer from './userSlice'</code> (default).</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.12 · Truthy / falsy</h3>
+  <p>Any value can be treated as true/false in a condition. The <strong>falsy</strong> values are exactly: <code>false</code>, <code>0</code>, <code>""</code> (empty string), <code>null</code>, <code>undefined</code>, <code>NaN</code>. Everything else is truthy — including <code>[]</code> and <code>{}</code>.</p>
+  <div class="callout bad"><span class="tag">Classic React bug</span>
+  <pre style="margin:8px 0 0"><code>{list.length &amp;&amp; &lt;List items={list} /&gt;}   <span class="tok-c">// BUG: when length is 0,</span>
+                                        <span class="tok-c">// React renders the number 0 on screen!</span>
+{list.length &gt; 0 &amp;&amp; &lt;List items={list} /&gt;} <span class="tok-c">// FIX: force a real boolean</span></code></pre></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.13 · Immutability (the React survival rule)</h3>
+  <p>Treat state as read-only. Never push into an array or set a property on an object that's in state — always create a new value. React decides whether to re-render by checking if the <em>reference</em> changed, so a mutated-in-place object looks "unchanged" to React.</p>
+  <pre><code><span class="tok-c">// ❌ mutation — React may not see the change</span>
+todos.push(newTodo);
+user.name = "New";
+
+<span class="tok-c">// ✅ new references</span>
+setTodos([...todos, newTodo]);                 <span class="tok-c">// add</span>
+setTodos(todos.filter(t =&gt; t.id !== id));       <span class="tok-c">// remove</span>
+setTodos(todos.map(t =&gt; t.id === id ? {...t, done:true} : t)); <span class="tok-c">// update one</span>
+setUser({ ...user, name: "New" });             <span class="tok-c">// change a field</span></code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>2.14 · Closures (why this matters for hooks)</h3>
+  <p>A closure is a function "remembering" the variables around it when it was created. Every render of a component creates fresh functions that close over <em>that render's</em> props and state. This explains a whole class of "why is my value stale?" bugs.</p>
+  <pre><code>function makeCounter(){
+  let count = 0;
+  return () =&gt; ++count;   <span class="tok-c">// this inner fn "closes over" count</span>
+}
+const next = makeCounter();
+next(); next();           <span class="tok-c">// 1, then 2 — count persists via the closure</span></code></pre>
+  <div class="callout warn"><span class="tag">Where this bites you</span><p style="margin-bottom:0">Inside <code>setTimeout</code> or an event handler, <code>count</code> is the value from the render that created it — it won't magically update. The fix is the <em>functional updater</em>: <code>setCount(c =&gt; c + 1)</code> (see §4.1).</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>2.15 · Promises &amp; <code>async</code>/<code>await</code></h3>
+  <p>Network calls take time. A <strong>Promise</strong> represents a value that will arrive later. <code>async/await</code> is the readable way to work with promises — it lets asynchronous code read top-to-bottom like normal code.</p>
+  <pre><code><span class="tok-c">// Promise style (.then / .catch)</span>
+axios.get("/api/props")
+  .then(res =&gt; setList(res.data))
+  .catch(err =&gt; setError(err.message));
+
+<span class="tok-c">// async/await style (what your code uses) — cleaner</span>
+const loadProps = async () =&gt; {
+  try {
+    const res = await axios.get("/api/props");  <span class="tok-c">// pause here until it resolves</span>
+    setList(res.data);
+  } catch (err) {
+    setError(err.message);                       <span class="tok-c">// runs if it rejects</span>
+  } finally {
+    setLoading(false);                           <span class="tok-c">// always runs</span>
+  }
+};</code></pre>
+  <div class="callout"><span class="tag">Rules of thumb</span><ul style="margin:6px 0 0">
+    <li><code>await</code> only works inside an <code>async</code> function.</li>
+    <li><code>await someAsync()</code> gives you the resolved value, not a Promise.</li>
+    <li>Always wrap <code>await</code> in <code>try/catch</code> for network calls (your <em>ContactUs.jsx</em> does this correctly).</li>
+  </ul></div>
+  <p class="muted">This is exactly your <code>handleSubmit = async (e) =&gt; { … await axios.post(…) … }</code> pattern.</p>
+  </div>
+
+  <div class="concept">
+  <h3>2.16 · JSON</h3>
+  <pre><code>const obj = { id: 1, city: "Pondy" };
+const text = JSON.stringify(obj);        <span class="tok-c">// object → string (for storage/network)</span>
+const back = JSON.parse(text);           <span class="tok-c">// string → object</span>
+
+<span class="tok-c">// common with localStorage</span>
+localStorage.setItem("user", JSON.stringify(user));
+const saved = JSON.parse(localStorage.getItem("user") || "null");</code></pre>
+  <p class="muted">axios parses JSON for you automatically — <code>res.data</code> is already a JS object, no <code>JSON.parse</code> needed.</p>
+  </div>
+</section>
+
+<!-- ===================== PART 3: REACT FUNDAMENTALS ===================== -->
+<section class="part">
+  <h2>3 · React fundamentals</h2>
+  <p class="lead">Now the React-specific building blocks. Everything here uses the JavaScript from Part 2.</p>
+
+  <div class="concept">
+  <h3>3.1 · Components</h3>
+  <p>A component is a function whose name is <strong>Capitalized</strong> and that returns JSX. That's the whole definition. You compose small components into bigger ones.</p>
+  <pre><code>function Welcome() {
+  return &lt;h1&gt;Welcome to PondyProperties&lt;/h1&gt;;
+}
+
+<span class="tok-c">// used like an HTML tag:</span>
+export default function App() {
+  return (
+    &lt;div&gt;
+      &lt;Welcome /&gt;
+      &lt;Welcome /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <p class="muted">Your <em>App.js</em> is exactly this: it returns <code>&lt;Header /&gt;</code>, <code>&lt;BannerCarousel /&gt;</code>, <code>&lt;Carousel /&gt;</code>, etc. composed together.</p>
+  <div class="callout warn"><span class="tag">Must-know rules</span><ul style="margin:6px 0 0">
+    <li>Component names <strong>must start with a capital letter</strong> (<code>Header</code>, not <code>header</code>) or React treats it as a plain HTML tag.</li>
+    <li>A component must return <strong>one</strong> root element. Wrap siblings in a <code>&lt;div&gt;</code> or a Fragment <code>&lt;&gt;…&lt;/&gt;</code>.</li>
+  </ul></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.2 · JSX</h3>
+  <p>JSX looks like HTML but is really JavaScript. It compiles to function calls. A few differences from HTML you must remember:</p>
+  <table>
+    <tr><th>HTML</th><th>JSX</th><th>Why</th></tr>
+    <tr><td><code>class</code></td><td><code>className</code></td><td><code>class</code> is a reserved JS word</td></tr>
+    <tr><td><code>for</code></td><td><code>htmlFor</code></td><td>same reason</td></tr>
+    <tr><td><code>onclick</code></td><td><code>onClick</code></td><td>camelCase events</td></tr>
+    <tr><td><code>style="color:red"</code></td><td><code>style={{color:'red'}}</code></td><td>style is an object</td></tr>
+    <tr><td><code>&lt;br&gt;</code></td><td><code>&lt;br /&gt;</code></td><td>tags must self-close</td></tr>
+  </table>
+  <pre><code>const city = "Pondy";
+const jsx = (
+  &lt;div className="card" style={{ padding: 12, fontWeight: "bold" }}&gt;
+    &lt;h2&gt;Properties in {city}&lt;/h2&gt;      {<span class="tok-c">/* { } embeds JS expressions */</span>}
+    &lt;p&gt;{2 + 2} results&lt;/p&gt;
+    {<span class="tok-c">/* this is how you write a comment inside JSX */</span>}
+  &lt;/div&gt;
+);</code></pre>
+  <div class="callout"><span class="tag">Inside <code>{ }</code> goes an <em>expression</em></span><p style="margin-bottom:0">You can put any JS expression in braces: a variable, <code>a + b</code>, a ternary, a <code>.map()</code>. You <strong>cannot</strong> put statements like <code>if</code> or <code>for</code> — that's why you use ternaries and <code>.map()</code> instead.</p></div>
+  <p class="muted">Note in <em>App.js</em>: <code>style={{fontFamily:"Inter, sans-serif"}}</code> — the outer <code>{}</code> means "JS here," the inner <code>{}</code> is the object.</p>
+  </div>
+
+  <div class="concept">
+  <h3>3.3 · Props — passing data into components</h3>
+  <p>Props are the arguments to a component. Data flows <strong>down</strong>, parent → child. Props are read-only; a child never edits its own props.</p>
+  <pre><code><span class="tok-c">// child — reads props (destructured)</span>
+function PropertyCard({ title, price, city }) {
+  return (
+    &lt;div className="card"&gt;
+      &lt;h3&gt;{title}&lt;/h3&gt;
+      &lt;p&gt;{city} — ₹{price.toLocaleString("en-IN")}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+<span class="tok-c">// parent — passes props like HTML attributes</span>
+&lt;PropertyCard title="2BHK Flat" price={2500000} city="Pondy" /&gt;
+
+<span class="tok-c">// strings use quotes; anything else uses { }</span>
+&lt;PropertyCard title="Villa" price={price} city={selectedCity} sold={false} /&gt;</code></pre>
+  <div class="callout tip"><span class="tag">Passing functions down as props</span><p style="margin-bottom:0">Children talk back to parents by calling a function the parent passed: <code>&lt;SearchBar onSearch={handleSearch} /&gt;</code>. The child calls <code>onSearch(value)</code>; the parent decides what happens. This is how "data down, events up" works.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.4 · Rendering lists &amp; the <code>key</code> prop</h3>
+  <p>Render arrays with <code>.map()</code>. Each element needs a stable, unique <code>key</code> so React can track items across re-renders.</p>
+  <pre><code>function PropertyList({ properties }) {
+  return (
+    &lt;div&gt;
+      {properties.map(p =&gt; (
+        &lt;PropertyCard key={p._id} title={p.title} price={p.price} /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <div class="callout warn"><span class="tag">Key rules</span><ul style="margin:6px 0 0">
+    <li>Use a <strong>stable unique id</strong> from your data (Mongo's <code>_id</code> is perfect).</li>
+    <li><strong>Avoid the array index</strong> as key when the list can reorder, filter, or have items inserted/removed — it causes subtle UI bugs (wrong item state, wrong inputs).</li>
+    <li>The <code>key</code> goes on the outermost element returned by <code>map</code>, and it's not readable as a prop inside the child.</li>
+  </ul></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.5 · Conditional rendering</h3>
+  <pre><code>function Status({ loading, error, data }) {
+  if (loading) return &lt;Spinner /&gt;;              <span class="tok-c">// early return</span>
+  if (error)   return &lt;p className="text-danger"&gt;{error}&lt;/p&gt;;
+
+  return (
+    &lt;div&gt;
+      {data.length === 0
+        ? &lt;p&gt;No properties found&lt;/p&gt;            <span class="tok-c">// ternary for either/or</span>
+        : &lt;PropertyList properties={data} /&gt;}
+
+      {user &amp;&amp; &lt;WelcomeBanner name={user.name} /&gt;} <span class="tok-c">// && for "show or nothing"</span>
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <p class="muted">Three tools: <strong>early return</strong> (whole-component branches), <strong>ternary</strong> (either/or inside JSX), <strong>&amp;&amp;</strong> (show something or nothing). Remember the <code>length &gt; 0</code> guard from §2.12.</p>
+  </div>
+
+  <div class="concept">
+  <h3>3.6 · Handling events</h3>
+  <pre><code>function SearchBar() {
+  const handleClick = () =&gt; console.log("clicked");
+
+  return (
+    &lt;form onSubmit={(e) =&gt; { e.preventDefault(); /* … */ }}&gt;
+      &lt;input onChange={(e) =&gt; console.log(e.target.value)} /&gt;
+      &lt;button onClick={handleClick}&gt;Search&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+  <div class="callout warn"><span class="tag">Two beginner traps</span><ul style="margin:6px 0 0">
+    <li>Pass the function, don't call it: <code>onClick={handleClick}</code> ✅ &nbsp; <code>onClick={handleClick()}</code> ❌ (that runs it immediately during render).</li>
+    <li>To pass arguments, wrap in an arrow: <code>onClick={() =&gt; deleteItem(id)}</code>.</li>
+    <li>Call <code>e.preventDefault()</code> in form submit handlers to stop the browser's full-page reload — your <em>ContactUs.jsx</em> does this.</li>
+  </ul></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.7 · State with <code>useState</code></h3>
+  <p>State is data that changes over time and, when it changes, re-renders the component. <code>useState</code> gives you a value and a setter.</p>
+  <pre><code>import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);   <span class="tok-c">// 0 is the initial value</span>
+
+  return (
+    &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+      Clicked {count} times
+    &lt;/button&gt;
+  );
+}</code></pre>
+  <div class="callout"><span class="tag">Mental model</span><ol style="margin:6px 0 0">
+    <li>Calling <code>setCount</code> tells React "this value changed."</li>
+    <li>React re-runs <code>Counter()</code>; this time <code>count</code> is the new value.</li>
+    <li>The new JSX is diffed and the DOM updates.</li>
+  </ol></div>
+  <div class="callout warn"><span class="tag">State updates are asynchronous</span><p style="margin-bottom:0">After <code>setCount(5)</code>, reading <code>count</code> on the very next line still gives the <em>old</em> value. The new value shows up on the next render. Don't rely on it changing immediately.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.8 · Controlled forms</h3>
+  <p>A "controlled" input is one whose value comes from state. React is the single source of truth for the field. This is the standard pattern and exactly how your forms work.</p>
+  <pre><code>function ContactForm() {
+  const [formData, setFormData] = useState({ name:"", email:"", message:"" });
+
+  const handleChange = (e) =&gt;
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) =&gt; {
+    e.preventDefault();
+    await axios.post(`${process.env.REACT_APP_API_URL}/contactUs`, formData);
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input name="name"  value={formData.name}  onChange={handleChange} /&gt;
+      &lt;input name="email" value={formData.email} onChange={handleChange} /&gt;
+      &lt;textarea name="message" value={formData.message} onChange={handleChange} /&gt;
+      &lt;button&gt;Send&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+  <div class="callout good"><span class="tag">The trick that makes one handler serve every field</span><p style="margin-bottom:0">Give each input a <code>name</code> that matches a key in state, then use the computed key <code>[e.target.name]</code>. One <code>handleChange</code> updates any field. This is precisely your <em>ContactUs.jsx</em> design.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>3.9 · Lifting state up</h3>
+  <p>When two components need the same data, move the state to their nearest common parent and pass it down as props. The parent "owns" the state; children receive values and change-callbacks.</p>
+  <pre><code>function SearchPage() {
+  const [query, setQuery] = useState("");         <span class="tok-c">// owned here</span>
+  return (
+    &lt;&gt;
+      &lt;SearchInput value={query} onChange={setQuery} /&gt;  <span class="tok-c">// child sets it</span>
+      &lt;Results query={query} /&gt;                          <span class="tok-c">// sibling reads it</span>
+    &lt;/&gt;
+  );
+}</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>3.10 · Composition &amp; <code>children</code></h3>
+  <p>Wrap content with a component using the special <code>children</code> prop. Great for layout shells, cards, and modals.</p>
+  <pre><code>function Card({ title, children }) {
+  return (
+    &lt;div className="card shadow-lg p-4"&gt;
+      &lt;h3&gt;{title}&lt;/h3&gt;
+      &lt;div className="card-body"&gt;{children}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+<span class="tok-c">// usage — whatever you nest becomes `children`</span>
+&lt;Card title="Contact"&gt;
+  &lt;p&gt;Reach us anytime.&lt;/p&gt;
+  &lt;ContactForm /&gt;
+&lt;/Card&gt;</code></pre>
+  <p class="muted">This is the idiomatic React alternative to copy-pasting the same wrapper markup (like the Bootstrap <code>card shadow-lg</code> blocks repeated across your components).</p>
+  </div>
+</section>
+
+<!-- ===================== PART 4: HOOKS ===================== -->
+<section class="part">
+  <h2>4 · Hooks in depth</h2>
+  <p class="lead">Hooks are functions starting with <code>use</code> that let function components have state, side effects, and more. This is the core of modern React and 90% of what you write day to day.</p>
+
+  <div class="concept">
+  <h3>4.1 · <code>useState</code> — the details that trip people up</h3>
+  <pre><code>const [value, setValue] = useState(initial);
+
+<span class="tok-c">// 1) Functional updater — use when new state depends on old state</span>
+setCount(c =&gt; c + 1);        <span class="tok-c">// safe even in loops/timeouts/batched updates</span>
+
+<span class="tok-c">// 2) Lazy initial state — expensive init runs ONCE, not every render</span>
+const [data] = useState(() =&gt; JSON.parse(localStorage.getItem("cart")));
+
+<span class="tok-c">// 3) Updating objects/arrays — always a NEW reference (spread)</span>
+setUser(u =&gt; ({ ...u, city: "Chennai" }));
+setList(l =&gt; [...l, newItem]);</code></pre>
+  <div class="callout warn"><span class="tag">When to use the functional updater</span><p style="margin-bottom:0">If your next value is based on the current one — counters, toggles, appending — use <code>setX(prev =&gt; …)</code>. It avoids stale-closure bugs (§2.14) because React hands you the latest value.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>4.2 · <code>useEffect</code> — synchronizing with the outside world</h3>
+  <p>Effects run <strong>after</strong> render. Use them for things outside React's world: fetching data, subscriptions, timers, manually touching the DOM, socket connections. The dependency array controls <em>when</em> the effect re-runs.</p>
+  <pre><code>import { useEffect, useState } from "react";
+
+function Properties() {
+  const [list, setList] = useState([]);
+
+  <span class="tok-c">// [] → run ONCE after first render (like "on mount")</span>
+  useEffect(() =&gt; {
+    let active = true;
+    axios.get(`${process.env.REACT_APP_API_URL}/properties`)
+      .then(res =&gt; { if (active) setList(res.data); });
+    return () =&gt; { active = false; };   <span class="tok-c">// cleanup — avoids setting state after unmount</span>
+  }, []);
+
+  return &lt;PropertyList properties={list} /&gt;;
+}</code></pre>
+  <h4>The three dependency-array shapes</h4>
+  <table>
+    <tr><th>Code</th><th>Runs…</th></tr>
+    <tr><td><code>useEffect(fn)</code> (no array)</td><td>after <strong>every</strong> render — rarely what you want</td></tr>
+    <tr><td><code>useEffect(fn, [])</code></td><td><strong>once</strong>, after the first render (mount)</td></tr>
+    <tr><td><code>useEffect(fn, [id, query])</code></td><td>on mount <strong>and</strong> whenever <code>id</code> or <code>query</code> changes</td></tr>
+  </table>
+  <h4>Cleanup functions</h4>
+  <p>Return a function to tear down. It runs before the effect re-runs and when the component unmounts. Essential for timers, event listeners, and sockets.</p>
+  <pre><code>useEffect(() =&gt; {
+  const socket = io(process.env.REACT_APP_API_URL);
+  socket.on("newLead", lead =&gt; setLeads(prev =&gt; [lead, ...prev]));
+  return () =&gt; socket.disconnect();   <span class="tok-c">// cleanup — prevents duplicate connections</span>
+}, []);</code></pre>
+  <div class="callout bad"><span class="tag">The dependency-array mistakes that cause 90% of effect bugs</span><ul style="margin:6px 0 0">
+    <li><strong>Missing dependency</strong> → effect uses a stale value. Include every prop/state/function it reads.</li>
+    <li><strong>Object/array/function in deps</strong> → it's a new reference each render, so the effect runs every time. Fix with <code>useMemo</code>/<code>useCallback</code> (§4.6–4.7) or move it inside the effect.</li>
+    <li><strong>Infinite loop</strong> → the effect sets state that's also in its dependency array. Rethink the dependency, or use a functional updater.</li>
+    <li><strong>Fetching without cleanup</strong> → "Can't perform a React state update on an unmounted component." Use the <code>active</code> flag or an <code>AbortController</code>.</li>
+  </ul></div>
+  <div class="callout tip"><span class="tag">You often don't need an effect</span><p style="margin-bottom:0">Don't use an effect to compute a value from props/state — just compute it during render (<em>derived state</em>). Effects are for <em>side effects</em> (network, subscriptions, DOM), not for transforming data you already have.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>4.3 · Fetching data (the complete pattern)</h3>
+  <pre><code>function usePropertiesPage(city) {
+  const [data, setData]       = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  useEffect(() =&gt; {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    axios.get(`${process.env.REACT_APP_API_URL}/properties`, {
+      params: { city },
+      signal: controller.signal,
+    })
+      .then(res =&gt; setData(res.data))
+      .catch(err =&gt; { if (err.name !== "CanceledError") setError(err.message); })
+      .finally(() =&gt; setLoading(false));
+
+    return () =&gt; controller.abort();   <span class="tok-c">// cancel if city changes / unmount</span>
+  }, [city]);   <span class="tok-c">// re-fetch when city changes</span>
+
+  return { data, loading, error };
+}</code></pre>
+  <p class="muted">Loading + error + data is the universal trio. Every data screen in USER/ADMIN benefits from this shape.</p>
+  </div>
+
+  <div class="concept">
+  <h3>4.4 · <code>useRef</code> — a value that survives renders without causing one</h3>
+  <p>Two uses: (1) grab a DOM node, (2) hold a mutable value that <em>doesn't</em> trigger re-renders (timers, previous values, flags).</p>
+  <pre><code>function SearchBox() {
+  const inputRef = useRef(null);
+
+  useEffect(() =&gt; { inputRef.current.focus(); }, []); <span class="tok-c">// focus on mount</span>
+
+  return &lt;input ref={inputRef} /&gt;;
+}
+
+<span class="tok-c">// mutable value that persists but doesn't re-render:</span>
+const timer = useRef(null);
+timer.current = setTimeout(...);   <span class="tok-c">// changing .current never re-renders</span></code></pre>
+  <div class="callout"><span class="tag">ref vs state</span><p style="margin-bottom:0">Changing <strong>state</strong> re-renders; changing a <strong>ref</strong> does not. Use state for anything shown on screen; use a ref for behind-the-scenes values (a socket instance, an interval id, "did I already run this?").</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>4.5 · <code>useContext</code> — share data without prop-drilling</h3>
+  <p>When many components deep in the tree need the same value (current user, theme, cart), Context lets them read it directly instead of passing props through every layer.</p>
+  <pre><code><span class="tok-c">// 1) create</span>
+const AuthContext = createContext(null);
+
+<span class="tok-c">// 2) provide (near the top of the app)</span>
+function App() {
+  const [user, setUser] = useState(null);
+  return (
+    &lt;AuthContext.Provider value={{ user, setUser }}&gt;
+      &lt;Routes /&gt;
+    &lt;/AuthContext.Provider&gt;
+  );
+}
+
+<span class="tok-c">// 3) consume (anywhere below, no props needed)</span>
+function Navbar() {
+  const { user } = useContext(AuthContext);
+  return &lt;span&gt;{user ? user.name : "Login"}&lt;/span&gt;;
+}</code></pre>
+  <div class="callout warn"><span class="tag">Trade-off</span><p style="margin-bottom:0">Every component reading a context re-renders when its <code>value</code> changes. Keep fast-changing values out of one giant context, or split contexts. For app-wide, frequently-updated state, Redux Toolkit (§5.4) is often the better tool — which is why your project uses it.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>4.6 · <code>useReducer</code> — structured state for complex logic</h3>
+  <p>When state has many sub-values or the next state depends on an "action," a reducer is cleaner than juggling several <code>useState</code>s. (It's also the mental model behind Redux.)</p>
+  <pre><code>function reducer(state, action) {
+  switch (action.type) {
+    case "loading": return { ...state, loading: true, error: null };
+    case "success": return { loading: false, error: null, data: action.payload };
+    case "error":   return { ...state, loading: false, error: action.payload };
+    default:        return state;
+  }
+}
+
+function List() {
+  const [state, dispatch] = useReducer(reducer, { loading:false, error:null, data:[] });
+
+  useEffect(() =&gt; {
+    dispatch({ type: "loading" });
+    axios.get("/api/props")
+      .then(res =&gt; dispatch({ type: "success", payload: res.data }))
+      .catch(err =&gt; dispatch({ type: "error",  payload: err.message }));
+  }, []);
+
+  <span class="tok-c">// state.loading / state.error / state.data</span>
+}</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>4.7 · <code>useMemo</code> &amp; <code>useCallback</code> — memoization</h3>
+  <p>Both cache something between renders so you don't recompute or recreate it unnecessarily. Reach for them to fix a measured performance problem or to stabilize a dependency — not by default.</p>
+  <pre><code><span class="tok-c">// useMemo — cache a computed VALUE; recompute only when deps change</span>
+const sortedProps = useMemo(
+  () =&gt; [...props].sort((a, b) =&gt; b.price - a.price),
+  [props]
+);
+
+<span class="tok-c">// useCallback — cache a FUNCTION identity; stable unless deps change</span>
+const handleSelect = useCallback((id) =&gt; {
+  setSelected(id);
+}, []);   <span class="tok-c">// same function reference across renders</span></code></pre>
+  <div class="callout"><span class="tag">When each earns its keep</span><ul style="margin:6px 0 0">
+    <li><code>useMemo</code>: an expensive calculation (big sort/filter/reduce) on every render, or to keep an object/array reference stable so a child / effect doesn't re-run.</li>
+    <li><code>useCallback</code>: pass a stable function to a <code>React.memo</code> child, or to an effect's dependency array.</li>
+    <li>Don't sprinkle them everywhere — they add overhead and clutter. Profile first.</li>
+  </ul></div>
+  </div>
+
+  <div class="concept">
+  <h3>4.8 · Custom hooks — reuse stateful logic</h3>
+  <p>A custom hook is just a function starting with <code>use</code> that calls other hooks. Extract repeated logic (fetching, form handling, toggles) once and reuse it everywhere.</p>
+  <pre><code><span class="tok-c">// useFetch.js — reusable data fetching</span>
+function useFetch(url) {
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+
+  useEffect(() =&gt; {
+    let active = true;
+    setLoading(true);
+    axios.get(url)
+      .then(res =&gt; active &amp;&amp; setData(res.data))
+      .catch(err =&gt; active &amp;&amp; setError(err.message))
+      .finally(() =&gt; active &amp;&amp; setLoading(false));
+    return () =&gt; { active = false; };
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+<span class="tok-c">// any component:</span>
+const { data, loading, error } = useFetch(`${API}/properties`);</code></pre>
+  <p class="muted">Your USER/ADMIN apps repeat the fetch-loading-error pattern in dozens of files. A single <code>useFetch</code> (or a small <code>useApi</code>) would remove a lot of duplication.</p>
+  </div>
+
+  <div class="concept">
+  <h3>4.9 · The Rules of Hooks (break these and React breaks)</h3>
+  <div class="callout bad"><span class="tag">Non-negotiable</span><ol style="margin:6px 0 0">
+    <li><strong>Only call hooks at the top level</strong> of a component or custom hook. Never inside <code>if</code>, loops, or nested functions. React relies on hooks being called in the same order every render.</li>
+    <li><strong>Only call hooks from React functions</strong> — components or other hooks, never plain functions or event handlers.</li>
+    <li>Custom hooks <strong>must start with <code>use</code></strong> so the linter can check them.</li>
+  </ol></div>
+  <pre><code><span class="tok-c">// ❌ conditional hook — order changes between renders → crash</span>
+if (isLoggedIn) { const [x] = useState(0); }
+
+<span class="tok-c">// ✅ hook always runs; put the condition inside</span>
+const [x, setX] = useState(0);
+if (isLoggedIn) { /* use x */ }</code></pre>
+  </div>
+</section>
+
+<!-- ===================== PART 5: ROUTING/DATA/STATE ===================== -->
+<section class="part">
+  <h2>5 · Routing, data &amp; state management</h2>
+  <p class="lead">The libraries that turn components into a real app — the exact ones in your <code>package.json</code>.</p>
+
+  <div class="concept">
+  <h3>5.1 · React Router v7</h3>
+  <p>Maps URLs to components so your SPA has multiple "pages." Your apps use <code>react-router-dom</code> v7.</p>
+  <pre><code>import { BrowserRouter, Routes, Route, Link, useNavigate, useParams } from "react-router-dom";
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/"                element={&lt;Home /&gt;} /&gt;
+        &lt;Route path="/properties"      element={&lt;PropertyList /&gt;} /&gt;
+        &lt;Route path="/property/:id"    element={&lt;PropertyDetail /&gt;} /&gt;  {<span class="tok-c">/* :id = URL param */</span>}
+        &lt;Route path="*"                element={&lt;NotFound /&gt;} /&gt;         {<span class="tok-c">/* catch-all */</span>}
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+  <h4>Navigating &amp; reading params</h4>
+  <pre><code><span class="tok-c">// declarative link (no page reload)</span>
+&lt;Link to="/properties"&gt;Browse&lt;/Link&gt;
+
+<span class="tok-c">// programmatic navigation (after a login/submit)</span>
+const navigate = useNavigate();
+navigate("/dashboard");
+navigate(-1);                      <span class="tok-c">// go back</span>
+
+<span class="tok-c">// read the :id from /property/42</span>
+const { id } = useParams();
+useEffect(() =&gt; { /* fetch property #id */ }, [id]);</code></pre>
+  <p class="muted">Your <em>ContactUs.jsx</em> already imports <code>useNavigate</code> from <code>react-router-dom</code> — same idea.</p>
+  </div>
+
+  <div class="concept">
+  <h3>5.2 · axios &amp; environment variables</h3>
+  <p>axios is your HTTP client. In Create React App, any env var prefixed <code>REACT_APP_</code> is available as <code>process.env.REACT_APP_*</code> at build time.</p>
+  <pre><code><span class="tok-c">// .env  (project root, next to package.json)</span>
+REACT_APP_API_URL=https://vps.ppcpondy.com/api
+
+<span class="tok-c">// usage</span>
+const API = process.env.REACT_APP_API_URL;
+const { data } = await axios.get(`${API}/properties`);
+await axios.post(`${API}/contactUs`, formData);
+
+<span class="tok-c">// a shared instance keeps config in one place (recommended)</span>
+<span class="tok-c">// api.js</span>
+export const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  timeout: 15000,
+});
+<span class="tok-c">// then: api.get("/properties")  — no repeating the base URL</span></code></pre>
+  <div class="callout warn"><span class="tag">CRA env var gotchas</span><ul style="margin:6px 0 0">
+    <li>Must start with <code>REACT_APP_</code> or CRA ignores it.</li>
+    <li>They're baked in at <strong>build</strong> time — restart <code>npm start</code> after editing <code>.env</code>.</li>
+    <li>They're visible in the shipped bundle — <strong>never</strong> put secrets (API keys, passwords) in <code>REACT_APP_*</code>. Secrets belong on the backend.</li>
+  </ul></div>
+  </div>
+
+  <div class="concept">
+  <h3>5.3 · axios interceptors (auth tokens in one place)</h3>
+  <pre><code>api.interceptors.request.use(config =&gt; {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  res =&gt; res,
+  err =&gt; {
+    if (err.response?.status === 401) { /* redirect to login */ }
+    return Promise.reject(err);
+  }
+);</code></pre>
+  <p class="muted">Given your token-based admin auth, an interceptor is the clean place to attach the token to every request instead of repeating it per call.</p>
+  </div>
+
+  <div class="concept">
+  <h3>5.4 · Redux Toolkit — your global state solution</h3>
+  <p>Redux Toolkit (RTK) holds app-wide state in one <em>store</em> so any component can read/update it without prop-drilling. Your <em>red/store.js</em> already wires this up. The three pieces:</p>
+  <h4>1) The store (you have this)</h4>
+  <pre><code><span class="tok-c">// red/store.js</span>
+import { configureStore } from "@reduxjs/toolkit";
+import userReducer from "./userSlice";
+
+export const store = configureStore({
+  reducer: { user: userReducer },   <span class="tok-c">// state.user comes from userSlice</span>
+});</code></pre>
+  <h4>2) A slice — state + reducers together</h4>
+  <pre><code><span class="tok-c">// red/userSlice.js</span>
+import { createSlice } from "@reduxjs/toolkit";
+
+const userSlice = createSlice({
+  name: "user",
+  initialState: { phoneNumber: null, isLoggedIn: false },
+  reducers: {
+    setUser(state, action) {           <span class="tok-c">// RTK lets you "mutate" (Immer copies safely)</span>
+      state.phoneNumber = action.payload;
+      state.isLoggedIn  = true;
+    },
+    logout(state) {
+      state.phoneNumber = null;
+      state.isLoggedIn  = false;
+    },
+  },
+});
+
+export const { setUser, logout } = userSlice.actions;   <span class="tok-c">// action creators</span>
+export default userSlice.reducer;</code></pre>
+  <h4>3) Provide the store, then read/dispatch</h4>
+  <pre><code><span class="tok-c">// index.js — wrap the app once</span>
+import { Provider } from "react-redux";
+import { store } from "./red/store";
+root.render(&lt;Provider store={store}&gt;&lt;App /&gt;&lt;/Provider&gt;);
+
+<span class="tok-c">// any component:</span>
+import { useSelector, useDispatch } from "react-redux";
+import { setUser, logout } from "./red/userSlice";
+
+function Profile() {
+  const phone    = useSelector(state =&gt; state.user.phoneNumber);  <span class="tok-c">// READ</span>
+  const dispatch = useDispatch();                                 <span class="tok-c">// WRITE</span>
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;{phone}&lt;/p&gt;
+      &lt;button onClick={() =&gt; dispatch(logout())}&gt;Logout&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <div class="callout good"><span class="tag">The one-line summary</span><p style="margin-bottom:0"><strong>Slice</strong> defines state + how it changes. <strong><code>useSelector</code></strong> reads a piece of it. <strong><code>useDispatch</code></strong> sends an action to change it. RTK's Immer lets you write "mutating" code in reducers that's actually immutable under the hood.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>5.5 · Context vs. Redux — which to use</h3>
+  <table>
+    <tr><th>Use Context when…</th><th>Use Redux Toolkit when…</th></tr>
+    <tr><td>Rarely-changing global values (theme, current user, language)</td><td>Frequently-changing state shared widely (cart, live leads, filters)</td></tr>
+    <tr><td>Small app, few consumers</td><td>Many actions, complex updates, you want devtools/time-travel</td></tr>
+    <tr><td>No extra library wanted</td><td>You want a predictable, testable update flow</td></tr>
+  </table>
+  <p class="muted">Your project already standardized on Redux Toolkit — keep new global state in slices for consistency.</p>
+  </div>
+
+  <div class="concept">
+  <h3>5.6 · Real-time with socket.io</h3>
+  <p>Your USER app depends on <code>socket.io-client</code>. Sockets belong in an effect with cleanup so you don't stack up connections.</p>
+  <pre><code>import { io } from "socket.io-client";
+
+function LeadsCenter() {
+  const [leads, setLeads] = useState([]);
+
+  useEffect(() =&gt; {
+    const socket = io(process.env.REACT_APP_API_URL);
+
+    socket.on("connect",  () =&gt; console.log("connected", socket.id));
+    socket.on("newLead",  (lead) =&gt; setLeads(prev =&gt; [lead, ...prev])); <span class="tok-c">// functional update!</span>
+
+    return () =&gt; socket.disconnect();   <span class="tok-c">// cleanup on unmount</span>
+  }, []);
+
+  return &lt;LeadList leads={leads} /&gt;;
+}</code></pre>
+  <div class="callout warn"><span class="tag">Two socket pitfalls</span><ul style="margin:6px 0 0">
+    <li>Forgetting <code>disconnect()</code> in cleanup → duplicated listeners and memory leaks (especially with React 18 Strict Mode double-invoking effects in dev).</li>
+    <li>Using <code>setLeads([lead, ...leads])</code> instead of the functional form — <code>leads</code> is stale inside the once-created handler. Always <code>setLeads(prev =&gt; …)</code>.</li>
+  </ul></div>
+  </div>
+</section>
+
+<!-- ===================== PART 6: ADVANCED ===================== -->
+<section class="part">
+  <h2>6 · Advanced React &amp; performance</h2>
+  <p class="lead">The patterns that separate "it works" from "it scales." You won't need all of these daily, but knowing they exist tells you what to reach for.</p>
+
+  <div class="concept">
+  <h3>6.1 · The re-render model (what actually triggers renders)</h3>
+  <p>A component re-renders when: (1) its <strong>own state</strong> changes, (2) its <strong>parent</strong> re-renders, or (3) a <strong>context</strong> it consumes changes. Note #2: a parent re-render re-renders <em>all</em> children by default, even if their props didn't change. That's usually fine — renders are cheap — but it's the root of most "why is this slow" questions.</p>
+  <div class="callout"><span class="tag">Don't optimize blindly</span><p style="margin-bottom:0">Re-rendering ≠ re-touching the DOM. React still only updates the DOM where output actually differs. Measure with the React DevTools Profiler before adding memoization.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>6.2 · <code>React.memo</code> — skip re-rendering unchanged children</h3>
+  <pre><code>const PropertyCard = React.memo(function PropertyCard({ property }) {
+  <span class="tok-c">// re-renders only when the `property` prop actually changes</span>
+  return &lt;div className="card"&gt;{property.title}&lt;/div&gt;;
+});</code></pre>
+  <div class="callout warn"><span class="tag">Memo only helps if props are stable</span><p style="margin-bottom:0"><code>React.memo</code> does a shallow prop comparison. If you pass a fresh object/array/function each render (<code>onClick={() =&gt; …}</code>, <code>style={{…}}</code>), the props "changed" every time and memo does nothing. Pair it with <code>useCallback</code>/<code>useMemo</code> for the props.</p></div>
+  </div>
+
+  <div class="concept">
+  <h3>6.3 · Code splitting — <code>lazy</code> + <code>Suspense</code></h3>
+  <p>Your apps are large (200+ components). Loading everything up front makes the first paint slow. <code>React.lazy</code> splits a component into its own chunk that downloads on demand.</p>
+  <pre><code>import { lazy, Suspense } from "react";
+const AdminDashboard = lazy(() =&gt; import("./AdminDashboard"));
+
+&lt;Suspense fallback={&lt;Spinner /&gt;}&gt;
+  &lt;AdminDashboard /&gt;
+&lt;/Suspense&gt;</code></pre>
+  <p class="muted">Lazy-loading heavy, rarely-visited routes (admin reports, PDF/Excel exports via <code>jspdf</code>/<code>xlsx</code>) can noticeably shrink your initial bundle and speed up load — a real win for both apps.</p>
+  </div>
+
+  <div class="concept">
+  <h3>6.4 · Error boundaries</h3>
+  <p>A JavaScript error in one component shouldn't blank the whole app. An error boundary catches render errors in its subtree and shows a fallback. (This is the one thing still requiring a class component, or the <code>react-error-boundary</code> library.)</p>
+  <pre><code>class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, info) { /* log to a service */ }
+  render() {
+    return this.state.hasError
+      ? &lt;p&gt;Something went wrong. Please refresh.&lt;/p&gt;
+      : this.props.children;
+  }
+}
+
+<span class="tok-c">// wrap risky areas (or the whole router)</span>
+&lt;ErrorBoundary&gt;&lt;Routes /&gt;&lt;/ErrorBoundary&gt;</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>6.5 · Portals — render outside the parent DOM node</h3>
+  <p>Modals, toasts, and tooltips often need to escape overflow/z-index traps. A portal renders children into a different DOM node while keeping them in the React tree.</p>
+  <pre><code>import { createPortal } from "react-dom";
+function Modal({ children }) {
+  return createPortal(
+    &lt;div className="modal-backdrop"&gt;{children}&lt;/div&gt;,
+    document.body
+  );
+}</code></pre>
+  <p class="muted">Libraries you use (<code>react-toastify</code>, <code>sweetalert2</code>, MUI dialogs) rely on this internally.</p>
+  </div>
+
+  <div class="concept">
+  <h3>6.6 · <code>forwardRef</code> — let a parent reach a child's DOM node</h3>
+  <pre><code>const Input = React.forwardRef(function Input(props, ref) {
+  return &lt;input ref={ref} {...props} /&gt;;
+});
+
+<span class="tok-c">// parent can now focus it</span>
+const ref = useRef(null);
+&lt;Input ref={ref} /&gt;;
+ref.current.focus();</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>6.7 · HOCs &amp; render props (older reuse patterns)</h3>
+  <p>Before hooks, logic was shared via <strong>Higher-Order Components</strong> (a function taking a component, returning an enhanced one) and <strong>render props</strong>. You'll meet them in older code and libraries; for new code, prefer custom hooks (§4.8).</p>
+  <pre><code><span class="tok-c">// HOC</span>
+const withLoading = (Component) =&gt; ({ loading, ...props }) =&gt;
+  loading ? &lt;Spinner /&gt; : &lt;Component {...props} /&gt;;
+
+<span class="tok-c">// render prop</span>
+&lt;DataFetcher url="/api/props" render={(data) =&gt; &lt;List items={data} /&gt;} /&gt;</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>6.8 · Stale closures &amp; the functional updater (recap with teeth)</h3>
+  <pre><code>function Timer() {
+  const [count, setCount] = useState(0);
+  useEffect(() =&gt; {
+    const id = setInterval(() =&gt; {
+      <span class="tok-c">// ❌ count is frozen at 0 forever (closure from first render)</span>
+      <span class="tok-c">// setCount(count + 1);</span>
+      setCount(c =&gt; c + 1);   <span class="tok-c">// ✅ always uses the latest value</span>
+    }, 1000);
+    return () =&gt; clearInterval(id);
+  }, []);   <span class="tok-c">// empty deps — effect runs once, so `count` never updates inside it</span>
+  return &lt;p&gt;{count}&lt;/p&gt;;
+}</code></pre>
+  </div>
+
+  <div class="concept">
+  <h3>6.9 · React 18 Strict Mode (why effects run twice in dev)</h3>
+  <p>In development, React 18 intentionally mounts, unmounts, and re-mounts components once to surface missing cleanup. If your effect isn't idempotent (no cleanup), you'll see doubled API calls or socket connections <em>in dev only</em>. The fix is always: <strong>write proper cleanup</strong>. Production runs once.</p>
+  </div>
+
+  <div class="concept">
+  <h3>6.10 · A quick word on class components</h3>
+  <p>You'll see class components in older tutorials and a few legacy files. Mapping to hooks:</p>
+  <table>
+    <tr><th>Class</th><th>Hook equivalent</th></tr>
+    <tr><td><code>this.state</code> / <code>this.setState</code></td><td><code>useState</code></td></tr>
+    <tr><td><code>componentDidMount</code></td><td><code>useEffect(fn, [])</code></td></tr>
+    <tr><td><code>componentDidUpdate</code></td><td><code>useEffect(fn, [deps])</code></td></tr>
+    <tr><td><code>componentWillUnmount</code></td><td>cleanup <code>return</code> in <code>useEffect</code></td></tr>
+  </table>
+  <p class="muted">Write new components as functions with hooks. Keep classes only for error boundaries.</p>
+  </div>
+</section>
+
+<!-- ===================== PART 7: PROJECT MAP ===================== -->
+<section class="part">
+  <h2>7 · Your project, mapped to concepts</h2>
+  <p class="lead">Where each idea already lives in PondyProperties — so you can go read real, working examples right after learning the concept.</p>
+
+  <table>
+    <tr><th>Concept</th><th>Where to see it in your code</th></tr>
+    <tr><td>Component composition</td><td><em>USER/src/App.js</em> — <code>Header</code>, <code>BannerCarousel</code>, <code>Carousel</code>, <code>Ads</code>, <code>FrontFooter</code> assembled together</td></tr>
+    <tr><td>Controlled forms + <code>useState</code> + spread update</td><td><em>USER/src/Components/ContactUs.jsx</em> — <code>formData</code> + <code>handleChange</code> with <code>[e.target.name]</code></td></tr>
+    <tr><td>async/await + axios + try/catch</td><td><em>ContactUs.jsx</em> — <code>handleSubmit</code> posting to <code>/contactUs</code></td></tr>
+    <tr><td>Env-based API URL</td><td>Every axios call: <code>`${process.env.REACT_APP_API_URL}/…`</code></td></tr>
+    <tr><td>Routing / navigation</td><td><code>useNavigate</code> imported in <em>ContactUs.jsx</em>; route table in your top-level router</td></tr>
+    <tr><td>Redux Toolkit store</td><td><em>USER/src/red/store.js</em> + <em>red/userSlice.js</em> (holds <code>phoneNumber</code>)</td></tr>
+    <tr><td>Lists &amp; keys</td><td>Any table/list screen in <em>ADMIN/src</em> (e.g. <em>AllBills.jsx</em>, <em>BuyersMenu.jsx</em>) mapping API rows</td></tr>
+    <tr><td>Real-time</td><td><code>socket.io-client</code> in the USER app (leads/notifications)</td></tr>
+    <tr><td>Third-party via portals</td><td><code>react-toastify</code>, <code>sweetalert2</code>, MUI dialogs</td></tr>
+    <tr><td>Heavy libs to lazy-load</td><td><code>jspdf</code>, <code>jspdf-autotable</code>, <code>xlsx</code>, <code>html2pdf.js</code> in ADMIN exports</td></tr>
+  </table>
+
+  <h3>High-value refactors to practice these concepts</h3>
+  <ol>
+    <li><strong>Extract a <code>useFetch</code> / <code>useApi</code> custom hook</strong> (§4.8). The loading/error/data trio is duplicated across dozens of files — centralize it.</li>
+    <li><strong>Create one axios instance with an auth interceptor</strong> (§5.3) instead of repeating <code>process.env.REACT_APP_API_URL</code> and the token everywhere.</li>
+    <li><strong>Lazy-load export-heavy admin screens</strong> (§6.3) that pull in <code>jspdf</code>/<code>xlsx</code> to shrink the initial bundle.</li>
+    <li><strong>Add an error boundary</strong> (§6.4) around your router so one broken screen can't blank the app.</li>
+    <li><strong>Audit socket effects</strong> (§5.6) for <code>disconnect()</code> cleanup and functional state updates.</li>
+    <li><strong>Replace array-index keys</strong> (§3.4) with Mongo <code>_id</code> in lists that filter or reorder.</li>
+  </ol>
+</section>
+
+<!-- ===================== APPENDIX ===================== -->
+<section class="part">
+  <h2>8 · Appendix</h2>
+
+  <h3>8.1 · Rules of Hooks — cheat sheet</h3>
+  <ul>
+    <li>Call hooks only at the <strong>top level</strong> — never in <code>if</code>/loops/nested functions.</li>
+    <li>Call hooks only from <strong>components or custom hooks</strong>.</li>
+    <li>Custom hooks start with <code>use</code>.</li>
+    <li><code>useEffect</code> deps must list <strong>everything the effect reads</strong>.</li>
+    <li>Base new state on old state with the <strong>functional updater</strong>: <code>setX(prev =&gt; …)</code>.</li>
+    <li>Never mutate state — always create a <strong>new object/array</strong>.</li>
+    <li>Return a <strong>cleanup</strong> from effects that subscribe/time/connect.</li>
+  </ul>
+
+  <h3>8.2 · Common mistakes &amp; fixes</h3>
+  <table>
+    <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+    <tr><td>"0" or "false" appears on screen</td><td><code>{count &amp;&amp; …}</code> with falsy left side</td><td><code>{count &gt; 0 &amp;&amp; …}</code></td></tr>
+    <tr><td>UI doesn't update after change</td><td>Mutated state in place</td><td>Copy with spread, then set</td></tr>
+    <tr><td>Infinite re-render loop</td><td>Effect sets state that's in its deps; or object literal in deps</td><td>Fix deps; memoize; functional update</td></tr>
+    <tr><td>Stale value in timer/handler</td><td>Closure captured old state</td><td><code>setX(prev =&gt; …)</code> / add to deps</td></tr>
+    <tr><td>Two API calls / double socket in dev</td><td>Strict Mode + missing cleanup</td><td>Return cleanup from effect</td></tr>
+    <tr><td>"Cannot read properties of undefined"</td><td>Reading data before it loads</td><td>Optional chaining <code>?.</code> + loading guard</td></tr>
+    <tr><td>Handler runs on render, not click</td><td><code>onClick={fn()}</code></td><td><code>onClick={fn}</code> or <code>onClick={() =&gt; fn(arg)}</code></td></tr>
+    <tr><td>Wrong item edited in a list</td><td>Array index used as <code>key</code></td><td>Use a stable id</td></tr>
+  </table>
+
+  <h3>8.3 · Glossary</h3>
+  <table>
+    <tr><td><strong>JSX</strong></td><td>HTML-like syntax that compiles to JS; what components return</td></tr>
+    <tr><td><strong>Component</strong></td><td>Capitalized function returning JSX</td></tr>
+    <tr><td><strong>Props</strong></td><td>Read-only inputs passed parent → child</td></tr>
+    <tr><td><strong>State</strong></td><td>Data that changes and triggers re-render</td></tr>
+    <tr><td><strong>Hook</strong></td><td><code>use*</code> function adding state/effects to function components</td></tr>
+    <tr><td><strong>Effect</strong></td><td>Side-effect code that runs after render (fetch, subscribe)</td></tr>
+    <tr><td><strong>Reconciliation</strong></td><td>React diffing new vs old tree to update the DOM minimally</td></tr>
+    <tr><td><strong>Reducer</strong></td><td>Pure function <code>(state, action) =&gt; newState</code></td></tr>
+    <tr><td><strong>Slice</strong></td><td>RTK bundle of state + reducers + actions for one feature</td></tr>
+    <tr><td><strong>Selector</strong></td><td>Function reading a piece of Redux state (<code>useSelector</code>)</td></tr>
+    <tr><td><strong>Memoization</strong></td><td>Caching a value/function to avoid recomputing</td></tr>
+    <tr><td><strong>Portal</strong></td><td>Render children into a different DOM node</td></tr>
+    <tr><td><strong>SPA</strong></td><td>Single Page App — one HTML shell, JS renders everything</td></tr>
+  </table>
+
+  <h3>8.4 · A sensible learning order (check them off)</h3>
+  <ol>
+    <li>JS: destructuring, spread, arrow functions, array methods, async/await (Part 2)</li>
+    <li>Components, JSX, props, lists+keys, conditional rendering (Part 3)</li>
+    <li><code>useState</code> + controlled forms — rebuild your ContactUs form from scratch</li>
+    <li><code>useEffect</code> + axios — build a list screen with loading/error/data</li>
+    <li>React Router — wire up 3–4 pages with a detail route (<code>:id</code>)</li>
+    <li>Redux Toolkit — read/dispatch your existing <code>userSlice</code></li>
+    <li>Custom hooks — extract <code>useFetch</code> and use it in two screens</li>
+    <li>Performance — memo/useMemo/useCallback + the Profiler, only where measured</li>
+    <li>Advanced — lazy/Suspense, error boundaries, portals</li>
+  </ol>
+
+  <div class="callout good" style="margin-top:18px">
+    <span class="tag">Final advice</span>
+    <p style="margin-bottom:0">Don't just read — <strong>rebuild pieces of your own app</strong>. Every concept here maps to something already in PondyProperties. Pick one screen, recreate it from the concept up, and the ideas will stick far better than any tutorial. You already have the best practice project available: the real one you work in.</p>
+  </div>
+
+  <p style="text-align:center;color:var(--muted);margin-top:26px;font-size:9pt">
+    React &amp; JavaScript Study Guide · Generated for the PondyProperties codebase · 2026
+  </p>
+</section>
+
+</body>
+</html>

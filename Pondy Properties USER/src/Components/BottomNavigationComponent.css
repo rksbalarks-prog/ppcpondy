@@ -1,0 +1,55 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons+Outlined");
+
+:root {
+  --accent-color: #1fa8f5;
+  --app-content-background-color: #c0d8ec;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+}
+
+.container {
+  padding: 1rem 1rem 1.5rem;
+}
+
+.stage {
+  max-width: 400px;
+  width: 400px;
+  margin: 0 auto;
+}
+
+.tabbar {
+  background-color: var(--app-content-background-color);
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: content-box;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.4s;
+}
+
+.home {
+  color: var(--accent-color);
+}
+
+.products {
+  color: var(--app-content-background-color);
+}
+
+.home-property {
+  color: #d36e5a;
+}
+
+.buyer {
+  color: #4dd146;
+}
+
+.more {
+  color: #a3a3a3;
+}

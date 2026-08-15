@@ -1,0 +1,13 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # `(_, __, ___)` is the conventional way to write ignored builder params
+    # (errorBuilder, itemBuilder, …) and reads more clearly than repeating `_`.
+    unnecessary_underscores: false
+    # The `if (x != null) x` collection form is deliberate here: it keeps the
+    # nullable-field plumbing in the service layer explicit and greppable.
+    use_null_aware_elements: false
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options

@@ -1,0 +1,48 @@
+.support-page {
+  padding: 60px 0;
+  background: #f9fafb;
+}
+
+.support-header h2 {
+  font-weight: 700;
+  color: #111827;
+}
+
+.support-header p {
+  color: #6b7280;
+  max-width: 600px;
+  margin: auto;
+}
+
+/* Cards */
+.support-card {
+  border: none;
+  border-radius: 16px;
+  text-align: center;
+  padding: 20px;
+  transition: 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.support-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+}
+
+/* FAQ */
+.faq-section h4 {
+  font-weight: 600;
+  color: #111827;
+}
+
+.faq-item {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  transition: 0.3s ease;
+}
+
+.faq-item:hover {
+  background: #e9f7ef;
+}
