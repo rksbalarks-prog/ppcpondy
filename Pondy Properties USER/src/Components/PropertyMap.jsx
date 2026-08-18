@@ -4,7 +4,7 @@ import React, { useEffect, useState , useRef} from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import SeoHeading from "./SeoHeading";
 import { 
   FaFilter, FaHome, FaCity, FaRupeeSign, FaBed, FaCheck, FaTimes, 
   FaTools, FaIdCard, FaCalendarAlt, FaUserAlt, FaRulerCombined, FaBath, 
@@ -694,9 +694,11 @@ onClick={() => {
 
   return (
     <Container fluid className="p-0 w-100 d-flex align-items-center justify-content-center ">
-      <Helmet>
-        <title>Pondy Property | Properties</title>
-      </Helmet>
+      {/* Head tags for this route come from RouteSeo (utils/seoRoutes.js);
+          this is the page's one crawlable <h1>. */}
+      <SeoHeading>
+        Property Map — Listings Across Pondicherry and Chennai
+      </SeoHeading>
       <Row className="g-3 w-100 ">
         <Col lg={12} className="d-flex align-items-center justify-content-center pt-2 m-0">
          <div className="suggection m-0"

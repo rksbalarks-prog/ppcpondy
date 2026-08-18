@@ -62,8 +62,12 @@ import { CiShare2 } from "react-icons/ci";
 import { FcSearch } from "react-icons/fc";
 import PondyIcon from '../Assets/pondyMa.png';
 import { PiShareFat } from "react-icons/pi";
-import pic from '../Assets/default.png'; 
+import pic from '../Assets/default.png';
 import { Carousel } from 'react-bootstrap';
+// Per-listing <head>: title, description, canonical, share image and the
+// RealEstateListing / BreadcrumbList structured data Google reads.
+import Seo from './Seo';
+import { buildPropertySeo } from '../utils/propertySeo';
 
 const AnimatedHeart = ({ filled, onClick }) => {
   const [clicked, setClicked] = useState(false);
@@ -1279,12 +1283,27 @@ const handleHeartClick = async () => {
   };
   
 
-const currentUrl = `${window.location.origin}${location.pathname}`;  
+const currentUrl = `${window.location.origin}${location.pathname}`;
+
+// Search/social metadata for this listing, derived from the fetched record.
+const seo = buildPropertySeo(propertyDetails, `/details/${ppcId}`);
 
   return (
     <div className="container d-flex align-items-center justify-content-center p-0"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}>
+      {seo && (
+        <Seo
+          title={seo.title}
+          description={seo.description}
+          keywords={seo.keywords}
+          path={seo.path}
+          image={seo.image}
+          type={seo.type}
+          jsonLd={seo.jsonLd}
+          jsonLdId="property"
+        />
+      )}
 
 
             <div className="d-flex flex-column align-items-center justify-content-center m-0" style={{fontFamily: "Inter, sans-serif", maxWidth: '500px', margin: 'auto', width: '100%' }}>

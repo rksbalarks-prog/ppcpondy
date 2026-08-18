@@ -8,6 +8,9 @@ import MobileViews from './MoblieViews'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 // Microsoft Clarity route tracker (renders nothing; no-op without an ID).
 import ClarityTracker from './ClarityTracker'
+// Per-route <head> (title, description, canonical, robots, Open Graph).
+// Renders nothing; see utils/seoRoutes.js for the route -> metadata map.
+import RouteSeo from './RouteSeo'
 import AssistantWidget from '../assistant/AssistantWidget'
 import Login from './Login'
 import AddProps from './AddProps'
@@ -187,6 +190,7 @@ export default function RouterPage() {
   return (
     <BrowserRouter>
     <ClarityTracker />
+    <RouteSeo />
     <Routes>
     <Route path="/" element={<App />} />
     <Route path="/mobileviews" element={<MobileViews />} />

@@ -1,3 +1,93 @@
 # https://www.robotstxt.org/robotstxt.html
+# Pondy Properties — https://ppcpondy.com
+#
+# Public pages (home, city feeds, category pages, property details, policy
+# pages) are open to every crawler. Everything below is a logged-in account
+# screen, a payment step, or a URL that carries a phone number — none of it
+# belongs in a search index, and blocking it keeps crawl budget on listings.
+
 User-agent: *
-Disallow:
+Allow: /
+
+# --- Account & dashboard ---------------------------------------------------
+Disallow: /login
+Disallow: /web-login
+Disallow: /my
+Disallow: /my-*
+Disallow: /notification
+Disallow: /leads
+Disallow: /more
+Disallow: /more-component
+Disallow: /owner-menu
+Disallow: /buyer-menu
+Disallow: /tabs
+
+# --- Posting & editing -----------------------------------------------------
+Disallow: /add
+Disallow: /add-*
+Disallow: /edit-*
+Disallow: /expire-property
+Disallow: /removed-property
+Disallow: /zero-view
+
+# --- Payments (PayU round-trips, never indexable) --------------------------
+Disallow: /payu-*
+Disallow: /payu/
+Disallow: /payment-*
+Disallow: /points-payment-*
+Disallow: /points-history
+
+# --- Per-user interaction screens (phone number in the URL) ----------------
+Disallow: /interest-*
+Disallow: /contact-owner/
+Disallow: /contact-buyer/
+Disallow: /help-owner/
+Disallow: /help-buyer/
+Disallow: /offer-owner/
+Disallow: /offer-buyer/
+Disallow: /view-buyer/
+Disallow: /View-owner/
+Disallow: /viewed-*
+Disallow: /favorite-*
+Disallow: /soldout-*
+Disallow: /report-property-*
+Disallow: /photo-request-*
+Disallow: /address-request-*
+Disallow: /matched-*
+Disallow: /shortlist-buyer
+Disallow: /buyer-list
+Disallow: /buyer-lists
+Disallow: /buyer-budget-list/
+Disallow: /buyer-assistance/
+Disallow: /buyer-assis-buyer
+Disallow: /detail-buyer-assis
+Disallow: /Property-Assistance-Search/
+Disallow: /Buyer-List-Filter
+Disallow: /FormComponent
+Disallow: /cards
+Disallow: /confirm-model
+Disallow: /Construction
+Disallow: /socket
+
+# --- Backend API: never a search result ------------------------------------
+Disallow: /PPC/PPC/
+Allow: /PPC/uploads/
+Allow: /PPC/sitemap.xml
+Allow: /PPC/sitemap-properties.xml
+
+# Image crawlers need the listing photos to index them.
+User-agent: Googlebot-Image
+Allow: /PPC/uploads/
+Allow: /
+
+# AhrefsBot / SemrushBot crawl aggressively; slow them down rather than block.
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Static core pages (regenerated at build time by `npm run sitemap`), plus the
+# live property sitemap served by the backend from MongoDB.
+Sitemap: https://ppcpondy.com/sitemap.xml
+Sitemap: https://ppcpondy.com/PPC/sitemap-properties.xml

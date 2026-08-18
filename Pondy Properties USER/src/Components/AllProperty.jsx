@@ -4,7 +4,7 @@ import React, { useEffect, useState , useRef, useMemo} from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import SeoHeading from './SeoHeading';
 import { baseToPath, getActiveBase } from '../utils/cityBase';
 import OptionPopup from './OptionPopup';
 import { 
@@ -1725,9 +1725,11 @@ useEffect(() => {
 
     return (
     <Container fluid className="p-0 w-100 d-flex align-items-center justify-content-center ">
-      <Helmet>
-        <title>Pondy Property | Properties</title>
-      </Helmet>
+      {/* Title/description/canonical for this route come from RouteSeo (see
+          utils/seoRoutes.js). This supplies the page's one crawlable <h1>. */}
+      <SeoHeading>
+        All Properties for Sale in Pondicherry and Chennai
+      </SeoHeading>
 
       {/* Role Selection Popup */}
       {showRolePopup && (

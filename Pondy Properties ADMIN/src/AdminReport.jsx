@@ -102,15 +102,25 @@ const AdminReport = () => {
         ]);
 
         const filterByYesterday = (items, dateField) =>
-          items.filter(item => moment(item[dateField]).format('YYYY-MM-DD') === yesterday).length;
+          items.filter(item => item[dateField] && moment(item[dateField]).format('YYYY-MM-DD') === yesterday).length;
+
+        // /all-viewed-properties returns one row per PROPERTY with the timestamps
+        // nested under viewers[] — there is no viewedAt on the property itself,
+        // so this counts each viewer entry rather than the parent row.
+        const countYesterdayViews = (properties) =>
+          properties.reduce(
+            (sum, property) => sum + filterByYesterday(property.viewers || [], 'viewedAt'),
+            0
+          );
 
         setYesterdayData({
-          viewedProperties: filterByYesterday(viewedRes.data.viewedProperties || [], 'viewedAt'),
+          viewedProperties: countYesterdayViews(viewedRes.data.viewedProperties || []),
           offerRaised: filterByYesterday(offersRes.data.offers || [], 'createdAt'),
           sendInterest: filterByYesterday(interestsRes.data.data || [], 'createdAt'),
           photoRequest: filterByYesterday(Array.isArray(photoRes.data) ? photoRes.data : [], 'createdAt'),
           addressRequests: filterByYesterday(addressRes.data.requests || [], 'createdAt'),
-          calledList: filterByYesterday(calledRes.data.properties || [], 'createdAt'),
+          // The contact log's own timestamp is contactedAt; it has no createdAt.
+          calledList: filterByYesterday(calledRes.data.properties || [], 'contactedAt'),
         });
 
         const notifications = notifRes.data.notifications || [];

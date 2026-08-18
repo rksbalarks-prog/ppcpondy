@@ -1,5 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Seo from './Seo';
+import { buildFaq } from '../utils/seo';
 
 const FAQ = () => {
   const faqData = [
@@ -116,8 +118,26 @@ const FAQ = () => {
     },
   ];
 
+  // FAQPage structured data, built from the same array the page renders — so
+  // the rich result can never drift from what a visitor actually sees.
+  const faqJsonLd = buildFaq(
+    faqData.flatMap((section) =>
+      section.items.map((item) => ({
+        question: item.question,
+        answer: item.answer,
+      }))
+    )
+  );
+
   return (
     <div className="container py-5">
+      <Seo
+        title="Frequently Asked Questions"
+        description="Answers about listing a property, contacting owners, plans, payments and account management on Pondy Properties."
+        path="/Frequently-Asked-Questions"
+        jsonLd={faqJsonLd}
+        jsonLdId="faq"
+      />
       <h2 className="mb-4 text-center">Frequently Asked Questions (FAQ)</h2>
       {faqData.map((section, index) => (
         <div key={index} className="mb-5">

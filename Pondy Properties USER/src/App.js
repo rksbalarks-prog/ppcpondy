@@ -8,11 +8,17 @@ import Header from './Components/Header'
 import Carousel from './Components/Carousel';
 import Login from './Components/Login';
 import WebLogin from './Components/WebLogin'
+import SeoHeading from './Components/SeoHeading'
 
 
 export default function App() {
   return (
     <>
+    {/* The page is all carousels and cards, so the only <h1> a crawler can
+        find is this one. Visually hidden, semantically the page's subject. */}
+    <SeoHeading>
+      Buy, Sell and Rent Property in Pondicherry and Chennai
+    </SeoHeading>
     <Header />
     <BannerCarousel />
      <div className="container-fluid ps-5 pe-4">

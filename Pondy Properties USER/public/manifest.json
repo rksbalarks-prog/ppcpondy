@@ -1,6 +1,9 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Pondy Properties",
+  "name": "Pondy Properties — Buy, Sell & Rent Property in Pondicherry",
+  "description": "Find houses, flats, plots and land for sale in Pondicherry and Chennai. Verified owner listings with photos, price and location.",
+  "lang": "en-IN",
+  "categories": ["business", "shopping", "lifestyle"],
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,16 +13,20 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
+  "orientation": "portrait",
+  "theme_color": "#004E9D",
   "background_color": "#ffffff"
 }

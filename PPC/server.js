@@ -59,6 +59,12 @@ const SingleSendRouter = require('./SingleSendWhatsapp/Singlesendmsgrouter'); //
 const PointsRouter = require('./Points/PointsRouter');
 const PointsPricingRouter = require('./Points/PointsPricingRouter');
 const RcmRouter = require('./Rcm/RcmRouter');
+// XML sitemaps for the public site, generated live from the properties
+// collection so new listings are crawlable without a frontend redeploy.
+const SeoSitemapRouter = require('./seo/sitemapRouter');
+// Server-rendered listing pages for link-preview bots (WhatsApp, Facebook,
+// X, LinkedIn) that never execute the SPA's JavaScript.
+const SeoPrerenderRouter = require('./seo/prerenderRouter');
 
 const UserLogin = require('./user/UserModel'); // Import your UserLogin model
 const EditBuyerBillRouter = require('./EditBuyerBill/EditBuyerBillRouter');
@@ -67,6 +73,13 @@ const { sendUserOtpSms } = require('./utils/smsSender'); // SMS IDEA sender for 
 const DownloadHistoryRouter = require('./DownloadHistory/DownloadHistoryRouter'); // admin download audit log
 const assistant = require('./assistant'); // AI voice + chat assistant (additive layer)
 const FcmTokenRouter = require('./fcm/FcmTokenRouter'); // FCM push notifications (additive)
+
+// Scheduled e-mail reports (additive layers — each stays asleep without SMTP_*
+// in .env). DataAddedMail owns the shared nodemailer transport that the other
+// two, and BackupMail/backupEmail.js, all send through.
+const dataAddedMail = require('./DataAddedMail');   // monthly Data Added summary
+const adminReportMail = require('./AdminReportMail'); // daily Admin Report PDF
+const adminExcelMail = require('./AdminExcelMail');   // daily Admin Detail xlsx
 
 const app = express();
 const PORT = process.env.PORT || 5006;
@@ -386,6 +399,10 @@ app.get('/user-login-history/:phoneNumber', async (req, res) => {
 
 
 // Mount all routers under /PPC prefix
+// SEO sitemaps first: /PPC/sitemap*.xml must not be shadowed by any other
+// router (SingleSendRouter's catch-all GET "/:id" in particular).
+app.use('/PPC', SeoSitemapRouter);
+app.use('/PPC', SeoPrerenderRouter);
 app.use("/PPC", AddRouter);
 app.use("/PPC", AddRouters);
 app.use("/PPC", PricingPlanRouter);
@@ -448,6 +465,12 @@ assistant.mount(app);
 // Firebase app. Mounted BEFORE SingleSendRouter — its catch-all GET "/:id"
 // would otherwise swallow GET /PPC/push-stats and 500 on the ObjectId cast.
 app.use('/PPC', FcmTokenRouter);
+// Scheduled report mails: status + send-now controls. Mounted BEFORE
+// SingleSendRouter for the same reason as the routers above — its catch-all
+// GET "/:id" is greedy.
+app.use('/PPC', dataAddedMail.router);
+app.use('/PPC', adminReportMail.router);
+app.use('/PPC', adminExcelMail.router);
 app.use('/PPC', SingleSendRouter)
 app.use('/PPC', EditBuyerBillRouter);
 app.use('/PPC', messageRoutes);
@@ -465,6 +488,11 @@ app.use((err, req, res, next) => {
 
 // Start Server
 app.listen(PORT, () => {
+  // Arm the report schedules once the port is bound. Each start() is fail-soft:
+  // with no SMTP credentials it logs one line and stays asleep.
+  dataAddedMail.start();
+  adminReportMail.start();
+  adminExcelMail.start();
 });
 
 

@@ -1,31 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/logo.PNG" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#004E9D" />
+
+    <!-- ==================================================================
+         Baseline SEO.
+
+         This is the head every crawler and social scraper sees BEFORE any
+         JavaScript runs, so it has to stand on its own. Once React mounts,
+         src/Components/RouteSeo.jsx rewrites these same tags per route (it
+         updates them in place, so nothing here is ever duplicated).
+         ================================================================== -->
+    <title>Pondy Properties | Buy, Sell & Rent Property in Pondicherry</title>
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Find houses, flats, plots, villas and commercial property for sale in Pondicherry and Chennai. Verified owner listings with photos, price and location. Post your property free on Pondy Properties."
     />
-    <script async
-  defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB0wL8bW7T1bHM0YXMQgJbd1XKk-YIxaDU&libraries=places"></script>
+    <meta
+      name="keywords"
+      content="Pondy Properties, property in Pondicherry, real estate Pondicherry, houses for sale Pondicherry, plots for sale Puducherry, flats for sale Pondicherry, land for sale Pondicherry, property in Chennai, buy property Puducherry, sell property Pondicherry"
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="author" content="Pondy Properties" />
+    <link rel="canonical" href="https://ppcpondy.com/" />
 
+    <!-- Local relevance signals for Puducherry searches -->
+    <meta name="geo.region" content="IN-PY" />
+    <meta name="geo.placename" content="Puducherry" />
+    <meta name="geo.position" content="11.9339;79.8300" />
+    <meta name="ICBM" content="11.9339, 79.8300" />
+
+    <!-- Open Graph: Facebook, WhatsApp, LinkedIn link previews -->
+    <meta property="og:site_name" content="Pondy Properties" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content="Pondy Properties | Buy, Sell & Rent Property in Pondicherry" />
+    <meta
+      property="og:description"
+      content="Find houses, flats, plots, villas and commercial property for sale in Pondicherry and Chennai. Verified owner listings with photos, price and location."
+    />
+    <meta property="og:url" content="https://ppcpondy.com/" />
+    <meta property="og:image" content="https://ppcpondy.com/logo512.png" />
+    <meta property="og:image:alt" content="Pondy Properties" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@pondyproperty" />
+    <meta name="twitter:title" content="Pondy Properties | Buy, Sell & Rent Property in Pondicherry" />
+    <meta
+      name="twitter:description"
+      content="Find houses, flats, plots, villas and commercial property for sale in Pondicherry and Chennai."
+    />
+    <meta name="twitter:image" content="https://ppcpondy.com/logo512.png" />
+
+    <!-- Android app association, so the Play Store listing and the site rank together -->
+    <meta name="google-play-app" content="app-id=com.apps.ppcpondy" />
+
+    <link rel="icon" href="%PUBLIC_URL%/logo.PNG" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
- 
-   
-  
-  <script async
-  defer src="https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js"></script>
 
-    <title>Pondy | Properties</title>
+    <!-- Third-party origins used on first paint: resolve DNS/TLS early -->
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://ppcpondy.com" />
+    <link rel="dns-prefetch" href="https://maps.gstatic.com" />
+
+    <!-- ==================================================================
+         Site-wide structured data. Establishes the business entity (for the
+         knowledge panel / local pack) and the site search box. Page-level
+         JSON-LD is injected separately with a data-seo attribute and never
+         touches this block.
+         ================================================================== -->
+    <script type="application/ld+json" data-seo="site-graph">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "RealEstateAgent",
+            "@id": "https://ppcpondy.com/#organization",
+            "name": "Pondy Properties",
+            "url": "https://ppcpondy.com/",
+            "logo": "https://ppcpondy.com/logo512.png",
+            "image": "https://ppcpondy.com/logo512.png",
+            "description": "Pondy Properties is Puducherry's local property marketplace for buying, selling and listing houses, plots, flats and land in Pondicherry and Chennai.",
+            "telephone": "+91-9150524409",
+            "email": "inf.ppcpdy@gmail.com",
+            "priceRange": "INR",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "No.89, Aurobindo Street, M.G Road Junction",
+              "addressLocality": "Puducherry",
+              "addressRegion": "Puducherry",
+              "postalCode": "605001",
+              "addressCountry": "IN"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 11.9339,
+              "longitude": 79.83
+            },
+            "areaServed": [
+              { "@type": "City", "name": "Puducherry" },
+              { "@type": "City", "name": "Chennai" }
+            ],
+            "sameAs": [
+              "https://www.facebook.com/pondyproperty",
+              "https://www.instagram.com/pondy_property",
+              "https://www.youtube.com/@pondyclassifieds15",
+              "https://play.google.com/store/apps/details?id=com.apps.ppcpondy"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://ppcpondy.com/#website",
+            "url": "https://ppcpondy.com/",
+            "name": "Pondy Properties",
+            "inLanguage": "en-IN",
+            "publisher": { "@id": "https://ppcpondy.com/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://ppcpondy.com/all-property?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
+
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB0wL8bW7T1bHM0YXMQgJbd1XKk-YIxaDU&libraries=places"></script>
+    <script async defer
+      src="https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js"></script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <h1>Pondy Properties — Buy, Sell &amp; Rent Property in Pondicherry</h1>
+      <p>
+        Pondy Properties lists verified houses, flats, plots, villas and
+        agricultural land for sale in Pondicherry (Puducherry) and Chennai.
+        Please enable JavaScript to browse listings, or call +91 91505 24409.
+      </p>
+    </noscript>
     <div id="root"></div>
- 
   </body>
 </html>
