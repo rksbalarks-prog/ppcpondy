@@ -357,7 +357,7 @@ class _PropertyFeedScreenState extends State<PropertyFeedScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 8, 14, 2),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 2),
           child: Row(
             children: [
               Expanded(

@@ -72,8 +72,9 @@ Disallow: /socket
 # --- Backend API: never a search result ------------------------------------
 Disallow: /PPC/PPC/
 Allow: /PPC/uploads/
-Allow: /PPC/sitemap.xml
-Allow: /PPC/sitemap-properties.xml
+Allow: /PPC/PPC/sitemap.xml
+Allow: /PPC/PPC/sitemap-core.xml
+Allow: /PPC/PPC/sitemap-properties.xml
 
 # Image crawlers need the listing photos to index them.
 User-agent: Googlebot-Image
@@ -90,4 +91,4 @@ Crawl-delay: 10
 # Static core pages (regenerated at build time by `npm run sitemap`), plus the
 # live property sitemap served by the backend from MongoDB.
 Sitemap: https://ppcpondy.com/sitemap.xml
-Sitemap: https://ppcpondy.com/PPC/sitemap-properties.xml
+Sitemap: https://ppcpondy.com/PPC/PPC/sitemap.xml

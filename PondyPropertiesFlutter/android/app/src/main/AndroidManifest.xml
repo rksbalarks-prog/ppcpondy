@@ -48,9 +48,18 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="ppcpondy_default" />
+        <!-- Android renders a notification's SMALL icon as an ALPHA MASK:
+             every non-transparent pixel is repainted solid white, and the
+             colour below tints the result. @mipmap/ic_launcher is a fully
+             opaque square, so it arrived as a featureless white block. This
+             drawable is the PPC key glyph on a transparent field, which is
+             what that mask actually needs. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+            android:resource="@drawable/ic_stat_ppc" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/ppc_notification_accent" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

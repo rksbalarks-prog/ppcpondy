@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -42,6 +44,9 @@ class PushService {
     description: 'Property alerts, interests, offers and updates.',
     importance: Importance.high,
   );
+
+  /// Matches @color/ppc_notification_accent in res/values/colors.xml.
+  static const Color _accent = Color(0xFF1453EB);
 
   final ApiClient _api = ApiClient.instance;
   bool _available = false;
@@ -103,7 +108,7 @@ class PushService {
   }
 
   Future<void> _initLocalNotifications() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_stat_ppc');
     const ios = DarwinInitializationSettings();
     await _local.initialize(
       const InitializationSettings(android: android, iOS: ios),
@@ -181,7 +186,14 @@ class PushService {
           channelDescription: _channel.description,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          // Must be the transparent glyph, not the launcher icon — see the
+          // alpha-mask note in AndroidManifest.xml.
+          icon: '@drawable/ic_stat_ppc',
+          color: _accent,
+          // The full-colour PPC mark, shown on the right of the banner. Only
+          // the foreground path can set this; a backgrounded message is drawn
+          // by the OS from the manifest meta-data instead.
+          largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
         ),
         iOS: const DarwinNotificationDetails(),
       ),

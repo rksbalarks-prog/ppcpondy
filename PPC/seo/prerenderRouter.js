@@ -74,10 +74,17 @@ const formatPrice = (value) => {
   return n.toLocaleString('en-IN');
 };
 
+/**
+ * Address fields that carry no information. Real listings hold "Others",
+ * "N/A" and whitespace-only strings, and "Plot for Sale in Others" is worse
+ * than saying nothing about the locality at all.
+ */
+const PLACEHOLDER = /^(others?|none|n\/?a|nil|null|-+|test)$/i;
+
 const locationOf = (p) => {
   const parts = [p.area, p.nagar, p.city, p.district]
     .map((x) => String(x || '').trim())
-    .filter(Boolean);
+    .filter((x) => x && !PLACEHOLDER.test(x));
   const seen = new Set();
   return parts
     .filter((x) => {
@@ -90,12 +97,35 @@ const locationOf = (p) => {
     .join(', ');
 };
 
+/**
+ * "2 BHK" from the messy real values of `bedrooms`.
+ *
+ * Live data holds null, "0", "No", plain numbers and already-formatted
+ * strings like "3 BHK". Anything that is not a positive room count has to
+ * disappear entirely — a plot titled "0 BHK Plot" reads as broken.
+ */
+const bedroomLabel = (raw) => {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  if (/bhk/i.test(s)) return s.replace(/\s+/g, ' ').replace(/bhk/i, 'BHK');
+  const n = parseInt(s, 10);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return n + ' BHK';
+};
+
+// `propertyMode` is usually a category (Residential, Commercial) but is
+// sometimes the intent itself (Sale). Only the latter belongs after "for".
+const INTENT = /^(sale|rent|lease|resale)$/i;
+
 const titleOf = (p) => {
   const bits = [];
-  const beds = String(p.bedrooms || '').trim();
-  if (beds) bits.push(/^\d+$/.test(beds) ? beds + ' BHK' : beds);
+  const beds = bedroomLabel(p.bedrooms);
+  if (beds) bits.push(beds);
+  const mode = String(p.propertyMode || '').trim();
+  const isIntent = INTENT.test(mode);
+  if (mode && !isIntent) bits.push(mode);
   bits.push(String(p.propertyType || 'Property').trim());
-  bits.push(p.propertyMode ? 'for ' + String(p.propertyMode).trim() : 'for Sale');
+  bits.push('for ' + (isIntent ? mode : 'Sale'));
   const place = locationOf(p);
   if (place) bits.push('in ' + place);
   const price = p.onDemand ? '' : formatPrice(p.price);
@@ -115,21 +145,25 @@ const descriptionOf = (p) => {
   const own = clamp(p.description, 155);
   if (own && own.length >= 70) return own;
   const facts = [];
-  if (p.bedrooms) facts.push(String(p.bedrooms) + ' BHK');
+  const beds = bedroomLabel(p.bedrooms);
+  if (beds) facts.push(beds);
+  const mode = String(p.propertyMode || '').trim();
+  if (mode && !INTENT.test(mode)) facts.push(mode);
   if (p.propertyType) facts.push(String(p.propertyType));
   if (p.totalArea) facts.push(String(p.totalArea) + ' ' + String(p.areaUnit || 'sq.ft'));
   if (p.facing) facts.push(String(p.facing) + ' facing');
   if (String(p.bankLoan || '').toLowerCase() === 'yes') facts.push('bank loan available');
   const place = locationOf(p);
   const price = p.onDemand ? 'Price on request' : formatPrice(p.price);
-  return clamp(
+  const core =
     (facts.length ? facts.join(', ') : 'Property') +
-      (place ? ' in ' + place : '') +
-      (price ? '. ' + (p.onDemand ? price : 'Price ' + price) : '') +
-      '. PPC ID ' + (p.ppcId || '') +
-      '. View photos, location and owner contact on ' + SITE_NAME + '.',
-    160
-  );
+    (place ? ' in ' + place : '') +
+    (price ? '. ' + (p.onDemand ? price : 'Price ' + price) : '') +
+    '. PPC ID ' + (p.ppcId || '') + '.';
+  // Append the call to action only when it fits whole, so a listing never
+  // ends mid-phrase ("...owner contact on...").
+  const tail = ' View photos, location and owner contact on ' + SITE_NAME + '.';
+  return clamp(core.length + tail.length <= 160 ? core + tail : core, 160);
 };
 
 const jsonLdOf = (p, canonical, images) => {

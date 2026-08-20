@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tint Android applies to the notification's alpha-masked small icon and
+         to the notification header accent. Mid-point of the PPC logo gradient
+         (#019FE6 at the top, #2707F1 at the bottom). -->
+    <color name="ppc_notification_accent">#FF1453EB</color>
+</resources>

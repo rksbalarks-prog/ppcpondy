@@ -16,7 +16,7 @@ class AppNavbar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onMenuTap;
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize => const Size.fromHeight(52);
 
   @override
   Widget build(BuildContext context) {
@@ -25,24 +25,26 @@ class AppNavbar extends StatelessWidget implements PreferredSizeWidget {
 
     return Material(
       color: const Color(0xFFF8F9FA),
-      child: SafeArea(
-        bottom: false,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu, size: 30),
-                color: AppColors.teal,
-                tooltip: 'Open menu',
-              ),
-              Expanded(child: _AnimatedBrand(city: brandCity)),
-              _PointsPill(balance: session.pointsBalance),
-              _bell(context, session),
-              const SizedBox(width: 4),
-            ],
-          ),
+      // Deliberately no SafeArea: _citySwitcher, directly above this in the
+      // MainShell column, already consumes the status-bar inset. SafeArea only
+      // strips that padding for its own subtree, so a second one on this
+      // sibling re-applies the full inset and leaves a band of dead space
+      // between the city bar and the brand.
+      child: SizedBox(
+        height: 52,
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
+              icon: const Icon(Icons.menu, size: 30),
+              color: AppColors.teal,
+              tooltip: 'Open menu',
+            ),
+            Expanded(child: _AnimatedBrand(city: brandCity)),
+            _PointsPill(balance: session.pointsBalance),
+            _bell(context, session),
+            const SizedBox(width: 4),
+          ],
         ),
       ),
     );
@@ -479,7 +481,10 @@ class _AnimatedBrandState extends State<_AnimatedBrand>
           mainAxisSize: MainAxisSize.min,
           children: [
             _roofLine(),
-            const SizedBox(height: 15), // .roof { margin: 0 auto 15px }
+            // The web's `.roof { margin: 0 auto 15px }` is scaled for a taller
+            // desktop navbar; inside this 52px bar it strands the title far
+            // below the roof line, so the gap is trimmed to 4px.
+            const SizedBox(height: 4),
             _title(fontSize),
           ],
         ),

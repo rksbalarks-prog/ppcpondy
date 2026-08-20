@@ -60,7 +60,7 @@ class _CategoryBarState extends State<CategoryBar> {
     final count = widget.items.length * _repeats;
 
     return Container(
-      height: 62,
+      height: 56,
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -70,7 +70,7 @@ class _CategoryBarState extends State<CategoryBar> {
       child: ListView.builder(
         controller: _controller,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         itemCount: count,
         itemBuilder: (context, index) {
           final item = widget.items[index % widget.items.length];

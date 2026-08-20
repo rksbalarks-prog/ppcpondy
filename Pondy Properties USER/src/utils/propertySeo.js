@@ -43,6 +43,13 @@ export const formatIndianPrice = (value) => {
   return new Intl.NumberFormat('en-IN').format(n);
 };
 
+/**
+ * Address fields that carry no information. Real listings hold "Others",
+ * "N/A" and whitespace-only strings, and "Plot for Sale in Others" is worse
+ * than saying nothing about the locality at all.
+ */
+const PLACEHOLDER = /^(others?|none|n\/?a|nil|null|-+|test)$/i;
+
 /** Most specific human-readable locality we can build from the address parts. */
 export const propertyLocation = (property = {}) => {
   const parts = [
@@ -52,7 +59,7 @@ export const propertyLocation = (property = {}) => {
     property.district,
   ]
     .map((p) => String(p || '').trim())
-    .filter(Boolean);
+    .filter((p) => p && !PLACEHOLDER.test(p));
   // Drop repeats such as city === district ("Puducherry, Puducherry").
   const seen = new Set();
   const unique = parts.filter((p) => {
@@ -65,20 +72,45 @@ export const propertyLocation = (property = {}) => {
 };
 
 /**
- * "3 BHK House for Sale in Lawspet, Puducherry - 45 Lakh"
- * Front-loads the terms people actually search for: BHK, type, intent, place.
+ * "2 BHK" from the messy real values of `bedrooms`.
+ *
+ * Live data holds null, "0", "No", plain numbers and already-formatted
+ * strings like "3 BHK". Anything that is not a positive room count has to
+ * disappear entirely — a plot listed as "0 BHK Plot" reads as broken.
+ */
+export const bedroomLabel = (raw) => {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  if (/bhk/i.test(s)) return s.replace(/\s+/g, ' ').replace(/bhk/i, 'BHK');
+  const n = parseInt(s, 10);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return n + ' BHK';
+};
+
+// `propertyMode` is usually a category (Residential, Commercial) but is
+// sometimes the intent itself (Sale). Only the latter belongs after "for".
+const INTENT = /^(sale|rent|lease|resale)$/i;
+
+/**
+ * "Residential Plot for Sale in Pondicherry Town - 5.75 Crore"
+ * "2 BHK House for Sale in Lawspet, Puducherry - 45 Lakh"
+ *
+ * Front-loads the terms people actually search for: BHK, category, type,
+ * intent, place, price.
  */
 export const propertyTitle = (property = {}) => {
   const bits = [];
-  const beds = String(property.bedrooms || '').trim();
-  if (beds && /^\d+$/.test(beds)) bits.push(beds + ' BHK');
-  else if (beds) bits.push(beds);
 
-  const type = String(property.propertyType || 'Property').trim();
-  bits.push(type);
+  const beds = bedroomLabel(property.bedrooms);
+  if (beds) bits.push(beds);
 
   const mode = String(property.propertyMode || '').trim();
-  bits.push(mode ? 'for ' + mode : 'for Sale');
+  const isIntent = INTENT.test(mode);
+  // "Residential Plot", but never "Sale Plot".
+  if (mode && !isIntent) bits.push(mode);
+
+  bits.push(String(property.propertyType || 'Property').trim());
+  bits.push('for ' + (isIntent ? mode : 'Sale'));
 
   const place = propertyLocation(property);
   if (place) bits.push('in ' + place);
@@ -94,8 +126,10 @@ export const propertyDescription = (property = {}) => {
   if (own && own.length >= 70) return own;
 
   const facts = [];
-  const beds = String(property.bedrooms || '').trim();
-  if (beds) facts.push(beds + ' BHK');
+  const beds = bedroomLabel(property.bedrooms);
+  if (beds) facts.push(beds);
+  const mode = String(property.propertyMode || '').trim();
+  if (mode && !INTENT.test(mode)) facts.push(mode);
   if (property.propertyType) facts.push(String(property.propertyType));
   if (property.totalArea) {
     facts.push(
@@ -111,22 +145,25 @@ export const propertyDescription = (property = {}) => {
   const place = propertyLocation(property);
   const price = property.onDemand ? 'Price on request' : formatIndianPrice(property.price);
 
-  const sentence =
+  const core =
     (facts.length ? facts.join(', ') : 'Property') +
     (place ? ' in ' + place : '') +
     (price ? '. ' + (property.onDemand ? price : 'Price ' + price) : '') +
-    '. PPC ID ' + (property.ppcId || '') +
-    '. View photos, location and owner contact on Pondy Properties.';
+    '. PPC ID ' + (property.ppcId || '') + '.';
 
-  return clampDescription(sentence, 160);
+  // Append the call to action only when it fits whole. Clamping the combined
+  // string instead would leave listings ending mid-phrase ("...contact on...").
+  const tail = ' View photos, location and owner contact on Pondy Properties.';
+  return clampDescription(core.length + tail.length <= 160 ? core + tail : core, 160);
 };
 
 /** Keyword set built from the listing's own attributes. */
 export const propertyKeywords = (property = {}) => {
   const type = String(property.propertyType || 'property').toLowerCase();
-  const mode = String(property.propertyMode || 'sale').toLowerCase();
+  const rawMode = String(property.propertyMode || '').trim();
+  const mode = (INTENT.test(rawMode) ? rawMode : 'sale').toLowerCase();
   const place = propertyLocation(property) || 'Pondicherry';
-  const beds = String(property.bedrooms || '').trim();
+  const beds = bedroomLabel(property.bedrooms);
   const out = [
     type + ' for ' + mode + ' in ' + place,
     type + ' in ' + place,
@@ -134,7 +171,7 @@ export const propertyKeywords = (property = {}) => {
     'real estate ' + place,
     'Pondy Properties',
   ];
-  if (beds) out.unshift(beds + ' BHK ' + type + ' in ' + place);
+  if (beds) out.unshift(beds + ' ' + type + ' in ' + place);
   return out;
 };
 

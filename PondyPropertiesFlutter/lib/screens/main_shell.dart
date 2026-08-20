@@ -294,7 +294,7 @@ class _MainShellState extends State<MainShell> {
   Widget _citySwitcher(SessionProvider session) {
     return Container(
       color: AppColors.indigo,
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: SafeArea(
         bottom: false,
         child: Row(

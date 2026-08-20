@@ -23,6 +23,19 @@ const router = express.Router();
 
 const SITE_URL = (process.env.SEO_SITE_URL || 'https://ppcpondy.com').replace(/\/+$/, '');
 
+/**
+ * Public path prefix these sitemaps are reachable at.
+ *
+ * Apache proxies the site's /PPC/* to this app and the app mounts its routers
+ * under /PPC again, so a route Express sees as /PPC/sitemap.xml is served to
+ * the world at /PPC/PPC/sitemap.xml — the same doubling the frontend's
+ * REACT_APP_API_URL (https://ppcpondy.com/PPC/PPC) already relies on. The
+ * sitemap index has to advertise the URL Google can actually fetch, not the
+ * internal one. Override with SEO_PUBLIC_PREFIX if the vhost is ever changed
+ * to serve these at the root.
+ */
+const PUBLIC_PREFIX = (process.env.SEO_PUBLIC_PREFIX || '/PPC/PPC').replace(/\/+$/, '');
+
 // Sitemaps.org caps a single file at 50,000 URLs; stay under it with room to
 // spare so one page is always one HTTP response.
 const PAGE_SIZE = 20000;
@@ -163,10 +176,10 @@ router.get('/sitemap.xml', async (req, res) => {
       const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       const today = iso();
 
-      const entries = ['/PPC/sitemap-core.xml'];
+      const entries = [PUBLIC_PREFIX + '/sitemap-core.xml'];
       for (let i = 1; i <= pages; i += 1) {
         entries.push(
-          '/PPC/sitemap-properties.xml' + (i === 1 ? '' : '?page=' + i)
+          PUBLIC_PREFIX + '/sitemap-properties.xml' + (i === 1 ? '' : '?page=' + i)
         );
       }
 
@@ -257,7 +270,8 @@ router.get('/seo/sitemap-status', async (req, res) => {
       corePages: CORE_PAGES.length,
       cacheTtlMs: CACHE_TTL_MS,
       cachedKeys: Array.from(cache.keys()),
-      index: SITE_URL + '/PPC/sitemap.xml',
+      index: SITE_URL + PUBLIC_PREFIX + '/sitemap.xml',
+      publicPrefix: PUBLIC_PREFIX,
     });
   } catch (err) {
     res.status(500).json({ message: 'status failed', error: err.message });
