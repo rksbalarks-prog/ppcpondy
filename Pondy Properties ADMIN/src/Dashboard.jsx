@@ -100,6 +100,7 @@ import AdminSetForm from './DataAddAdmin/AdminSetForm';
 import InterestTables from './Detail/InterestTables';
 import AddPropertyList from './AddPropertyList';
 import BulkUploadProperty from './BulkUploadProperty';
+import AdExpressImport from './AdExpressImport';
 import FavoriteTable from './Detail/FavoriteTables';
 import FavoriteTables from './Detail/FavoriteTables';
 import NeedHelpLeadTable from './HelpLoanLead';
@@ -294,6 +295,7 @@ const routes = [
   { path: "/report-property-table", element: <ReportPropertyTables /> },
   { path: "/property-list", element: <AddPropertyList /> },
   { path: "/bulk-upload-property", element: <BulkUploadProperty /> },
+  { path: "/adexpress-import", element: <AdExpressImport /> },
   { path: "/get-buyer-assistance", element: <GetBuyerAssistance /> },
   { path: "/text-editor", element: <TextEditor /> },
   { path: "/get-matched-properties", element: <MatchedPropertyTable /> },

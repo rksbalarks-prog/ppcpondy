@@ -73,6 +73,9 @@ const { sendUserOtpSms } = require('./utils/smsSender'); // SMS IDEA sender for 
 const DownloadHistoryRouter = require('./DownloadHistory/DownloadHistoryRouter'); // admin download audit log
 const assistant = require('./assistant'); // AI voice + chat assistant (additive layer)
 const FcmTokenRouter = require('./fcm/FcmTokenRouter'); // FCM push notifications (additive)
+// Adexpress classified-weekly importer (additive: own collections + own routes)
+const AdExpressRouter = require('./AdExpress/AdExpressRouter');
+const adExpressSchedule = require('./AdExpress/schedule');
 
 // Scheduled e-mail reports (additive layers — each stays asleep without SMTP_*
 // in .env). DataAddedMail owns the shared nodemailer transport that the other
@@ -474,6 +477,7 @@ app.use('/PPC', adminExcelMail.router);
 app.use('/PPC', SingleSendRouter)
 app.use('/PPC', EditBuyerBillRouter);
 app.use('/PPC', messageRoutes);
+app.use('/PPC', AdExpressRouter); // Adexpress import: /adexpress/* (staging only)
 
 
 // 404 Error Handling Middleware
@@ -493,6 +497,8 @@ app.listen(PORT, () => {
   dataAddedMail.start();
   adminReportMail.start();
   adminExcelMail.start();
+  // Nightly Adexpress pickup: newest issue -> sale ads -> PreApproved.
+  adExpressSchedule.start();
 });
 
 

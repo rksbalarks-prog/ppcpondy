@@ -101,15 +101,25 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
         .map((e) => e.value)
         .toList();
     if (missing.isNotEmpty) {
-      showToast(context, '${missing.join(', ')} required', error: true);
+      await _showValidationPopup(
+        missing.map((m) => '$m is required').toList(),
+      );
       return;
     }
 
     final min = num.tryParse('${_form['minPrice']}') ?? 0;
     final max = num.tryParse('${_form['maxPrice']}') ?? 0;
     if (max < min) {
-      showToast(context, 'Max price must be greater than min price.', error: true);
+      await _showValidationPopup(
+        const ['Max price must be greater than min price.'],
+      );
       return;
+    }
+
+    // "Do you want to create assistance?" — the web asks before POSTing.
+    if (!_isEdit) {
+      final go = await _showCreateConfirm();
+      if (!go || !mounted) return;
     }
 
     setState(() => _busy = true);
@@ -172,9 +182,28 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
   Widget build(BuildContext context) {
     final body = _body();
     if (widget.embedded) return body;
+    // BuyerAssistance.jsx's sticky strip: flat #EFEFEF, teal back arrow, and a
+    // 20px title — same chrome the detail page uses.
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_isEdit ? 'Edit Requirement' : 'Buyer Assistance'),
+        backgroundColor: AppColors.detailHeaderBg,
+        surfaceTintColor: AppColors.detailHeaderBg,
+        elevation: 0,
+        titleSpacing: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back, size: 20, color: AppColors.teal),
+          tooltip: 'Back',
+        ),
+        title: Text(
+          _isEdit ? 'Edit Requirement' : 'Buyer Assistance',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
+        ),
       ),
       body: body,
     );
@@ -186,8 +215,22 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
         children: [
+          _banner(),
+          _topActions(),
+          // The web repeats the page name as a small teal form title.
+          const Padding(
+            padding: EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              'Buyer Assistance',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.tealDark,
+              ),
+            ),
+          ),
           _intro(),
           const SizedBox(height: 18),
           _sectionLabel('Your details'),
@@ -283,6 +326,188 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
             child: const Text('View my requirements'),
           ),
         ],
+      ),
+    );
+  }
+
+  /// BuyerAssistance.jsx's `showPopup` modal — a #FFE8E8 card listing every
+  /// unfilled required field in #E74C3C, with a matching full-width Close.
+  Future<void> _showValidationPopup(List<String> errors) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFFFFE8E8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Please complete required fields:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFE74C3C),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: const Text(
+                      '×',
+                      style: TextStyle(
+                        fontSize: 24,
+                        height: 1,
+                        color: Color(0xFFE74C3C),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              for (final e in errors)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    '•  $e',
+                    style: const TextStyle(
+                        fontSize: 14, color: Color(0xFFE74C3C)),
+                  ),
+                ),
+              const SizedBox(height: 4),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFE74C3C),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4)),
+                ),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// `showConfirmPopup` — "Do you want to create assistance?" with the web's
+  /// #6CBAAF confirm and grey dismiss, split evenly.
+  Future<bool> _showCreateConfirm() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Do you want to create assistance?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF6CBAAF),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4)),
+                      ),
+                      child: const Text('Yes, help me'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFCCCCCC),
+                        foregroundColor: const Color(0xFF333333),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4)),
+                      ),
+                      child: const Text('No'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return result ?? false;
+  }
+
+  /// `<img src={ppbuyer} className="header-image" style={{width:'100%'}}/>` —
+  /// the full-bleed banner directly under the header.
+  Widget _banner() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Image.asset(
+        'assets/images/ppbuyer.png',
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  /// The pair of #019988 buttons the web puts under the banner. "Add Buyer
+  /// Assistant" is the page you are already on, so it stays disabled at 60%
+  /// opacity exactly as the web renders it.
+  Widget _topActions() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Opacity(
+            opacity: 0.6,
+            child: _pillButton('Add Buyer Assistant', null),
+          ),
+          _pillButton(
+            'View Buyer List',
+            () => Navigator.pushNamed(context, AppRoutes.myBuyerAssistance),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pillButton(String label, VoidCallback? onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.galleryNav, // #019988
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Colors.white),
+        ),
       ),
     );
   }
@@ -391,7 +616,11 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
   static String _bareLabel(String label) =>
       label.replaceAll('*', '').trimRight();
 
+  /// Keyed by form key so a TextFormField's state can never be reused by a
+  /// different field if this list ever becomes conditional — the failure mode
+  /// that made Add Property's Total Area look filled while _form was empty.
   Widget _text(String key, String label, {int maxLines = 1}) => WebTextField(
+        key: ValueKey(key),
         label: _bareLabel(label),
         required: _requiredKeys.contains(key),
         value: _form[key]?.toString(),
@@ -400,6 +629,7 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
       );
 
   Widget _number(String key, String label) => WebTextField(
+        key: ValueKey(key),
         label: _bareLabel(label),
         required: _requiredKeys.contains(key),
         value: _form[key]?.toString(),
@@ -410,6 +640,7 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
   Widget _dropdown(String key, String label, List<String> options) {
     final bare = _bareLabel(label);
     return WebDropdownField(
+      key: ValueKey(key),
       label: bare,
       required: _requiredKeys.contains(key),
       value: _form[key]?.toString(),
@@ -425,6 +656,7 @@ class _BuyerAssistanceFormScreenState extends State<BuyerAssistanceFormScreen> {
     final labels = {for (final p in _priceSteps) Fmt.price(p): p};
     final current = num.tryParse('${_form[key]}');
     return WebDropdownField(
+      key: ValueKey(key),
       label: bare,
       required: _requiredKeys.contains(key),
       value: current == null ? null : Fmt.price(current),

@@ -1,7 +1,7 @@
 name: pondy_properties
 description: "Pondy Properties — Flutter user app (same API / DB as the React web app)."
 publish_to: 'none'
-version: 1.0.0+36
+version: 1.0.0+38
 
 environment:
   sdk: ^3.12.2
@@ -25,6 +25,11 @@ dependencies:
   url_launcher: ^6.3.1
   intl: ^0.20.2
   image_picker: ^1.1.2
+  # Direct dep purely so main.dart can flip useAndroidPhotoPicker on. Without
+  # it the Android impl falls back to ACTION_GET_CONTENT; Play wants the real
+  # photo picker (see AndroidManifest.xml).
+  image_picker_android: ^0.8.13
+  image_picker_platform_interface: ^2.10.0
   share_plus: ^10.1.2
 
   # PayU needs an auto-submitting POST form, exactly like the web PayUForm.

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:pondy_properties/assistant/assistant_client.dart';
+import 'package:pondy_properties/assistant/assistant_controller.dart';
+import 'package:pondy_properties/assistant/assistant_strings.dart';
 import 'package:pondy_properties/core/formatters.dart';
 import 'package:pondy_properties/main.dart';
 import 'package:pondy_properties/models/property.dart';
@@ -76,7 +79,17 @@ void main() {
     final session = SessionProvider();
     await session.bootstrap();
 
-    await tester.pumpWidget(PondyPropertiesApp(session: session));
+    // PondyPropertiesApp requires the assistant controller main.dart hands it;
+    // built here the same way so the widget tree matches the real app.
+    final assistant = AssistantController(
+      client: AssistantClient(),
+      phoneProvider: () => session.phoneNumber ?? '',
+      loginFirstMessage: AssistantT.en.loginFirst,
+    );
+
+    await tester.pumpWidget(
+      PondyPropertiesApp(session: session, assistant: assistant),
+    );
     await tester.pump(const Duration(seconds: 1));
     await tester.pump();
 

@@ -72,6 +72,7 @@ const ALL_FILES = [
   { key: "Search Property", label: "Search Property", section: "PPC Property" },
   { key: "Pricing Info", label: "Pricing Info", section: "PPC Property" },
   { key: "Add Property", label: "Add Property", section: "PPC Property" },
+  { key: "Adexpress Import", label: "Adexpress Import (newspaper ads)", section: "PPC Property" },
   { key: "Bulk Upload Property", label: "Bulk Upload Property", section: "PPC Property" },
   { key: "Manage Property", label: "Manage Properties", section: "PPC Property" },
   { key: "Approved Property", label: "Approved Property", section: "PPC Property" },

@@ -227,11 +227,27 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      // AddProperty.jsx's sticky strip: flat #EFEFEF with a teal back arrow and
+      // an 18px <h3>. The PPC-ID moves out of the title and into the teal band
+      // below, where the web shows it.
       appBar: AppBar(
-        // AddProperty.jsx renders the title as <h3 style={{fontSize:"18px"}}>.
-        title: Text(
-          _ppcId == null ? 'Add Property' : 'Add Property · PPC-$_ppcId',
-          style: const TextStyle(fontSize: 18),
+        backgroundColor: AppColors.detailHeaderBg,
+        surfaceTintColor: AppColors.detailHeaderBg,
+        elevation: 0,
+        titleSpacing: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back, size: 20, color: AppColors.teal),
+          tooltip: 'Back',
+        ),
+        title: const Text(
+          'Add Property',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
         ),
       ),
       body: _body(),
@@ -252,6 +268,28 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
+              // <h4>123 Property Management</h4> — bold near-black, above the
+              // teal PPC-ID band.
+              const Text(
+                '123 Property Management',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0A0A0A),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // <p className="p-3" style={{color:white, background:rgb(47,116,127)}}>
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                color: AppColors.tealDark,
+                child: Text(
+                  'PPC-ID: $_ppcId',
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 14),
               // Each web step heading is
               // <h4 style={{color:"rgb(47,116,127)", fontWeight:"bold",
               //             marginBottom:"10px"}}> — rgb(47,116,127) is
@@ -260,7 +298,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               Text(
                 _stepTitles[_step],
                 style: const TextStyle(
-                  fontSize: 21,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.tealDark,
                 ),
@@ -292,15 +330,6 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   color: AppColors.textMuted,
                 ),
               ),
-              const Spacer(),
-              Text(
-                'PPC-ID: $_ppcId',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.tealDark,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -318,44 +347,78 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     );
   }
 
+  /// The review-step button pair from AddProperty.jsx: a pill-shaped outlined
+  /// EDIT in #1882F6 and a wider gradient SUBMIT
+  /// (`linear-gradient(145deg,#4a90e2,#007bff)`), both 40px tall on a 25px
+  /// radius with the same inset highlight + drop shadow.
   Widget _footer() {
     final isLast = _step == _stepTitles.length - 1;
+    const blue = Color(0xFF1882F6);
+    const shadow = [
+      BoxShadow(color: Color(0x1A000000), blurRadius: 6, offset: Offset(0, 4)),
+    ];
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: Row(
           children: [
-            if (_step > 0)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _busy ? null : _back,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.tealSoft,
-                    side: const BorderSide(color: AppColors.tealSoft),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+            if (_step > 0) ...[
+              GestureDetector(
+                onTap: _busy ? null : _back,
+                child: Container(
+                  width: 90,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: blue, width: 2),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: shadow,
                   ),
-                  child: const Text('BACK'),
+                  child: const Text(
+                    'BACK',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: blue,
+                    ),
+                  ),
                 ),
               ),
-            if (_step > 0) const SizedBox(width: 10),
+              const SizedBox(width: 20),
+            ],
             Expanded(
-              flex: 2,
-              child: FilledButton(
-                onPressed: _busy ? null : (isLast ? _submit : _next),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.teal,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+              child: GestureDetector(
+                onTap: _busy ? null : (isLast ? _submit : _next),
+                child: Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4A90E2), Color(0xFF007BFF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: shadow,
+                  ),
+                  child: _busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          isLast ? 'SUBMIT PROPERTY' : 'SAVE & CONTINUE',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
-                      )
-                    : Text(isLast ? 'SUBMIT PROPERTY' : 'SAVE & CONTINUE'),
+                ),
               ),
             ),
           ],
@@ -596,6 +659,14 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   static String _bareLabel(String label) =>
       label.replaceAll('*', '').trimRight();
 
+  /// Every field carries a ValueKey of its form key. _stepFields() spreads a
+  /// different list into the same Column on each step, so without keys Flutter
+  /// matches children by index+type and hands one step's TextFormField state to
+  /// the field sitting at the same index on the next step — step 1's price box
+  /// (index 2) fed its typed text straight into step 2's Total Area (index 2),
+  /// which then LOOKED filled while _form['totalArea'] was still empty and the
+  /// required-field check rejected the step. initialValue is only read when the
+  /// element is first created, so the keys are what keep _form authoritative.
   Widget _text(
     String key,
     String label, {
@@ -605,6 +676,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     IconData? icon,
   }) {
     return WebTextField(
+      key: ValueKey(key),
       label: _bareLabel(label),
       required: _isRequired(key),
       value: _form[key]?.toString(),
@@ -618,6 +690,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Widget _number(String key, String label, {String? helper, IconData? icon}) {
     return WebTextField(
+      key: ValueKey(key),
       label: _bareLabel(label),
       required: _isRequired(key),
       value: _form[key]?.toString(),
@@ -631,6 +704,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   Widget _dropdown(String key, String label, List<String> options) {
     final bare = _bareLabel(label);
     return WebDropdownField(
+      key: ValueKey(key),
       label: bare,
       required: _isRequired(key),
       value: _form[key]?.toString(),

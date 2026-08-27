@@ -1,6 +1,8 @@
 import 'package:clarity_flutter/clarity_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +21,16 @@ import 'widgets/common.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Route every gallery pick through the Android photo picker instead of
+  // ACTION_GET_CONTENT. The picker returns per-item URIs, so the app needs no
+  // READ_MEDIA_* permission — which is what Play rejected v36 over. The 'is'
+  // check is a no-op on every other platform.
+  final pickerImpl = ImagePickerPlatform.instance;
+  if (pickerImpl is ImagePickerAndroid) {
+    pickerImpl.useAndroidPhotoPicker = true;
+  }
+
   await initializeDateFormatting('en_IN');
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,

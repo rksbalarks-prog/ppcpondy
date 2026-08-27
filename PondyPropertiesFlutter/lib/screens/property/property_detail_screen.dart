@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -42,6 +44,9 @@ class PropertyDetailScreen extends StatefulWidget {
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   final _pageController = PageController();
 
+  /// Backs the inline "Make an offer" field the web renders under the price.
+  final _offerController = TextEditingController();
+
   Property? _property;
   List<AdImage> _ads = const [];
   bool _loading = true;
@@ -78,6 +83,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _offerController.dispose();
     _videoController?.dispose();
     super.dispose();
   }
@@ -522,48 +528,34 @@ Rent Pondy Team'''));
     }
   }
 
-  Future<void> _makeOffer() async {
+  /// Submit handler for the inline offer form. The web validates that a price
+  /// and a stored phone number exist, then shows a confirm modal before
+  /// posting — same order here.
+  Future<void> _submitOffer() async {
     if (!_requireLogin()) return;
-    final controller = TextEditingController();
-    final amount = await showDialog<num>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Make an Offer', style: TextStyle(fontSize: 16)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          autofocus: true,
-          decoration: const InputDecoration(
-            prefixText: '₹ ',
-            hintText: 'Your offer amount',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = num.tryParse(controller.text.trim());
-              Navigator.pop(ctx, value);
-            },
-            child: const Text('Send Offer'),
-          ),
-        ],
-      ),
+
+    final amount = num.tryParse(_offerController.text.trim());
+    if (amount == null || amount <= 0) {
+      showToast(context, 'Enter an offer amount first.', error: true);
+      return;
+    }
+
+    final confirmed = await confirmDialog(
+      context,
+      message: 'Send an offer of ${Fmt.price(amount)} to the owner?',
     );
-    controller.dispose();
-    if (amount == null || amount <= 0) return;
+    if (!confirmed || !mounted) return;
+
     try {
       await PropertyService.makeOffer(
         phoneNumber: _phone!,
         ppcId: widget.ppcId,
         amount: amount,
       );
-      if (mounted) showToast(context, 'Offer of ${Fmt.price(amount)} sent.');
+      if (!mounted) return;
+      _offerController.clear();
+      FocusScope.of(context).unfocus();
+      showToast(context, 'Offer of ${Fmt.price(amount)} sent.');
     } catch (e) {
       if (mounted) showToast(context, describeError(e), error: true);
     }
@@ -596,57 +588,146 @@ Rent Pondy Team'''));
   }) async {
     String? selected;
     final commentController = TextEditingController();
+
+    // Details.jsx's `Popup`: a rounded-5 card with an uppercase grey title, a
+    // filter-icon Select, a one-row "Add Comment" textarea, and a CANCEL /
+    // SUBMIT pair split 50-50 — SUBMIT on the web's #4b3aa8 indigo.
     final result = await showDialog<({String reason, String comment})>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocal) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ...reasons.map(
-                  (r) => RadioListTile<String>(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    value: r,
-                    // ignore: deprecated_member_use
-                    groupValue: selected,
-                    activeColor: AppColors.teal,
-                    title: Text(r, style: const TextStyle(fontSize: 13)),
-                    // ignore: deprecated_member_use
-                    onChanged: (v) => setLocal(() => selected = v),
+        builder: (ctx, setLocal) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    title.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textMuted,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: commentController,
-                  maxLines: 2,
-                  decoration: const InputDecoration(hintText: 'Add a comment'),
-                ),
-              ],
+                  const SizedBox(height: 20),
+
+                  // The bg-light, border-0, centred Form.Select.
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.filter_alt_outlined,
+                            size: 19, color: AppColors.textFaint),
+                        Expanded(
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selected,
+                              isExpanded: true,
+                              hint: const Center(
+                                child: Text(
+                                  'Select Reason',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ),
+                              items: reasons
+                                  .map((r) => DropdownMenuItem(
+                                        value: r,
+                                        child: Center(
+                                          child: Text(
+                                            r,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.textMuted,
+                                            ),
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) => setLocal(() => selected = v),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextField(
+                    controller: commentController,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Add Comment',
+                      contentPadding: const EdgeInsets.all(14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: TextButton.styleFrom(
+                            backgroundColor: const Color(0xFFF8F9FA),
+                            foregroundColor: AppColors.text,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('CANCEL',
+                              style: TextStyle(fontWeight: FontWeight.w500)),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: selected == null
+                              ? null
+                              : () => Navigator.pop(
+                                    ctx,
+                                    (
+                                      reason: selected!,
+                                      comment: commentController.text.trim()
+                                    ),
+                                  ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF4B3AA8),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('SUBMIT',
+                              style: TextStyle(fontWeight: FontWeight.w500)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: selected == null
-                  ? null
-                  : () => Navigator.pop(
-                        ctx,
-                        (reason: selected!, comment: commentController.text.trim()),
-                      ),
-              child: const Text('Submit'),
-            ),
-          ],
         ),
       ),
     );
@@ -659,12 +740,27 @@ Rent Pondy Team'''));
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F4),
+      backgroundColor: Colors.white,
+      // The web's sticky strip: a flat #EFEFEF band with a teal back arrow and
+      // a 15px "PROPERTY DETAILS" label. Share and favourite live down in the
+      // title row, exactly as Details.jsx places them.
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          'PPC-ID: ${widget.ppcId}',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        backgroundColor: AppColors.detailHeaderBg,
+        surfaceTintColor: AppColors.detailHeaderBg,
+        elevation: 0,
+        titleSpacing: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back, size: 20, color: AppColors.teal),
+          tooltip: 'Back',
+        ),
+        title: const Text(
+          'PROPERTY DETAILS',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text,
+          ),
         ),
         actions: [
           IconButton(
@@ -673,12 +769,7 @@ Rent Pondy Team'''));
               Clipboard.setData(ClipboardData(text: widget.ppcId));
               showToast(context, 'PPC-ID copied');
             },
-            icon: const Icon(Icons.copy, size: 20),
-          ),
-          IconButton(
-            tooltip: 'Share',
-            onPressed: _share,
-            icon: const Icon(Icons.share, size: 20),
+            icon: const Icon(Icons.copy, size: 18, color: AppColors.teal),
           ),
         ],
       ),
@@ -727,47 +818,84 @@ Rent Pondy Team'''));
     if (_error != null) return ErrorState(message: _error!, onRetry: _load);
 
     final p = _property!;
+    // Section order follows Details.jsx top to bottom: gallery, PPC_ID pill,
+    // title row, price, offer form, the spec grid, contact, map, then the
+    // four action cards. The web keeps everything in one flat column rather
+    // than the stack of white cards this screen used to render.
     return ListView(
       padding: const EdgeInsets.only(bottom: 30),
       children: [
         _gallery(p),
         _summary(p),
         if (_videos.isNotEmpty) _videoSection(p),
-        _actionGrid(),
-        _contactSection(p),
         _specSheet(p),
+        _contactSection(p),
         _locationSection(p),
+        _actionGrid(),
         if (_ads.isNotEmpty) _adsStrip(),
       ],
     );
   }
 
+  /// The Swiper block from Details.jsx: a 200px rounded frame with a soft drop
+  /// shadow, the teal ❮ ❯ buttons pinned bottom-right, and the frosted
+  /// "3 / 12" counter centred beneath. When a listing has no photos the web
+  /// swaps in a placeholder carrying the Photo Request button.
   Widget _gallery(Property p) {
     final photos = p.photoUrls;
-    return Stack(
-      children: [
-        SizedBox(
-          height: 250,
-          child: photos.isEmpty
-              ? Stack(
+    final total = photos.length + _videos.length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000), // 0 4px 8px rgba(0,0,0,.1)
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (photos.isEmpty)
+                Stack(
                   fit: StackFit.expand,
                   children: [
                     const AppNetworkImage(url: null),
-                    Center(
-                      child: FilledButton.icon(
-                        onPressed: _photoRequested ? null : _requestPhotos,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.tealDark,
-                        ),
-                        icon: const Icon(Icons.photo_camera, size: 18),
-                        label: Text(
-                          _photoRequested ? 'Photo Requested' : 'Request Photos',
+                    Positioned(
+                      right: 10,
+                      bottom: 40,
+                      child: GestureDetector(
+                        onTap: _photoRequested ? null : _requestPhotos,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          color: _photoRequested
+                              ? const Color(0xFF3F61D8)
+                              : const Color(0xFF34ACD6),
+                          child: Text(
+                            _photoRequested
+                                ? 'Photo Request Sent'
+                                : 'Photo Request',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 )
-              : PageView.builder(
+              else
+                PageView.builder(
                   controller: _pageController,
                   onPageChanged: (i) => setState(() => _photoIndex = i),
                   itemCount: photos.length,
@@ -776,126 +904,276 @@ Rent Pondy Team'''));
                     child: AppNetworkImage(url: photos[i], fit: BoxFit.cover),
                   ),
                 ),
-        ),
-        if (photos.length > 1)
-          Positioned(
-            bottom: 10,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                photos.length,
-                (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: i == _photoIndex ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: i == _photoIndex ? Colors.white : Colors.white54,
-                    borderRadius: BorderRadius.circular(3),
+
+              if (p.isFeatured)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: AppColors.featuredGradient),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.star, size: 13, color: Colors.black),
+                        SizedBox(width: 4),
+                        Text(
+                          'Featured',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        Positioned(
-          top: 10,
-          right: 12,
-          child: Material(
-            color: Colors.white,
-            shape: const CircleBorder(),
-            child: IconButton(
-              onPressed: _toggleFavorite,
-              icon: Icon(
-                _favorite ? Icons.favorite : Icons.favorite_border,
-                color: _favorite ? Colors.red : AppColors.textMuted,
-              ),
-            ),
+
+              // ❮ ❯ — 60×30 solid #019988 blocks, radius 4, bottom right.
+              if (photos.length > 1)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _galleryArrow('❮', () => _stepPhoto(-1, photos.length)),
+                      const SizedBox(width: 4),
+                      _galleryArrow('❯', () => _stepPhoto(1, photos.length)),
+                    ],
+                  ),
+                ),
+
+              // Frosted counter pill, centred 14px off the bottom.
+              if (total > 0)
+                Positioned(
+                  bottom: 14,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0x8C0F171C),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: const Color(0x2EFFFFFF)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.photo_camera_outlined,
+                                  size: 13, color: Colors.white),
+                              const SizedBox(width: 7),
+                              Text.rich(
+                                TextSpan(children: [
+                                  TextSpan(
+                                    text: '${_photoIndex + 1}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                  const TextSpan(
+                                    text: ' / ',
+                                    style: TextStyle(color: Colors.white54),
+                                  ),
+                                  TextSpan(
+                                    text: '$total',
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                ]),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.4,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        if (p.isFeatured)
-          Positioned(
-            top: 10,
-            left: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.featuredGradient),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.star, size: 13, color: Colors.black),
-                  SizedBox(width: 4),
-                  Text(
-                    'Featured',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  void _openLightbox(List<String> photos, int index) {
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (ctx) => Stack(
-        children: [
-          PageView.builder(
-            controller: PageController(initialPage: index),
-            itemCount: photos.length,
-            itemBuilder: (_, i) => InteractiveViewer(
-              child: Center(child: AppNetworkImage(url: photos[i], fit: BoxFit.contain)),
-            ),
-          ),
-          Positioned(
-            top: 40,
-            right: 16,
-            child: IconButton(
-              onPressed: () => Navigator.pop(ctx),
-              icon: const Icon(Icons.close, color: Colors.white, size: 28),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  /// Property walkthrough video — the web's `videos` Swiper slide.
+  Widget _galleryArrow(String glyph, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 60,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.galleryNav,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          glyph,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.white,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The Swiper loops, so stepping past either end wraps around.
+  void _stepPhoto(int delta, int count) {
+    if (count == 0) return;
+    final next = (_photoIndex + delta + count) % count;
+    _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  /// The web's image modal: a white card over a 50%-black backdrop, with the
+  /// 38px circular ‹ › arrows overlaid on the photo and a footer carrying
+  /// "Image 3 of 12" beside a Close button. Tapping the backdrop dismisses it.
+  void _openLightbox(List<String> photos, int index) {
+    var current = index;
+    final controller = PageController(initialPage: index);
+
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => Dialog(
+          backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 60),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(ctx).height * 0.6,
+                      ),
+                      child: PageView.builder(
+                        controller: controller,
+                        onPageChanged: (i) => setLocal(() => current = i),
+                        itemCount: photos.length,
+                        itemBuilder: (_, i) => InteractiveViewer(
+                          child: Center(
+                            child: AppNetworkImage(
+                                url: photos[i], fit: BoxFit.contain),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (photos.length > 1) ...[
+                      Positioned(
+                        left: 10,
+                        child: _lightboxArrow('‹', () {
+                          final next =
+                              (current - 1 + photos.length) % photos.length;
+                          controller.jumpToPage(next);
+                        }),
+                      ),
+                      Positioned(
+                        right: 10,
+                        child: _lightboxArrow('›', () {
+                          controller.jumpToPage((current + 1) % photos.length);
+                        }),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Image ${current + 1} of ${photos.length}',
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.textFaint),
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF6C757D), // btn-secondary
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) => controller.dispose());
+  }
+
+  Widget _lightboxArrow(String glyph, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: Color(0x8C000000), // rgba(0,0,0,.55)
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          glyph,
+          style: const TextStyle(
+              fontSize: 22, color: Colors.white, height: 1),
+        ),
+      ),
+    );
+  }
+
+  /// Property walkthrough video — the web's `videos` Swiper slide, headed by
+  /// `<h4 className="text-start mt-3">Selected Videos:</h4>` and framed at
+  /// 200px with the same radius-8 + drop shadow the photo carousel uses.
   Widget _videoSection(Property p) {
     final ready = _videoController?.value.isInitialized ?? false;
 
-    return AppCard(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      padding: EdgeInsets.zero,
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 12, 10, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(12, 12, 12, 8),
-            child: Row(
-              children: [
-                Icon(Icons.videocam, size: 18, color: AppColors.teal),
-                SizedBox(width: 6),
-                Text(
-                  'Property Video',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.teal,
-                  ),
-                ),
-              ],
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Selected Videos:',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
+              ),
             ),
           ),
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(14)),
+            borderRadius: BorderRadius.circular(8),
             child: AspectRatio(
               aspectRatio: ready ? _videoController!.value.aspectRatio : 16 / 9,
               child: ready
@@ -945,94 +1223,218 @@ Rent Pondy Team'''));
     );
   }
 
+  /// Everything between the gallery and the spec grid on the web page: the
+  /// PPC_ID pill, the "Mode | Type" line with its share + heart controls, the
+  /// orange price and its negotiable badge, the price in words, and the inline
+  /// "Make an offer" form.
   Widget _summary(Property p) {
-    return AppCard(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+    final negotiable = (p.negotiation ?? '').toLowerCase() == 'yes';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 12, 10, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // PPC_ID : 1234 — gradient pill, all caps, tight.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.brandGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(999),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x402F747F),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text.rich(
+              TextSpan(children: [
+                const TextSpan(
+                  text: 'PPC_ID',
+                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+                ),
+                const TextSpan(text: ' : ', style: TextStyle(color: Colors.white60)),
+                TextSpan(
+                  text: p.ppcId,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ]),
+              style: const TextStyle(
+                fontSize: 11.5,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Mode | Type, with share and the outlined heart on the right.
           Row(
             children: [
               Expanded(
                 child: Text(
-                  Fmt.cap(p.propertyType),
+                  '${Fmt.cap(p.propertyMode)} |  ${Fmt.cap(p.propertyType)}',
                   style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                    color: AppColors.ink,
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.searchBottom,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  Fmt.cap(p.propertyMode),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.tealDark,
-                  ),
+              IconButton(
+                tooltip: 'Share',
+                onPressed: _share,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.share, size: 20, color: AppColors.teal),
+              ),
+              IconButton(
+                tooltip: _favorite ? 'Remove from favourites' : 'Add to favourites',
+                onPressed: _toggleFavorite,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  _favorite ? Icons.favorite : Icons.favorite_border,
+                  size: 26,
+                  color: _favorite ? Colors.red : AppColors.teal,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+
+          // ₹ 45,00,000  [NEGOTIABLE]
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(Icons.place, size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 4),
-              Expanded(
+              Flexible(
                 child: Text(
-                  p.locationLine,
-                  style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                p.priceLabel,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: p.isOnDemand ? AppColors.onDemand : AppColors.tealDark,
+                  p.priceLabel,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                    color: p.isOnDemand ? AppColors.onDemand : AppColors.priceOrange,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 3),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                decoration: BoxDecoration(
+                  color: negotiable ? AppColors.negOkBg : AppColors.negNoBg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: Text(
-                  p.negotiation == 'Yes' ? 'Negotiable' : 'Non-Negotiable',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  negotiable ? 'NEGOTIABLE' : 'NON-NEGOTIABLE',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: negotiable ? AppColors.negOkFg : AppColors.negNoFg,
+                  ),
                 ),
               ),
             ],
           ),
           if (_priceInWords(p) != null) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               _priceInWords(p)!,
-              style: const TextStyle(fontSize: 12, color: AppColors.textFaint),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontStyle: FontStyle.italic,
+                color: AppColors.priceWords,
+              ),
             ),
           ],
-          const Divider(height: 22),
-          Row(
-            children: [
-              _quickFact(Icons.square_foot,
-                  '${p.totalArea ?? '—'} ${p.areaUnit ?? ''}'.trim(), 'Total Area'),
-              _quickFact(Icons.bed, p.bedrooms ?? '—', 'Bedrooms'),
-              _quickFact(Icons.visibility, '${p.views}', 'Views'),
-              _quickFact(Icons.calendar_today, Fmt.date(p.displayDate), 'Posted'),
-            ],
-          ),
+
+          const SpecHeading('Make an offer', padding: EdgeInsets.only(top: 12, bottom: 8)),
+          _offerForm(),
         ],
       ),
+    );
+  }
+
+  /// The web's offer `<form>`: a rupee-prefixed field and a gradient Submit,
+  /// side by side. Submitting runs the same confirm-then-post flow the action
+  /// card used to trigger.
+  Widget _offerForm() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _offerController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(fontSize: 14, color: AppColors.ink),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: 'Make an offer',
+              hintStyle: const TextStyle(
+                fontSize: 14,
+                color: AppColors.labelMuted,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: const Icon(Icons.currency_rupee,
+                  size: 16, color: AppColors.teal),
+              prefixIconConstraints:
+                  const BoxConstraints(minWidth: 34, minHeight: 0),
+              filled: true,
+              fillColor: AppColors.tileBg,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.fieldBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.fieldBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.teal, width: 1.5),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: _submitOffer,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.brandGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x402F747F),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Text(
+              'Submit',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1051,26 +1453,14 @@ Rent Pondy Team'''));
     return null;
   }
 
-  Widget _quickFact(IconData icon, String value, String label) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 18, color: AppColors.teal),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textFaint)),
-        ],
-      ),
-    );
-  }
 
-  /// The four action cards on the web detail page, plus the offer/photo/address
-  /// actions that live further down that page.
+  /// The `cards` row from Details.jsx — four 100×80 shadowed white tiles laid
+  /// out `col-3`, each a 30px glyph over a 10px caption. The web tints a card
+  /// #F7F2F4 on hover; the pressed/《done》state stands in for that on touch.
+  ///
+  /// Offer and photo requests are NOT cards here: the web puts the offer form
+  /// inline under the price and the photo request on the empty gallery, and
+  /// both now live in those places.
   Widget _actionGrid() {
     final actions = <({IconData icon, String label, bool done, VoidCallback tap})>[
       (
@@ -1097,126 +1487,162 @@ Rent Pondy Team'''));
         done: _helpRequested,
         tap: _needHelp,
       ),
-      (
-        icon: Icons.local_offer_outlined,
-        label: 'Make an Offer',
-        done: false,
-        tap: _makeOffer,
-      ),
-      (
-        icon: Icons.photo_camera_outlined,
-        label: _photoRequested ? 'Photos Requested' : 'Request Photos',
-        done: _photoRequested,
-        tap: _requestPhotos,
-      ),
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.95,
-        children: actions
-            .map(
-              (a) => Material(
-                color: a.done ? AppColors.searchBottom : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: a.tap,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: a.done ? AppColors.tealSoft : const Color(0xFFE6E6E6),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(6),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(a.icon, size: 24, color: AppColors.teal),
-                        const SizedBox(height: 8),
-                        Text(
-                          a.label,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textMuted,
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final a in actions)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Material(
+                  color: a.done ? const Color(0xFFF7F2F4) : Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  elevation: 2,
+                  shadowColor: const Color(0x33000000),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: a.tap,
+                    child: SizedBox(
+                      height: 80,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(a.icon, size: 30, color: AppColors.teal),
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Text(
+                              a.label,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                height: 1.15,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            )
-            .toList(),
+            ),
+        ],
       ),
     );
   }
 
+  /// "Contact Info" and the reveal button, then — once revealed — the owner
+  /// grid and the Property Location rows the web keeps hidden behind the same
+  /// gate, followed by the Request Address / Call pair.
   Widget _contactSection(Property p) {
-    return AppCard(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Contact Info',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.teal,
+          const SpecHeading('Contact Info',
+              padding: EdgeInsets.only(top: 14, bottom: 8)),
+
+          // Outlined while hidden, solid teal once viewed — the web toggles
+          // this button's fill on `Viewed`.
+          GestureDetector(
+            onTap: _revealContact,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _contactVisible ? AppColors.teal : Colors.transparent,
+                border: Border.all(color: AppColors.teal),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.contact_phone_outlined,
+                    size: 20,
+                    color: _contactVisible ? Colors.white : AppColors.teal,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'View owner contact details',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _contactVisible ? Colors.white : AppColors.teal,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
-          if (!_contactVisible)
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _revealContact,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.tealDark,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                ),
-                icon: const Icon(Icons.phone, size: 18),
-                label: const Text('View Owner Contact'),
-              ),
-            )
-          else ...[
-            Row(
-              children: [
-                const Icon(Icons.person, size: 18, color: AppColors.teal),
-                const SizedBox(width: 8),
-                Text(
-                  p.ownerName ?? 'Owner',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _callOwner,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.tealDark,
+
+          if (_contactVisible) ...[
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final half = (constraints.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    SizedBox(
+                      width: half,
+                      child: _contactRow(Icons.person, 'Name', p.ownerName),
                     ),
-                    icon: const Icon(Icons.call, size: 17),
-                    label: Text(
-                      _contactNumber ?? '—',
+                    SizedBox(
+                      width: half,
+                      child: _contactRow(Icons.access_time, 'Best Time to Call',
+                          p.bestTimeToCall),
+                    ),
+                    SizedBox(
+                      width: constraints.maxWidth,
+                      child: _contactRow(Icons.email_outlined, 'Email', p.email),
+                    ),
+                    SizedBox(
+                      width: half,
+                      child: _contactRow(Icons.phone, 'Mobile', _contactNumber,
+                          onTap: _callOwner),
+                    ),
+                    SizedBox(
+                      width: half,
+                      child: _contactRow(Icons.phone_forwarded, 'Alternate Phone',
+                          p.alternatePhone,
+                          onTap: p.alternatePhone == null
+                              ? null
+                              : () => dialPhone(context, p.alternatePhone)),
+                    ),
+                  ],
+                );
+              },
+            ),
+            // Property Location is gated behind the same reveal on the web.
+            _locationRows(p),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (p.coordinates == null) ...[
+                  OutlinedButton(
+                    onPressed: _addressRequested ? null : _requestAddress,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.teal,
+                      side: const BorderSide(color: AppColors.teal),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: Text(
+                      _addressRequested ? 'Address Requested' : 'Request Address',
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
+                ],
                 IconButton(
                   tooltip: 'WhatsApp',
                   onPressed: () => openWhatsApp(
@@ -1226,16 +1652,61 @@ Rent Pondy Team'''));
                   ),
                   icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
                 ),
+                if (_contactNumber != null)
+                  FilledButton.icon(
+                    onPressed: _callOwner,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.teal,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6)),
+                    ),
+                    icon: const Icon(Icons.phone, size: 15),
+                    label: const Text('Call', style: TextStyle(fontSize: 13)),
+                  ),
               ],
             ),
-            if (p.bestTimeToCall != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                'Best time to call: ${p.bestTimeToCall}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-              ),
-            ],
           ],
+        ],
+      ),
+    );
+  }
+
+  /// One entry of the revealed owner grid: a teal glyph, a 13px grey caption
+  /// and the value under it. Tappable values (the two phone numbers) take the
+  /// teal the web gives them.
+  Widget _contactRow(IconData icon, String label, String? value,
+      {VoidCallback? onTap}) {
+    final shown = (value ?? '').trim().isEmpty ? 'N/A' : value!.trim();
+    final live = onTap != null && shown != 'N/A';
+    return GestureDetector(
+      onTap: live ? onTap : null,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: AppColors.teal),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 13, color: AppColors.textFaint),
+                ),
+                Text(
+                  shown,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: live ? AppColors.teal : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1293,8 +1764,11 @@ Rent Pondy Team'''));
       ],
     };
 
-    return AppCard(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+    // The web renders every row in the list, showing an italic "N/A" where a
+    // value is missing rather than dropping the row — so the two columns stay
+    // aligned and the sheet reads the same for every listing.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Two equal columns with a 12px gutter — the web's col-6 pairs.
@@ -1302,35 +1776,30 @@ Rent Pondy Team'''));
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final entry in sections.entries)
-                if (entry.value.any((r) => (r.value ?? '').isNotEmpty)) ...[
-                  _sectionHeading(entry.key),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 4,
-                    children: entry.value
-                        .where((r) =>
-                            (r.value ?? '').isNotEmpty && r.value != 'N/A')
-                        .map((r) => SizedBox(
-                              width: tileWidth,
-                              child: SpecTile(
-                                label: r.label,
-                                value: Fmt.cap(r.value),
-                                icon: r.icon,
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ],
-              if ((p.description ?? '').isNotEmpty) ...[
-                _sectionHeading('Description'),
-                SpecTile(
-                  label: 'Description',
-                  value: p.description!,
-                  icon: Icons.description_outlined,
-                  fullWidth: true,
+              for (final entry in sections.entries) ...[
+                SpecHeading(entry.key),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: entry.value
+                      .map((r) => SizedBox(
+                            width: tileWidth,
+                            child: SpecTile(
+                              label: r.label,
+                              value: Fmt.cap(r.value),
+                              icon: r.icon,
+                            ),
+                          ))
+                      .toList(),
                 ),
               ],
+              const SpecHeading('Description'),
+              SpecTile(
+                label: 'Description',
+                value: p.description ?? '',
+                icon: Icons.description_outlined,
+                fullWidth: true,
+              ),
             ],
           );
         },
@@ -1338,117 +1807,127 @@ Rent Pondy Team'''));
     );
   }
 
-  /// Black 16px section title — the web uses `<h4>` here, not the teal used
-  /// for card titles elsewhere on the page.
-  Widget _sectionHeading(String text) {
+  /// The location BLOCK on the web is only the map: an `<h6>Property Location
+  /// on Map:</h6>` beside a "Share Property Location" link and its orange share
+  /// glyph, then a 300px radius-8 canvas. Details.jsx renders the whole thing
+  /// only when `locationCoordinates` exists, and keeps the Country/State/City
+  /// rows inside the owner-contact reveal instead — see [_locationRows].
+  Widget _locationSection(Property p) {
+    final coords = p.coordinates;
+    if (coords == null) return const SizedBox.shrink();
+
+    final link = 'https://www.google.com/maps?q=${coords.lat},${coords.lng}';
+
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
+      padding: const EdgeInsets.fromLTRB(10, 14, 10, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Property Location on Map:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => _shareMenu(
+                  url: link,
+                  text: 'Check out this property: $link',
+                ),
+                child: const Row(
+                  children: [
+                    Text(
+                      'Share Property Location',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF014378)),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(Icons.ios_share, size: 18, color: Color(0xFFFF4920)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // No Google Maps SDK in the app, so the 300px canvas becomes a
+          // tappable panel that hands off to the installed maps app.
+          GestureDetector(
+            onTap: () => openMap(context, coords.lat, coords.lng),
+            child: Container(
+              height: 300,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.tileBg,
+                border: Border.all(color: AppColors.tileBorder),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.map_outlined, size: 44, color: AppColors.teal),
+                  SizedBox(height: 10),
+                  Text(
+                    'Open in Maps',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _locationSection(Property p) {
-    final coords = p.coordinates;
-    return AppCard(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeading('Property Location'),
-          SpecTile(
-            label: 'Address',
-            value: p.fullAddress,
-            icon: Icons.place,
-            fullWidth: true,
-          ),
-          // The web lists every location component as its own grid tile.
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final tileWidth = (constraints.maxWidth - 12) / 2;
-              return Wrap(
-                spacing: 12,
-                runSpacing: 4,
-                children: <({String label, String? value, IconData icon})>[
-                  (label: 'Country', value: p.country, icon: Icons.public),
-                  (label: 'State', value: p.state, icon: Icons.map_outlined),
-                  (label: 'City', value: p.city, icon: Icons.location_city),
-                  (label: 'District', value: p.district, icon: Icons.place_outlined),
-                  (label: 'Nagar', value: p.nagar, icon: Icons.signpost_outlined),
-                  (label: 'Area', value: p.area, icon: Icons.location_on_outlined),
-                  (label: 'Street Name', value: p.streetName, icon: Icons.streetview),
-                  (
-                    label: 'Door Number',
-                    value: p.doorNumber,
-                    icon: Icons.door_front_door_outlined
-                  ),
-                  (label: 'Pin Code', value: p.pinCode, icon: Icons.markunread_mailbox),
-                ]
-                    .where((r) => (r.value ?? '').isNotEmpty && r.value != 'N/A')
-                    .map((r) => SizedBox(
-                          width: tileWidth,
-                          child: SpecTile(
-                            label: r.label,
-                            value: Fmt.cap(r.value),
-                            icon: r.icon,
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _addressRequested ? null : _requestAddress,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.tealDark,
-                    side: const BorderSide(color: AppColors.tealSoft),
-                  ),
-                  icon: const Icon(Icons.location_searching, size: 16),
-                  label: Text(
-                    _addressRequested ? 'Address Requested' : 'Request Address',
-                    style: const TextStyle(fontSize: 12),
-                  ),
+  /// Country / State / City / … — revealed together with the owner contact,
+  /// which is where `locationDetailsList` sits on the web.
+  Widget _locationRows(Property p) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = (constraints.maxWidth - 12) / 2;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SpecHeading('Property Location'),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: <({String label, String? value, IconData icon})>[
+                (label: 'Country', value: p.country, icon: Icons.public),
+                (label: 'State', value: p.state, icon: Icons.map_outlined),
+                (label: 'City', value: p.city, icon: Icons.location_city),
+                (label: 'District', value: p.district, icon: Icons.place_outlined),
+                (label: 'Nagar', value: p.nagar, icon: Icons.signpost_outlined),
+                (label: 'Area', value: p.area, icon: Icons.location_on_outlined),
+                (label: 'Street Name', value: p.streetName, icon: Icons.streetview),
+                (
+                  label: 'Door Number',
+                  value: p.doorNumber,
+                  icon: Icons.door_front_door_outlined
                 ),
-              ),
-              if (coords != null) ...[
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => openMap(context, coords.lat, coords.lng),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.tealDark,
-                    ),
-                    icon: const Icon(Icons.map, size: 16),
-                    label: const Text('View on Map', style: TextStyle(fontSize: 12)),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Share location',
-                  onPressed: () {
-                    final link =
-                        'https://www.google.com/maps?q=${coords.lat},${coords.lng}';
-                    _shareMenu(
-                      url: link,
-                      text: 'Check out this property: $link',
-                    );
-                  },
-                  icon: const Icon(Icons.share, size: 18, color: AppColors.tealDark),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
+                (label: 'Pin Code', value: p.pinCode, icon: Icons.markunread_mailbox),
+              ]
+                  .map((r) => SizedBox(
+                        width: tileWidth,
+                        child: SpecTile(
+                          label: r.label,
+                          value: Fmt.cap(r.value),
+                          icon: r.icon,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -321,10 +321,17 @@ class SpecRow extends StatelessWidget {
   }
 }
 
-/// A single cell of the detail page's two-column spec grid, matching
-/// DetailProperty.jsx: a large teal glyph, the label above the value, and the
-/// value clipped to one line. Fixed 55px so the two columns stay aligned even
-/// when one side wraps.
+/// A single cell of the detail page's two-column spec grid — a direct port of
+/// `renderDetailItem` in Details.jsx:
+///
+///   .tile   background #F6FAFB, 1px #E3EEF0, radius 10, padding 8/10,
+///           min-height 58px (auto for the full-width Description)
+///   .chip   34px circle of #E3F1F2 holding a 16px #2F747F glyph
+///   .label  10.5px, 500, uppercase, 0.5 letter-spacing, #7A8A91
+///   .value  13.5px, 600, #1F3A3F — or italic #A6B0B5 when it reads "N/A"
+///
+/// The web renders every row, including empty ones, so a missing value shows
+/// as an italic "N/A" rather than the row disappearing.
 class SpecTile extends StatelessWidget {
   const SpecTile({
     super.key,
@@ -344,43 +351,111 @@ class SpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: fullWidth ? null : 55,
+    final isEmpty = value.trim().isEmpty || value.trim() == 'N/A';
+    final shown = isEmpty ? 'N/A' : value;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: fullWidth ? 0 : 58),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.tileBg,
+        border: Border.all(color: AppColors.tileBorder),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
         crossAxisAlignment:
             fullWidth ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 26, color: AppColors.teal),
-            const SizedBox(width: 12),
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: AppColors.tileIconBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: AppColors.tealDark),
+            ),
+            const SizedBox(width: 10),
           ],
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!fullWidth)
+                if (!fullWidth) ...[
                   Text(
-                    label,
+                    label.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textFaint,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                      color: AppColors.labelMuted,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                ],
                 Text(
-                  value,
-                  maxLines: fullWidth ? null : 1,
-                  overflow: fullWidth ? null : TextOverflow.ellipsis,
+                  shown,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                    height: fullWidth ? 1.5 : null,
+                    height: 1.35,
+                    color: isEmpty ? AppColors.valueEmpty : AppColors.ink,
+                    fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The gradient bar + label that prefixes every section on the detail and form
+/// pages — the `<h4>` with its 4×16 gradient `<span>` in Details.jsx.
+///
+/// Distinct from [SectionHeading], which is the plain teal heading the menu
+/// and account screens use; both exist because the web styles them differently.
+class SpecHeading extends StatelessWidget {
+  const SpecHeading(this.text, {super.key, this.padding});
+
+  final String text;
+  final EdgeInsets? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding ?? const EdgeInsets.only(top: 10, bottom: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.accentBarGradient,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+                color: AppColors.ink,
+              ),
             ),
           ),
         ],

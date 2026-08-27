@@ -169,14 +169,27 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
+  /// [_item] pops the drawer BEFORE invoking this, so the drawer subtree —
+  /// and this `context` with it — is unmounted as soon as the close animation
+  /// finishes, about a quarter of a second later. That is always long before
+  /// the user answers the confirm dialog, so the old `!context.mounted` guards
+  /// fired every single time and swallowed the logout without a word.
+  ///
+  /// The navigator and the session both outlive the drawer, so capture them
+  /// while the context is still alive and never touch it across the await.
+  /// The dialog goes on the root navigator (showDialog's default), which is
+  /// why it appeared even though the context behind it was already dying.
   Future<void> _logout(BuildContext context) async {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final session = context.read<SessionProvider>();
+
     final ok = await confirmDialog(
-      context,
+      navigator.context,
       message: 'Are you sure you want to logout?',
     );
-    if (!ok || !context.mounted) return;
-    await context.read<SessionProvider>().signOut();
-    if (!context.mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+    if (!ok) return;
+
+    await session.signOut();
+    navigator.pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
   }
 }

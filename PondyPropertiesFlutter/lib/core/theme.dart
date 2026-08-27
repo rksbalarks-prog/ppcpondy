@@ -61,6 +61,59 @@ class AppColors {
   static const Color searchBorder = Color(0xFFB7DCDE);
   static const Color searchTop = Color(0xFFF6FBFB);
   static const Color searchBottom = Color(0xFFEAF5F5);
+
+  // ── Detail / form page palette ──────────────────────────────────────────
+  // Lifted from the inline styles in Details.jsx, AddProperty.jsx and
+  // BuyerAssistance.jsx, which share one visual language: pale teal-tinted
+  // tiles, an uppercase micro-label over a dark slate value, and a gradient
+  // accent bar on every section heading.
+
+  /// Headings and field values (#1F3A3F).
+  static const Color ink = Color(0xFF1F3A3F);
+
+  /// Tile fill and its resting border (#F6FAFB / #E3EEF0).
+  static const Color tileBg = Color(0xFFF6FAFB);
+  static const Color tileBorder = Color(0xFFE3EEF0);
+
+  /// The round icon chip inside a tile (#E3F1F2 behind #2F747F).
+  static const Color tileIconBg = Color(0xFFE3F1F2);
+
+  /// Uppercase micro-label above a value (#7A8A91), and the italic grey a
+  /// tile falls back to when it has no value (#A6B0B5).
+  static const Color labelMuted = Color(0xFF7A8A91);
+  static const Color valueEmpty = Color(0xFFA6B0B5);
+
+  /// Price (#FF5722) and the italic "in words" line under it (#8B99A9).
+  static const Color priceOrange = Color(0xFFFF5722);
+  static const Color priceWords = Color(0xFF8B99A9);
+
+  /// Negotiable / non-negotiable pills.
+  static const Color negOkFg = Color(0xFF15803D);
+  static const Color negOkBg = Color(0xFFDCFCE7);
+  static const Color negNoFg = Color(0xFFB91C1C);
+  static const Color negNoBg = Color(0xFFFEE2E2);
+
+  /// Sticky detail header strip (#EFEFEF) and the gallery's arrow buttons
+  /// (#019988).
+  static const Color detailHeaderBg = Color(0xFFEFEFEF);
+  static const Color galleryNav = Color(0xFF019988);
+
+  /// Input border on the offer / form fields (#C6DFE3).
+  static const Color fieldBorder = Color(0xFFC6DFE3);
+
+  /// The brand gradient on pills and primary buttons
+  /// (`linear-gradient(135deg,#2F747F,#3E8E96)`).
+  static const List<Color> brandGradient = [
+    Color(0xFF2F747F),
+    Color(0xFF3E8E96),
+  ];
+
+  /// The vertical bar that prefixes every section heading
+  /// (`linear-gradient(180deg,#30747F,#6EB7B2)`).
+  static const List<Color> accentBarGradient = [
+    Color(0xFF30747F),
+    Color(0xFF6EB7B2),
+  ];
 }
 
 /// The web app is locked to a 470px-wide column; we reuse that as the max

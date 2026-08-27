@@ -462,6 +462,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {(can("Add Property") || can("Bulk Upload Property")) && (
                   <li className="p-0 mt-2"><NavLink to="/dashboard/bulk-upload-property" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaFileInvoice /> Bulk Upload Property</NavLink></li>
                 )}
+                {can("Adexpress Import") && (
+                  <li className="p-0 mt-2"><NavLink to="/dashboard/adexpress-import" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaFileInvoice /> Adexpress Import</NavLink></li>
+                )}
                 {can("Manage Property") && (
                   <li className="p-0 mt-2"><NavLink to="/dashboard/property-list" className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaPlusCircle /> Manage Properties</NavLink></li>
                 )}
