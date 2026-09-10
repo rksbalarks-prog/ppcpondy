@@ -36,6 +36,7 @@
     "openai": "^6.49.0",
     "pdfkit": "^0.19.1",
     "socket.io": "^4.8.1",
+    "tesseract.js": "5.1.1",
     "wasenderapi": "^0.4.0",
     "xlsx": "^0.18.5",
     "xml2js": "^0.6.2"

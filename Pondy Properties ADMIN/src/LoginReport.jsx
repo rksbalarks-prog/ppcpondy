@@ -8,7 +8,7 @@ import PhoneCell from "./components/PhoneCell";
 import FollowupQuickModal from "./components/FollowupQuickModal";
 
 // Remark values that map to a follow-up bucket (double-click → quick modal).
-const FOLLOWUP_REMARKS = ["seller", "buyer", "visitor", "ring"];
+const FOLLOWUP_REMARKS = ["seller", "buyer", "visitor", "ring", "notinterested", "noresponse"];
 
 // Constants & Helpers
 const remarksMap = {
@@ -16,6 +16,8 @@ const remarksMap = {
   seller: "Owner",
   buyer: "Tenant",
   ring: "Ring",
+  notinterested: "Not Interested",
+  noresponse: "No Response",
 };
 
 const getDisplayRemarks = (r) => remarksMap[r] || r || "N/A";
@@ -612,6 +614,8 @@ const LoginReportTable = () => {
             <option value="buyer">Buyer</option>
             <option value="visitor">Visitor</option>
             <option value="ring">Ring</option>
+            <option value="notinterested">Not Interested</option>
+            <option value="noresponse">No Response</option>
           </select>
         </div>
 
@@ -718,6 +722,8 @@ const LoginReportTable = () => {
                 <option value="buyer">Buyer</option>
                 <option value="visitor">Visitor</option>
                 <option value="ring">Ring</option>
+                <option value="notinterested">Not Interested</option>
+                <option value="noresponse">No Response</option>
               </select>
             ) : (
               <input
@@ -799,6 +805,8 @@ const LoginReportTable = () => {
                     <option value="buyer">Buyer</option>
                     <option value="visitor">Visitor</option>
                     <option value="ring">Ring</option>
+                    <option value="notinterested">Not Interested</option>
+                    <option value="noresponse">No Response</option>
                   </select>
                 </td>
 
@@ -840,6 +848,28 @@ const LoginReportTable = () => {
                   {item.remarks === "ring" && (
                     <div>
                       <span className="badge bg-success d-block mb-1">Ring</span>
+                      {item.updatedBy && (
+                        <small className="text-muted d-block">
+                          {item.updatedBy}
+                          {item.updateDate ? ` (${moment(item.updateDate).format("DD-MM-YYYY")})` : ""}
+                        </small>
+                      )}
+                    </div>
+                  )}
+                  {item.remarks === "notinterested" && (
+                    <div>
+                      <span className="badge bg-danger d-block mb-1">Not Interested</span>
+                      {item.updatedBy && (
+                        <small className="text-muted d-block">
+                          {item.updatedBy}
+                          {item.updateDate ? ` (${moment(item.updateDate).format("DD-MM-YYYY")})` : ""}
+                        </small>
+                      )}
+                    </div>
+                  )}
+                  {item.remarks === "noresponse" && (
+                    <div>
+                      <span className="badge bg-dark d-block mb-1">No Response</span>
                       {item.updatedBy && (
                         <small className="text-muted d-block">
                           {item.updatedBy}
@@ -1013,7 +1043,8 @@ const LoginReportTable = () => {
           <Modal.Title>Remark Status Required</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Please set a <strong>Remark Status</strong> (Seller / Buyer / Visitor / Ring) for this
+          Please set a <strong>Remark Status</strong> (Seller / Buyer / Visitor / Ring /
+          Not Interested / No Response) for this
           phone number before adding a follow-up.
         </Modal.Body>
         <Modal.Footer>

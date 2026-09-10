@@ -715,7 +715,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           )}
 
           {/* ── FOLLOW UPS ── */}
-          {sectionVisible(["Property FllowUp", "All Property FollowUp", "Buyer FllowUp", "Transfer FllowUps", "Transfer Assistant"]) && (
+          {sectionVisible(["Property FllowUp", "All Property FollowUp", "Buyer FllowUp", "No Response FllowUp", "Transfer FllowUps", "Transfer Assistant"]) && (
             <>
               <li className="p-3 mt-2 text-white" onClick={() => toggleSection("FollowUps")}
                 style={{ borderRadius: "5px", background: "#8BC34A", cursor: "pointer" }}>
@@ -725,6 +725,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {can("Property FllowUp") && (<li className="p-0 mt-2"><NavLink to="/dashboard/car-follow-ups" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><RiCaravanFill size={20} /> Property Follow Ups</NavLink></li>)}
                 {can("All Property FollowUp") && (<li className="p-0 mt-2"><NavLink to="/dashboard/followup-list" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaFileInvoice /> All Property FollowUps Data</NavLink></li>)}
                 {can("Buyer FllowUp") && (<li className="p-0 mt-2"><NavLink to="/dashboard/buyers-follow-ups" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><RiGroupFill size={20} /> All Buyers FollowUps Data</NavLink></li>)}
+                {/* No-Response follow-ups (created from the Login OTP report when Remark Status
+                    is "No Response"). Gated by the "No Response FllowUp" role key (UserRolls.jsx). */}
+                {can("No Response FllowUp") && (<li className="p-0 mt-2"><NavLink to="/dashboard/noresponse-follow-ups" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaFileInvoice /> No Response FollowUps Data</NavLink></li>)}
                 {can("Transfer FllowUps") && (<li className="p-0 mt-2"><NavLink to="/dashboard/transfer-follow-ups" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><RiExchangeFill size={20} /> Transfer FollowUps</NavLink></li>)}
                 {can("Transfer Assistant") && (<li className="p-0 mt-2"><NavLink to="/dashboard/transfer-assistant" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><RiHandCoinFill size={20} /> Transfer Assistant</NavLink></li>)}
               </ul>

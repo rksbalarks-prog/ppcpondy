@@ -25,7 +25,11 @@ const { extractJpegPages, extractTextLayer } = require('./pdfImages');
 const { tilePage } = require('./tiles');
 const { detectAdBoxes, cropRaw } = require('./boxes');
 const crops = require('./crops');
-const vision = require('./vision');
+// Which reader turns a scanned box into fields. Both modules export the same
+// five functions with the same shapes, so nothing below this line cares which
+// one is in use. 'local' (Tesseract, no tokens) is the default; ADEXPRESS_READER
+// =openai switches back to the vision calls.
+const vision = config.reader === 'openai' ? require('./vision') : require('./ocr');
 const { normalizeAd, mergeAds, resolvePhones, adKeyFor } = require('./normalize');
 const source = require('./source');
 const { AdExpressIssue, AdExpressAd } = require('./AdExpressModel');
@@ -449,6 +453,12 @@ async function processIssue(issueDoc, options = {}) {
     recentJobs.set(String(issueDoc._id), snapshot(job));
     if (recentJobs.size > 20) recentJobs.delete(recentJobs.keys().next().value);
     activeJob = null;
+    // The local reader holds Tesseract worker threads open between boxes so it
+    // does not pay the start-up cost 66 times a page. They must be released
+    // when the issue is done, or a nightly cron leaks a pool per run.
+    if (typeof vision.shutdown === 'function') {
+      await vision.shutdown().catch(() => {});
+    }
   }
 }
 

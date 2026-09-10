@@ -27,6 +27,7 @@ import BuyerListInterest from "./BuyerListInteres";
 import BuyersAssistant from "./BuyersAssistant";
 import BuyersContacted from "./BuyersContacted";
 import BuyersFollowUps from "./BuyersFollowUps";
+import NoResponseFollowUps from "./NoResponseFollowUps";
 import BuyersShortlized from "./BuyersShortlized";
 import BuyersStatics from "./BuyersStatics";
 import CallBackForm from "./CallBackForm";
@@ -218,6 +219,7 @@ const routes = [
   { path: "/buyers-assistant", element: <BuyersAssistant /> },
   { path: "/buyers-contacted", element: <BuyersContacted /> },
   { path: "/buyers-follow-ups", element: <BuyersFollowUps /> },
+  { path: "/noresponse-follow-ups", element: <NoResponseFollowUps /> },
   { path: "/buyers-shortlisted", element: <BuyersShortlized /> },
   { path: "/buyers-statics", element: <BuyersStatics /> },
   { path: "/callback-form", element: <CallBackForm /> },

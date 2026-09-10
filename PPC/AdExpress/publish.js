@@ -3,10 +3,11 @@
 // Shared by the Import button on the admin screen and by the nightly cron, so
 // both behave identically. Three steps:
 //
-//   1. shape each ad into a bulk-upload row, filling the handful of fields a
-//      newspaper ad never states so the row can land in PreApproved;
+//   1. resolve each ad's area + pincode, then shape it into a bulk-upload row,
+//      filling the handful of fields a newspaper ad never states so the row can
+//      land in PreApproved;
 //   2. hand the rows to the app's OWN POST /PPC/bulk-upload-properties — same
-//      Rent-ID allocation, same completeness gate, same revertable batch;
+//      PPC-ID allocation, same completeness gate, same revertable batch;
 //   3. draw a details card for each new property and attach it as the photo.
 //
 // Step 3 writes `photos` directly onto the rows this batch just created, keyed
@@ -23,6 +24,8 @@ const path = require('path');
 
 const config = require('./config');
 const { toBulkUploadRow } = require('./normalize');
+const locality = require('./locality');
+const geocode = require('./geocode');
 const { renderPropertyCard } = require('./cardImage');
 const { AdExpressAd } = require('./AdExpressModel');
 const AddModel = require('../AddModel');
@@ -72,6 +75,46 @@ async function writeCard(ad, ppcId) {
 }
 
 /**
+ * Teach the locality resolver from the app's own listings.
+ *
+ * Staff have paired area names with pincodes over the years — a far wider and
+ * more current gazetteer than any list hardcoded here, and in their own
+ * vocabulary. Refreshed at most every 10 minutes; a failure is harmless, the
+ * curated map still applies.
+ */
+let learnedAt = 0;
+async function primeLocalities() {
+  if (Date.now() - learnedAt < 10 * 60 * 1000) return;
+  try {
+    const pairs = await AddModel.collection
+      .find(
+        { pinCode: { $nin: [null, ''] }, area: { $nin: [null, '', 'undefined'] } },
+        { projection: { area: 1, pinCode: 1 } }
+      )
+      .toArray();
+    locality.learn(pairs);
+    learnedAt = Date.now();
+  } catch (err) {
+    console.error('[AdExpress] could not learn areas from existing listings:', err.message);
+  }
+}
+
+/**
+ * For the handful of ads the gazetteer cannot place, ask public records once
+ * and hang the answer on the ad. Rate-limited and cached, so this is a few
+ * seconds on a first run and nothing at all thereafter.
+ */
+async function fillUnknownLocalities(ads) {
+  for (const ad of ads) {
+    if (locality.resolveArea(ad.locality, ad.address, ad.rawText)) continue;
+    const text = ad.locality || ad.address;
+    if (!text) continue;
+    const found = await geocode.lookup(text);
+    if (found) ad.resolvedLocality = { area: found.area, pinCode: found.pinCode };
+  }
+}
+
+/**
  * Publish a set of staged ads.
  *
  * @param {Array} ads              staged ad documents (already vetted by the caller)
@@ -80,6 +123,8 @@ async function writeCard(ad, ppcId) {
  */
 async function publishAds(ads, options = {}) {
   if (!ads.length) return { insertedCount: 0, message: 'Nothing to publish.' };
+  await primeLocalities();
+  await fillUnknownLocalities(ads);
 
   const base = String(options.base || config.defaultBase).toUpperCase() === 'CH' ? 'CH' : 'PY';
   const forcePreApproved =
@@ -102,7 +147,7 @@ async function publishAds(ads, options = {}) {
     throw new Error(result.message || `Bulk upload rejected the rows (HTTP ${response.status}).`);
   }
 
-  // Rows go in ordered, so the Nth ad got the Nth Rent-ID. The phone number is
+  // Rows go in ordered, so the Nth ad got the Nth PPC-ID. The phone number is
   // checked against the stored row before anything is attached to it, so a
   // surprise in that ordering can never put a card on the wrong property.
   let cards = 0;

@@ -12,10 +12,12 @@ import { Modal, Button } from 'react-bootstrap';
  *   remark 'buyer'   (Tenant)  → POST /followup-create-buyer    → Buyer Followups
  *   remark 'visitor' (Visitor) → POST /visitor-followup-create  → Visitor Followups
  *   remark 'ring'    (Ring)    → POST /ring-followup-create     → Ring Followups
+ *   remark 'notinterested'     → POST /notinterested-followup-create → Not Interested
+ *   remark 'noresponse'         → POST /noresponse-followup-create → No Response
  *
  * Seller/Buyer reuse the existing collections (so they appear in the existing
- * pages); Visitor and Ring each use their own collection / page. Buyer
- * follow-ups require a ba_id, so 'N/A' is sent for login-report rows (which
+ * pages); Visitor, Ring, Not Interested and No Response each use their own
+ * collection. Buyer follow-ups require a ba_id, so 'N/A' is sent for login-report rows (which
  * have no buyer-assistance id) — matching the existing manual create flow.
  *
  * The status/type option lists below are the values accepted by the backend
@@ -47,13 +49,32 @@ const REMARK_CONFIG = {
     endpoint: '/ring-followup-create',
     extra: {},
   },
+  notinterested: {
+    label: 'Not Interested',
+    badge: 'bg-danger',
+    endpoint: '/notinterested-followup-create',
+    extra: {},
+  },
+  noresponse: {
+    label: 'No Response',
+    badge: 'bg-dark',
+    endpoint: '/noresponse-followup-create',
+    extra: {},
+  },
 };
 
 const STATUS_OPTIONS = ['Ring', 'Ready To Pay', 'Not Decided', 'Not Interested-Closed', 'Paid Closed'];
 const TYPE_OPTIONS = ['Payment Followup', 'Data Followup', 'Enquiry Followup', 'Payment Closed'];
 
+// The No Response schema also accepts a literal 'No Response' status/type; the
+// other buckets' enums do not, so it is offered only for that remark.
+const NORESPONSE_STATUS_OPTIONS = ['Ring', 'Ready To Pay', 'Not Decided', 'No Response', 'Not Interested-Closed', 'Paid Closed'];
+const NORESPONSE_TYPE_OPTIONS = ['Payment Followup', 'Data Followup', 'Enquiry Followup', 'No Response', 'Payment Closed'];
+
 const FollowupQuickModal = ({ phone, remark, adminName, onClose, onCreated }) => {
   const config = REMARK_CONFIG[remark];
+  const statusOptions = remark === 'noresponse' ? NORESPONSE_STATUS_OPTIONS : STATUS_OPTIONS;
+  const typeOptions = remark === 'noresponse' ? NORESPONSE_TYPE_OPTIONS : TYPE_OPTIONS;
   const [form, setForm] = useState({
     followupStatus: '',
     followupType: '',
@@ -132,7 +153,7 @@ const FollowupQuickModal = ({ phone, remark, adminName, onClose, onCreated }) =>
             <select name="followupStatus" value={form.followupStatus} onChange={handleChange}
               className="form-select" required>
               <option value="">Select Status</option>
-              {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+              {statusOptions.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
 
@@ -141,7 +162,7 @@ const FollowupQuickModal = ({ phone, remark, adminName, onClose, onCreated }) =>
             <select name="followupType" value={form.followupType} onChange={handleChange}
               className="form-select" required>
               <option value="">Select Type</option>
-              {TYPE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+              {typeOptions.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
 

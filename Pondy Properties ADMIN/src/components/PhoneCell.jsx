@@ -23,7 +23,7 @@ import { useFollowups } from '../contexts/FollowupContext';
  */
 const PhoneCell = ({
   phone,
-  type,                 // "owner" | "tenant" | "visitor" | "ring" | "any"
+  type,                 // "owner" | "tenant" | "visitor" | "ring" | "notinterested" | "noresponse" | "any"
   ppcId,
   ba_id,
   baId,                 // accepted as alias to match existing prop names

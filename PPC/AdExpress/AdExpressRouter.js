@@ -136,8 +136,13 @@ function whyNotImportable(ad) {
 router.get('/adexpress/status', (req, res) => {
   res.json({
     enabled: config.enabled,
+    // Which reader is actually live. Without this the status endpoint reports a
+    // vision model even when no OpenAI call is being made, which is misleading
+    // when you are checking whether the local reader took effect.
+    reader: config.reader,
     apiKeyConfigured: !!config.openaiApiKey,
-    visionModel: config.visionModel,
+    // Only meaningful for reader=openai.
+    visionModel: config.reader === 'openai' ? config.visionModel : null,
     site: config.site,
     deal: config.deal,
     phoneReads: config.phoneReads,

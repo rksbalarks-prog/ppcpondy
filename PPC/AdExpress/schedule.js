@@ -1,9 +1,14 @@
-// Nightly job: pick up the newest Pondicherry issue, read it, publish the ads.
+// Weekly job: pick up the newest Pondicherry issue, read it, publish the ads.
+// Runs Saturday afternoon, after the paper comes out.
 //
 //   1. ask adexpressonline.in for the latest issues
-//   2. take the newest one that has a public PDF and has not been read yet
+//   2. take THE NEWEST one, and only that one — if it has already been read the
+//      run stops rather than working backwards into an older paper
 //   3. run it through the reader (boxes -> per-ad OCR -> phone verification)
-//   4. publish the rent ads whose number every reading agreed on
+//   4. publish the sale ads whose number every reading agreed on, resolving
+//      each one's area + pincode on the way so it can be found by area search
+//   5. raise a follow-up and a bill for each, which takes them PreApproved ->
+//      Approved and therefore live
 //
 // Step 4 is the compromise worth being explicit about. The admin screen refuses
 // to import a number until a person has confirmed it against the printed ad —
@@ -24,6 +29,7 @@ const config = require('./config');
 const source = require('./source');
 const processor = require('./processor');
 const { publishAds } = require('./publish');
+const { followUpAndBill } = require('./approve');
 const { AdExpressIssue, AdExpressAd } = require('./AdExpressModel');
 
 const LOG = '[AdExpressCron]';
@@ -47,6 +53,7 @@ const state = () => ({
   armedAt,
   cron: config.cron.expression,
   timezone: config.cron.timezone,
+  latestOnly: config.cron.latestOnly,
   autoPublish: config.cron.autoPublish,
   minPhoneStatus: config.cron.minPhoneStatus,
   running,
@@ -81,7 +88,12 @@ async function findLatestUnread() {
     .filter((i) => i.pdfUrl)
     .sort((a, b) => new Date(b.issueDate || 0) - new Date(a.issueDate || 0));
 
-  for (const item of ordered) {
+  // The current paper only. Without this the job walks backwards through the
+  // archive whenever the newest issue is already read, and starts importing ads
+  // from papers whose properties have long since been sold.
+  const candidates = config.cron.latestOnly ? ordered.slice(0, 1) : ordered;
+
+  for (const item of candidates) {
     const existing = await AdExpressIssue.findOne({ issueKey: item.issueKey });
     if (existing && existing.status === 'processed') continue;
     if (existing && existing.status === 'processing') continue;
@@ -140,7 +152,9 @@ async function runOnce(options = {}) {
       return record({
         trigger: options.trigger,
         ok: true,
-        skipped: 'no new issue with a public PDF',
+        skipped: config.cron.latestOnly
+          ? 'the newest issue has already been read'
+          : 'no new issue with a public PDF',
       });
     }
 
@@ -148,9 +162,12 @@ async function runOnce(options = {}) {
     const job = await processor.processIssue(issue, { by: options.by || 'Adexpress cron' });
 
     let published = null;
+    let approved = null;
     if (config.cron.autoPublish) {
       const ads = await publishableAds(issue);
       if (ads.length) {
+        // publishAds resolves each ad's area + pincode on the way through, so
+        // the rows land able to be found by area search.
         published = await publishAds(ads, {
           base: config.defaultBase,
           addedBy: options.by || 'Adexpress cron',
@@ -158,6 +175,19 @@ async function runOnce(options = {}) {
           forcePreApproved: config.forcePreApproved,
         });
         console.log(`${LOG} ${published.message || ''}`.trim());
+
+        // PreApproved -> follow-up -> bill -> Approved, which is what the
+        // office used to do by hand every week.
+        const items = ads
+          .filter((a) => a.importedListingId)
+          .map((a) => ({ ppcId: a.importedListingId, phoneNumber: a.primaryPhone }));
+        approved = await followUpAndBill(items, options.by || 'Adexpress cron');
+        if (config.autoApprove.enabled && approved.attempted) {
+          console.log(
+            `${LOG} ${approved.followUpsCreated} follow-ups, ${approved.billsCreated} bills ` +
+              `-> Approved${approved.errors.length ? ' (' + approved.errors.join('; ') + ')' : ''}`
+          );
+        }
       }
     }
 
@@ -180,6 +210,9 @@ async function runOnce(options = {}) {
       preApproved: published ? published.preApprovedCount || 0 : 0,
       pending: published ? published.pendingCount || 0 : 0,
       cards: published ? published.cards || 0 : 0,
+      followUps: approved ? approved.followUpsCreated : 0,
+      billed: approved ? approved.billsCreated : 0,
+      approveErrors: approved && approved.errors.length ? approved.errors : undefined,
       bulkUploadId: published ? published.bulkUploadId : null,
       heldForReview: held,
       seconds: Math.round((Date.now() - started) / 1000),

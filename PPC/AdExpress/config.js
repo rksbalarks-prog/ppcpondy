@@ -7,7 +7,8 @@
 //
 // Source: https://adexpressonline.in — the Adexpress Pondicherry classified
 // weekly. Each issue is published as a WordPress post carrying a scanned PDF
-// (10-ish A4 pages, no text layer), so extraction is OCR by vision model.
+// (10-ish A4 pages, no text layer), so extraction is OCR — by default the local
+// Tesseract reader, which costs no tokens; see `reader` below.
 //
 // This is the Pondy Properties copy: the same pipeline as Rent Pondy's, but
 // pointed at the paper's FOR SALE advertisements instead of its rentals, and
@@ -70,6 +71,22 @@ const config = {
   maxPdfBytes: int(process.env.ADEXPRESS_MAX_PDF_BYTES, 60 * 1024 * 1024),
 
   // ── OCR / extraction ─────────────────────────────────────────────────────
+  // Which reader turns a scanned box into fields:
+  //   'local'  Tesseract on this machine — no API key, no tokens (default)
+  //   'openai' the original vision calls, kept as a fallback
+  // Both implement the same interface; see ocr.js and vision.js. Switching is
+  // the whole reason processor.js talks to `vision` through one variable.
+  reader: (process.env.ADEXPRESS_READER || 'local').toLowerCase(),
+
+  ocr: {
+    // Tesseract workers held per profile. Each one costs memory and a second of
+    // start-up, and pages are read one at a time, so two is plenty on the VPS.
+    workers: int(process.env.ADEXPRESS_OCR_WORKERS, 2),
+    // Below this the reading is treated as unreliable and cannot carry a phone
+    // number to unanimity on its own.
+    minConfidence: int(process.env.ADEXPRESS_OCR_MIN_CONFIDENCE, 30),
+  },
+
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   openaiBaseUrl: (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, ''),
   // Vision model used for both page triage and ad extraction. gpt-4o reads the
@@ -132,15 +149,21 @@ const config = {
 
   // ── Scheduled run ────────────────────────────────────────────────────────
   // Picks up the newest openly-published issue, reads it, and publishes the
-  // rent ads whose independent readings agreed. See schedule.js for why a cron
+  // sale ads whose independent readings agreed. See schedule.js for why a cron
   // is allowed to publish without a person confirming each number.
   cron: {
     enabled: bool(process.env.ADEXPRESS_CRON_ENABLED, true),
-    // 02:40 IST — after the nightly backup, well clear of the report mails.
-    expression: process.env.ADEXPRESS_CRON || '40 2 * * *',
+    // Saturday 16:30 IST. The paper is published on Saturday, so the job runs
+    // once a week, after it is out — the same schedule the Rent Pondy copy runs.
+    expression: process.env.ADEXPRESS_CRON || '30 16 * * 6',
     timezone: process.env.ADEXPRESS_CRON_TZ || 'Asia/Kolkata',
-    // How many recent issues to look through for one that has not been read.
+    // How many recent issues to list when working out which one is newest.
     lookBack: int(process.env.ADEXPRESS_CRON_LOOKBACK, 4),
+    // Only ever read the NEWEST issue. If it has already been read the run does
+    // nothing — it never works backwards through the archive. Without this a
+    // daily cron walks into last month's papers as soon as the current one is
+    // done and starts importing properties that sold weeks ago.
+    latestOnly: bool(process.env.ADEXPRESS_CRON_LATEST_ONLY, true),
     // false = read and stage only, publish nothing.
     autoPublish: bool(process.env.ADEXPRESS_CRON_AUTO_IMPORT, true),
     // 'verified'  — publish numbers every reading agreed on (default)
@@ -160,6 +183,53 @@ const config = {
     areaUnit: process.env.ADEXPRESS_AREA_UNIT || 'Sq.ft',
     brand: process.env.ADEXPRESS_CARD_BRAND || 'Pondy Properties',
   },
+
+  // ── Straight through to Approved ─────────────────────────────────────────
+  // After importing, raise a follow-up and a bill for each new property. The
+  // bill is what sets status 'active', which is what puts the listing on the
+  // Approved page and in the public feed. Defaults mirror what this office
+  // already does for this kind of lead, and every value below was checked
+  // against its OWN 296 existing bills (30 May 2026 backup) rather than
+  // carried over from the other app:
+  //
+  //   planName    'Free'      233 of 296 bills ("Free" 121 + "free" 112);
+  //                           the rest are Silver (57) and GOLD PLUS (6).
+  //                           Note 'Free' is NOT a pricingplans row — the plan
+  //                           list holds only Silver / GOLD PLUS / Platinum —
+  //                           but it is overwhelmingly what the bills record.
+  //   paymentType 'Free'      271 of 296, and it IS a real paymenttypes row.
+  //   adminOffice 'AUROBINDO' 296 of 296, the only office in use.
+  //
+  // followupStatus and followupType are enum members on FollowUpModel, so those
+  // two are checked by the schema itself.
+  autoApprove: {
+    enabled: bool(process.env.ADEXPRESS_AUTO_APPROVE, true),
+    followupStatus: process.env.ADEXPRESS_FOLLOWUP_STATUS || 'Not Decided',
+    followupType: process.env.ADEXPRESS_FOLLOWUP_TYPE || 'Data Followup',
+    // The endpoint caps remarks at 50 characters.
+    remarks: (process.env.ADEXPRESS_FOLLOWUP_REMARKS || 'Adexpress import').slice(0, 50),
+    billOffice: process.env.ADEXPRESS_BILL_OFFICE || 'AUROBINDO',
+    billPlan: process.env.ADEXPRESS_BILL_PLAN || 'Free',
+    billPaymentType: process.env.ADEXPRESS_BILL_PAYMENT_TYPE || 'Free',
+    billAmount: int(process.env.ADEXPRESS_BILL_AMOUNT, 0),
+    billValidity: int(process.env.ADEXPRESS_BILL_VALIDITY, 180),
+    billNoOfAds: int(process.env.ADEXPRESS_BILL_NO_OF_ADS, 1),
+  },
+
+  // Base URL for the app's own REST surface, used when this module calls the
+  // existing follow-up / bill endpoints rather than touching Mongo.
+  apiBase: (
+    process.env.ADEXPRESS_IMPORT_BASE ||
+    `http://127.0.0.1:${process.env.PORT || 5005}/PPC`
+  ).replace(/\/+$/, ''),
+
+  // ── Locality lookup (public records) ─────────────────────────────────────
+  // Only used when the local gazetteer cannot place an ad's locality. Asks
+  // India Post, then OpenStreetMap, and believes neither without a 605xxx
+  // Puducherry pincode. Answers are cached in Mongo forever.
+  geocodeEnabled: bool(process.env.ADEXPRESS_GEOCODE, true),
+  geocodeTimeoutMs: int(process.env.ADEXPRESS_GEOCODE_TIMEOUT_MS, 20000),
+
   // Where property photos live — the same folder the rest of the app uploads to.
   photoDir: process.env.ADEXPRESS_PHOTO_DIR || 'uploads',
 
