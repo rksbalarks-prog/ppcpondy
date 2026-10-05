@@ -220,7 +220,7 @@ const config = {
   // existing follow-up / bill endpoints rather than touching Mongo.
   apiBase: (
     process.env.ADEXPRESS_IMPORT_BASE ||
-    `http://127.0.0.1:${process.env.PORT || 5005}/PPC`
+    `http://127.0.0.1:${process.env.PORT || 5006}/PPC`
   ).replace(/\/+$/, ''),
 
   // ── Locality lookup (public records) ─────────────────────────────────────
@@ -237,12 +237,17 @@ const config = {
   // the live rentals collection by this module directly.
   importEndpoint:
     (process.env.ADEXPRESS_IMPORT_BASE ||
-      `http://127.0.0.1:${process.env.PORT || 5005}/PPC`).replace(/\/+$/, '') +
+      `http://127.0.0.1:${process.env.PORT || 5006}/PPC`).replace(/\/+$/, '') +
     '/bulk-upload-properties',
   // NOTE: this app's /bulk-upload-properties reads base as "PY only when
   // explicitly PY, otherwise CH" — the opposite of Rent Pondy's — so the value
   // has to be passed deliberately.
   defaultBase: (process.env.ADEXPRESS_DEFAULT_BASE || 'PY').toUpperCase(),
 };
+
+// Whether pages can be read at all. Only the OpenAI fallback needs a key — the
+// default local reader runs on this machine, so a missing OPENAI_API_KEY must not
+// stop the weekly cron from arming.
+config.readerReady = config.reader !== 'openai' || !!config.openaiApiKey;
 
 module.exports = Object.freeze(config);

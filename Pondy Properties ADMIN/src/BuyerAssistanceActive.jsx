@@ -18,6 +18,15 @@ const BuyerAssistanceActive = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [billHistory, setBillHistory] = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  // Month filter ('YYYY-MM', local time) — set by clicking a Yearly Dashboard card.
+  const [monthFilter, setMonthFilter] = useState('');
+  // Yearly dashboard (month-wise buyer counts)
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardYear, setDashboardYear] = useState('');
+  // Bulk "Mark as Expired" selection
+  const [selectedBaIds, setSelectedBaIds] = useState([]);
+  const [showExpireModal, setShowExpireModal] = useState(false);
+  const [expiring, setExpiring] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +60,8 @@ const BuyerAssistanceActive = () => {
             table { border-collapse: collapse; width: 100%; font-size: 12px; }
             th, td { border: 1px solid #000; padding: 6px; text-align: left; }
             th { background: #f0f0f0; }
+            /* Selection checkboxes are a screen control, not part of the report. */
+            .no-print { display: none; }
           </style>
         </head>
         <body>
@@ -62,7 +73,19 @@ const BuyerAssistanceActive = () => {
     printWindow.document.close();
     printWindow.print();
   };
-  const handleFilter = () => {
+  // Local-time YYYY-MM of the record's createdAt — local rather than UTC so a
+  // record created just after midnight IST lands in the right month.
+  const toYM = (raw) => {
+    if (!raw) return '';
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  // `overrides` lets a caller filter using a value it has only just set,
+  // without waiting for the state update — the month cards rely on this.
+  const applyFilters = (overrides = {}) => {
+    const month = overrides.monthFilter !== undefined ? overrides.monthFilter : monthFilter;
     let filtered = data;
 
     if (phoneNumber) {
@@ -103,14 +126,23 @@ const BuyerAssistanceActive = () => {
       });
     }
 
+    // Month (Created) — set by clicking a card in the Yearly Dashboard.
+    if (month) {
+      filtered = filtered.filter((item) => toYM(item.createdAt) === month);
+    }
+
     setFilteredData(filtered);
   };
+
+  const handleFilter = () => applyFilters();
 
 const handleReset = () => {
   setPhoneNumber('');
   setBaId('');
   setStartDate('');
   setEndDate('');
+  setMonthFilter('');
+  setSelectedBaIds([]);
   setFilteredData(data); // Reset to original data
 };
 
@@ -179,7 +211,87 @@ const handleViewBillHistory = async (ba_id) => {
   }
 };
 
+  // ----- Yearly dashboard data (month-wise buyer counts) -----
+  // Counts use the same createdAt the table's "Created At" column shows, so a
+  // month card and the rows it filters to always agree.
+  const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dashboardYears = Array.from(
+    new Set((data || []).map((item) => toYM(item.createdAt).slice(0, 4)).filter(Boolean))
+  ).sort((a, b) => b.localeCompare(a));
+  const selectedDashboardYear = dashboardYear || dashboardYears[0] || '';
+  const dashboardMonthly = Array.from({ length: 12 }, (_, m) => {
+    const mm = String(m + 1).padStart(2, '0');
+    const ym = `${selectedDashboardYear}-${mm}`;
+    const count = selectedDashboardYear
+      ? (data || []).filter((item) => toYM(item.createdAt) === ym).length
+      : 0;
+    return { month: m, mm, ym, count };
+  });
+  const dashboardYearTotal = dashboardMonthly.reduce((sum, x) => sum + x.count, 0);
 
+  // ----- Bulk "Mark as Expired" selection -----
+  // Only non-deleted rows in the current filtered view are selectable.
+  const selectableRows = filteredData.filter((item) => !item.isDeleted);
+  const allShownSelected =
+    selectableRows.length > 0 &&
+    selectableRows.every((item) => selectedBaIds.includes(item.ba_id));
+
+  const toggleSelectAllShown = () => {
+    if (allShownSelected) {
+      setSelectedBaIds([]);
+    } else {
+      setSelectedBaIds(selectableRows.map((item) => item.ba_id));
+    }
+  };
+
+  const toggleSelectOne = (baIdValue) => {
+    setSelectedBaIds((prev) =>
+      prev.includes(baIdValue) ? prev.filter((id) => id !== baIdValue) : [...prev, baIdValue]
+    );
+  };
+
+  const handleBulkExpire = async () => {
+    if (selectedBaIds.length === 0) return;
+    setExpiring(true);
+
+    const ids = [...selectedBaIds];
+    try {
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_URL}/mark-buyerAssistance-expired`,
+        { baIds: ids, expiredBy: localStorage.getItem('adminName') || 'Admin' }
+      );
+
+      const expired = res.data?.expired || [];
+      const notFound = res.data?.notFound || [];
+
+      // This page lists baActive records only — drop the expired ones from view.
+      if (expired.length > 0) {
+        setData((prev) => prev.filter((item) => !expired.includes(item.ba_id)));
+        setFilteredData((prev) => prev.filter((item) => !expired.includes(item.ba_id)));
+      }
+
+      setSelectedBaIds(notFound); // keep only the ones that failed still selected
+      setShowExpireModal(false);
+
+      if (notFound.length === 0) {
+        alert(
+          `${expired.length} buyer assistance record${expired.length === 1 ? '' : 's'} marked as Expired. They now appear under Expired Assistant.`
+        );
+      } else {
+        alert(
+          `Expired ${expired.length} of ${ids.length}. ${notFound.length} could not be found — they are still selected.`
+        );
+      }
+    } catch (error) {
+      alert(`Error marking as expired: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setExpiring(false);
+    }
+  };
+
+  // Inline so it beats the global `input { width: 100%; padding; margin }` rule
+  // in Users/UserList.css, which would otherwise squash these checkboxes.
+  const checkboxStyle = { width: 16, height: 16, margin: 0, padding: 0, cursor: 'pointer', verticalAlign: 'middle' };
 
   return (
     <div className="p-4">
@@ -262,6 +374,32 @@ onClick={handleReset}
         <span style={{ background: "#007bff", color: "white", padding: "8px 16px", borderRadius: "4px", fontWeight: "bold", fontSize: "14px" }}>
           Showing: {filteredData.length} Records
         </span>
+        {monthFilter && (
+          <span style={{ background: "#ffc107", color: "#212529", padding: "8px 16px", borderRadius: "4px", fontWeight: "bold", fontSize: "14px" }}>
+            Month: {MONTH_NAMES[Number(monthFilter.slice(5, 7)) - 1]} {monthFilter.slice(0, 4)}
+            <span
+              onClick={() => { setMonthFilter(''); applyFilters({ monthFilter: '' }); }}
+              style={{ cursor: 'pointer', marginLeft: '10px', fontWeight: 700 }}
+              title="Clear month filter"
+            >
+              ×
+            </span>
+          </span>
+        )}
+        <button
+          className="btn btn-warning"
+          disabled={selectedBaIds.length === 0}
+          onClick={() => setShowExpireModal(true)}
+        >
+          Mark Selected as Expired ({selectedBaIds.length})
+        </button>
+        <button
+          className="btn btn-info"
+          style={{ color: '#fff' }}
+          onClick={() => setShowDashboard(true)}
+        >
+          Dashboard
+        </button>
       </div>
       {/* Data Table */}
       <div className="overflow-x-auto mt-1 mb-3">
@@ -269,6 +407,15 @@ onClick={handleReset}
  <div ref={tableRef}>      <Table striped bordered hover responsive className="table-sm align-middle">
           <thead className="sticky-top">
             <tr>
+              <th className="border px-2 py-2 no-print text-center">
+                <input
+                  type="checkbox"
+                  checked={allShownSelected}
+                  onChange={toggleSelectAllShown}
+                  title="Select all shown rows"
+                  style={checkboxStyle}
+                />
+              </th>
               <th className="border px-4 py-2">Ba_Id</th>
               <th className="border px-4 py-2">Phone Number</th>
               <th className="border px-4 py-2">Buyer Name</th>
@@ -291,6 +438,17 @@ onClick={handleReset}
           <tbody>
             {filteredData.map((item, idx) => (
               <tr key={idx} className="text-center">
+                <td className="border px-2 py-2 no-print">
+                  {!item.isDeleted && (
+                    <input
+                      type="checkbox"
+                      checked={selectedBaIds.includes(item.ba_id)}
+                      onChange={() => toggleSelectOne(item.ba_id)}
+                      title={`Select Ba_Id ${item.ba_id}`}
+                      style={checkboxStyle}
+                    />
+                  )}
+                </td>
                 <td className="border px-4 py-2">{item.ba_id}</td>
                 <td className="border px-4 py-2"><PhoneCell phone={item.phoneNumber} type="tenant" ba_id={item.ba_id} /></td>
                 <td className="border px-4 py-2">{item.baName}</td>
@@ -448,6 +606,103 @@ onClick={handleReset}
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Yearly Dashboard Modal — month-wise buyer counts for a selected year */}
+      <Modal show={showDashboard} onHide={() => setShowDashboard(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Approved Buyer Assistance — Yearly Dashboard</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <label className="mb-0 fw-bold">Select Year:</label>
+            <select
+              className="form-control"
+              style={{ maxWidth: '160px' }}
+              value={selectedDashboardYear}
+              onChange={(e) => setDashboardYear(e.target.value)}
+            >
+              {dashboardYears.length === 0 && <option value="">No data</option>}
+              {dashboardYears.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <span className="badge bg-primary" style={{ fontSize: '13px' }}>
+              Total in {selectedDashboardYear || '-'}: {dashboardYearTotal}
+            </span>
+          </div>
+
+          <div className="row g-3">
+            {dashboardMonthly.map((mData) => (
+              <div className="col-6 col-sm-4 col-md-3" key={mData.mm}>
+                <div
+                  onClick={() => {
+                    if (mData.count === 0) return;
+                    setMonthFilter(mData.ym);
+                    applyFilters({ monthFilter: mData.ym });
+                    setShowDashboard(false);
+                  }}
+                  style={{
+                    cursor: mData.count > 0 ? 'pointer' : 'default',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: mData.count > 0 ? '#f0f6ff' : '#f5f5f5',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                    opacity: mData.count > 0 ? 1 : 0.55,
+                  }}
+                  title={mData.count > 0 ? `Click to filter ${MONTH_NAMES[mData.month]} ${selectedDashboardYear}` : 'No buyers'}
+                >
+                  <div style={{ fontSize: '14px', color: '#555', fontWeight: 600 }}>
+                    {MONTH_NAMES[mData.month]}
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 700, color: '#0d6efd' }}>
+                    {mData.count}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#888' }}>buyers</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-muted mt-3 mb-0" style={{ fontSize: '12px' }}>
+            Tip: click any month card to filter the table below to that month.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDashboard(false)}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Bulk Expire Confirmation Modal */}
+      <Modal show={showExpireModal} onHide={() => !expiring && setShowExpireModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Mark as Expired</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            You are about to mark <strong>{selectedBaIds.length}</strong>{' '}
+            buyer assistance record{selectedBaIds.length === 1 ? '' : 's'} as <strong>Expired</strong>.
+          </p>
+          <p className="text-muted" style={{ fontSize: '13px' }}>
+            They will be removed from this Approved list and will appear under Expired
+            Assistant, where they can be restored if this was a mistake.
+          </p>
+          {selectedBaIds.length > 0 && (
+            <p className="mb-0" style={{ fontSize: '13px' }}>
+              <strong>Ba_Ids:</strong> {selectedBaIds.slice(0, 20).join(', ')}
+              {selectedBaIds.length > 20 ? ` … +${selectedBaIds.length - 20} more` : ''}
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowExpireModal(false)} disabled={expiring}>
+            Cancel
+          </Button>
+          <Button variant="warning" onClick={handleBulkExpire} disabled={expiring}>
+            {expiring ? 'Marking…' : 'Mark as Expired'}
           </Button>
         </Modal.Footer>
       </Modal>

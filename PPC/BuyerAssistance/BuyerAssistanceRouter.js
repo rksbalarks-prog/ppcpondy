@@ -3891,6 +3891,154 @@ router.put('/undo-unassign-buyer-phone', async (req, res) => {
   }
 });
 
+// ─── Manual "Mark as Expired" for buyer assistance ───────────────────────────
+// Additive. Ported from RentPondy's tenant-assistance version. Flips
+// ba_status to "baExpired" (already in the model's enum) and keeps the PayU
+// record in step. baExpiredAt / baExpiredBy record who and when — those two
+// fields are what separate a hand-expired record from a plan-expired one, and
+// they drive the "Manually Expired" section on the Expired Assistant screen.
+//
+//   PUT /mark-buyerAssistance-expired    { baIds: [...], expiredBy }
+//   PUT /unmark-buyerAssistance-expired  { baIds: [...] }
+//   GET /manually-expired-buyerAssistance
+
+router.put("/mark-buyerAssistance-expired", async (req, res) => {
+  try {
+    const baIds = Array.isArray(req.body?.baIds) ? req.body.baIds : [];
+    const expiredBy = String(req.body?.expiredBy || "").trim() || "Admin";
+
+    if (baIds.length === 0) {
+      return res.status(400).json({ success: false, message: '"baIds" must be a non-empty array' });
+    }
+
+    const expired = [];
+    const notFound = [];
+
+    for (const rawId of baIds) {
+      const ba_id = Number(rawId);
+      if (!Number.isFinite(ba_id)) {
+        notFound.push(rawId);
+        continue;
+      }
+
+      const result = await BuyerAssistance.updateOne(
+        { ba_id },
+        { $set: { ba_status: "baExpired", baExpiredAt: new Date(), baExpiredBy: expiredBy } }
+      );
+
+      // matchedCount on modern drivers, n on older ones — accept either.
+      const matched = result.matchedCount != null ? result.matchedCount : result.n;
+      if (!matched) {
+        notFound.push(rawId);
+        continue;
+      }
+
+      // Keep the payment record in step with the plan-expiry path in
+      // /expired-buyer-plan-assitant, which moves 'paid' → 'expiredPlan'.
+      // Scoped to 'paid' so a pending or failed payment is never touched.
+      await PaymentPayUBuyer.updateMany(
+        { ba_id, payustatususer: "paid" },
+        { $set: { payustatususer: "expiredPlan", updatedAt: new Date() } }
+      );
+
+      expired.push(ba_id);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${expired.length} buyer assistance record(s) marked as expired.`,
+      expiredCount: expired.length,
+      expired,
+      notFound,
+    });
+  } catch (error) {
+    console.error("Error marking buyer assistance as expired:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error marking buyer assistance as expired.",
+      error: error.message,
+    });
+  }
+});
+
+router.put("/unmark-buyerAssistance-expired", async (req, res) => {
+  try {
+    const baIds = Array.isArray(req.body?.baIds) ? req.body.baIds : [];
+
+    if (baIds.length === 0) {
+      return res.status(400).json({ success: false, message: '"baIds" must be a non-empty array' });
+    }
+
+    const restored = [];
+    const skipped = [];
+
+    for (const rawId of baIds) {
+      const ba_id = Number(rawId);
+      if (!Number.isFinite(ba_id)) {
+        skipped.push(rawId);
+        continue;
+      }
+
+      // Only records expired BY HAND can be restored. A record whose plan ran
+      // out has no baExpiredAt, and putting it back would resurrect a plan
+      // whose validity has genuinely ended.
+      const doc = await BuyerAssistance.findOne({ ba_id, baExpiredAt: { $ne: null } });
+      if (!doc) {
+        skipped.push(rawId);
+        continue;
+      }
+
+      await BuyerAssistance.updateOne(
+        { ba_id },
+        { $set: { ba_status: "baActive", baExpiredAt: null, baExpiredBy: "" } }
+      );
+      await PaymentPayUBuyer.updateMany(
+        { ba_id, payustatususer: "expiredPlan" },
+        { $set: { payustatususer: "paid", updatedAt: new Date() } }
+      );
+
+      restored.push(ba_id);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${restored.length} buyer assistance record(s) restored to active.`,
+      restoredCount: restored.length,
+      restored,
+      skipped,
+    });
+  } catch (error) {
+    console.error("Error restoring buyer assistance:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error restoring buyer assistance.",
+      error: error.message,
+    });
+  }
+});
+
+router.get("/manually-expired-buyerAssistance", async (req, res) => {
+  try {
+    // Soft-deleted records are excluded — they belong on the Removed Buyer
+    // Assistant page, which is where their Undo lives. City scoping is applied
+    // by the model's cityScopePlugin.
+    const data = await BuyerAssistance.find({
+      ba_status: "baExpired",
+      baExpiredAt: { $ne: null },
+      isDeleted: { $ne: true },
+    }).sort({ baExpiredAt: -1 });
+
+    return res.status(200).json({ success: true, count: data.length, data });
+  } catch (error) {
+    console.error("Error fetching manually expired buyer assistance:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching manually expired buyer assistance.",
+      error: error.message,
+    });
+  }
+});
+
 
 
 module.exports = router;

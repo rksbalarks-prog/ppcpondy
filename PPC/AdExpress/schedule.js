@@ -238,8 +238,8 @@ function start() {
     console.log(`${LOG} disabled — the newest issue will not be picked up automatically`);
     return { started: false, reason: 'disabled' };
   }
-  if (!config.openaiApiKey) {
-    console.log(`${LOG} asleep — OPENAI_API_KEY is not set, so pages cannot be read`);
+  if (!config.readerReady) {
+    console.log(`${LOG} asleep — ADEXPRESS_READER=openai but OPENAI_API_KEY is not set`);
     return { started: false, reason: 'not-configured' };
   }
   if (!cronIsValid(config.cron.expression)) {

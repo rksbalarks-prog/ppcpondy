@@ -7186,6 +7186,68 @@ router.put('/update-property-status', async (req, res) => {
   }
 });
 
+// ─── Expired Property page (ExpireCar.jsx) ───────────────────────────────────
+// The admin page already called these two routes but they were never added on
+// this side, so expired properties had nowhere to show. Ported from RentPondy,
+// keyed by ppcId. previousStatus is deliberately NOT written: its enum here has
+// no 'expired', and an out-of-enum value would fail a later doc.save().
+
+router.get('/all-expired-properties', async (req, res) => {
+  try {
+    const expiredProperties = await AddModel.find({ status: 'expired' }).sort({ updatedAt: -1 });
+
+    res.status(200).json({
+      status: 'success',
+      expiredCount: expiredProperties.length,
+      expiredPlans: expiredProperties,
+    });
+  } catch (error) {
+    console.error('Error fetching all expired properties:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+});
+
+// PUT: move an expired property back to active or complete, by ppcId.
+router.put('/update-expired-property-status', async (req, res) => {
+  try {
+    const { ppcId, newStatus, updatedBy } = req.body;
+
+    if (!ppcId || !newStatus) {
+      return res.status(400).json({ message: 'ppcId and newStatus are required' });
+    }
+
+    if (!['active', 'complete'].includes(newStatus)) {
+      return res.status(400).json({ message: 'Invalid newStatus. Must be "active" or "complete".' });
+    }
+
+    const updatedProperty = await AddModel.findOneAndUpdate(
+      { ppcId, status: 'expired' },
+      {
+        status: newStatus,
+        updatedAt: new Date(),
+        reason: `Manually updated from expired to ${newStatus} by ${updatedBy || 'Admin'}`,
+      },
+      { new: true }
+    );
+
+    if (!updatedProperty) {
+      return res.status(404).json({ message: 'Expired property not found for given PPC ID' });
+    }
+
+    res.status(200).json({
+      message: `Property status updated to "${newStatus}" successfully`,
+      data: updatedProperty,
+    });
+  } catch (error) {
+    console.error('Error updating expired property status:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 
 

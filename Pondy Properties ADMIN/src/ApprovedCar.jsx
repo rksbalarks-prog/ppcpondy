@@ -15,6 +15,14 @@ const ApprovedCar = () => {
   const [ppcIdSearch, setPpcIdSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [monthFilter, setMonthFilter] = useState(""); // 'YYYY-MM'
+  // Bulk "Mark as Expired" selection (Approved rows ticked via checkboxes)
+  const [selectedPpcIds, setSelectedPpcIds] = useState([]);
+  const [showExpireModal, setShowExpireModal] = useState(false);
+  const [expiring, setExpiring] = useState(false);
+  // Yearly dashboard (month-wise property counts)
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardYear, setDashboardYear] = useState("");
   const [statusProperties, setStatusProperties] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentPpcId, setCurrentPpcId] = useState("");
@@ -149,6 +157,8 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
               table { border-collapse: collapse; width: 100%; font-size: 12px; }
               th, td { border: 1px solid #000; padding: 6px; text-align: left; }
               th { background: #f0f0f0; }
+              /* Selection checkboxes are a screen control, not part of the report. */
+              .no-print { display: none; }
             </style>
           </head>
           <body>
@@ -240,6 +250,32 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
   const DEFAULT_IMAGE =
     "https://d17r9yv50dox9q.cloudfront.net/car_gallery/default.jpg";
 
+  // ----- Yearly dashboard data (month-wise counts from createdAt) -----
+  // YM extracted in UTC to stay consistent with the Month (Created) filter.
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const toYM = (d) => { try { return new Date(d).toISOString().slice(0, 7); } catch (e) { return ""; } };
+  const dashboardYears = Array.from(
+    new Set(
+      (properties || [])
+        .map((p) => (p.createdAt ? toYM(p.createdAt).slice(0, 4) : ""))
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => b.localeCompare(a));
+  const selectedDashboardYear = dashboardYear || dashboardYears[0] || "";
+  const dashboardMonthly = Array.from({ length: 12 }, (_, m) => {
+    const mm = String(m + 1).padStart(2, "0");
+    const ym = `${selectedDashboardYear}-${mm}`;
+    const count = selectedDashboardYear
+      ? (properties || []).filter((p) => p.createdAt && toYM(p.createdAt) === ym).length
+      : 0;
+    return { month: m, mm, ym, count };
+  });
+  const dashboardYearTotal = dashboardMonthly.reduce((sum, x) => sum + x.count, 0);
+
+  // Inline so it beats the global `input { width: 100%; padding; margin }` rule
+  // in Users/UserList.css, which would otherwise squash these checkboxes.
+  const checkboxStyle = { width: 16, height: 16, margin: 0, padding: 0, cursor: "pointer", verticalAlign: "middle" };
+
   const handleSearch = () => {
     let result = [...properties];
 
@@ -280,6 +316,14 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
       const matchEnd = !endDate || createdDate <= endDate;
       return matchStart && matchEnd;
     });
+
+    // Month filter (YYYY-MM) — matches the property's Created date month.
+    // UTC, consistent with the date range filter above.
+    if (monthFilter) {
+      result = result.filter(
+        (prop) => prop.createdAt && toYM(prop.createdAt) === monthFilter,
+      );
+    }
 
     // Feature Status Filter
     if (featureStatusFilter) {
@@ -397,6 +441,7 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
     pincodeSearch,
     startDate,
     endDate,
+    monthFilter,
     featureStatusFilter,
     sortOption,
     hasLocation,
@@ -420,7 +465,82 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
 
     setStartDate("");
     setEndDate("");
+    setMonthFilter("");
+    setSelectedPpcIds([]);
     setFiltered(properties);
+  };
+
+  // ----- Bulk "Mark as Expired" selection -----
+  // Only non-deleted (active) rows in the current filtered view are selectable.
+  const selectableRows = filtered.filter((p) => !p.isDeleted);
+  const allShownSelected =
+    selectableRows.length > 0 &&
+    selectableRows.every((p) => selectedPpcIds.includes(p.ppcId));
+
+  const toggleSelectAllShown = () => {
+    if (allShownSelected) {
+      setSelectedPpcIds([]);
+    } else {
+      setSelectedPpcIds(selectableRows.map((p) => p.ppcId));
+    }
+  };
+
+  const toggleSelectOne = (ppcId) => {
+    setSelectedPpcIds((prev) =>
+      prev.includes(ppcId) ? prev.filter((id) => id !== ppcId) : [...prev, ppcId],
+    );
+  };
+
+  const handleBulkExpire = async () => {
+    if (selectedPpcIds.length === 0) return;
+    setExpiring(true);
+
+    // Expire each selected property via the existing single-record endpoint.
+    // Concurrency is capped so a large batch doesn't fire hundreds of parallel
+    // requests at once.
+    const ids = [...selectedPpcIds];
+    const succeeded = [];
+    const failed = [];
+    const CONCURRENCY = 5;
+    let cursor = 0;
+
+    const worker = async () => {
+      while (cursor < ids.length) {
+        const ppcId = ids[cursor++];
+        try {
+          await axios.put(`${process.env.REACT_APP_API_URL}/update-property-status`, {
+            ppcId,
+            status: "expired",
+          });
+          succeeded.push(ppcId);
+        } catch (e) {
+          failed.push(ppcId);
+        }
+      }
+    };
+
+    try {
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, ids.length) }, () => worker()),
+      );
+
+      // Approved page shows only active rows — drop the expired ones from view.
+      if (succeeded.length > 0) {
+        setProperties((prev) => prev.filter((p) => !succeeded.includes(p.ppcId)));
+        setFiltered((prev) => prev.filter((p) => !succeeded.includes(p.ppcId)));
+      }
+
+      setSelectedPpcIds(failed); // keep only the ones that failed still selected
+      setShowExpireModal(false);
+
+      if (failed.length === 0) {
+        alert(`${succeeded.length} propert${succeeded.length === 1 ? "y" : "ies"} marked as Expired. They now appear under Expired Property.`);
+      } else {
+        alert(`Expired ${succeeded.length} of ${ids.length}. ${failed.length} failed — please retry the ones still selected.`);
+      }
+    } finally {
+      setExpiring(false);
+    }
   };
 
   // Delete functionality
@@ -984,6 +1104,14 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
           />
         </div>
         <div className="col-md-2">
+          <Form.Control
+            type="month"
+            title="Month (Created)"
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+          />
+        </div>
+        <div className="col-md-2">
           <Button
             variant={showAdvancedFilters ? "primary" : "outline-primary"}
             className="w-100 text-nowrap"
@@ -1056,6 +1184,20 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
           >
             Print Page
           </button>
+          <button
+            className="btn btn-warning"
+            disabled={selectedPpcIds.length === 0}
+            onClick={() => setShowExpireModal(true)}
+          >
+            Mark Selected as Expired ({selectedPpcIds.length})
+          </button>
+          <button
+            className="btn btn-info"
+            style={{ color: "#fff" }}
+            onClick={() => setShowDashboard(true)}
+          >
+            Dashboard
+          </button>
           <span
             style={{
               background: "brown",
@@ -1089,6 +1231,14 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
         >
           <thead className="sticky-top">
             <tr>
+              <th className="no-print text-center" title="Select all shown">
+                <input
+                  type="checkbox"
+                  checked={allShownSelected}
+                  onChange={toggleSelectAllShown}
+                  style={checkboxStyle}
+                />
+              </th>
               <th>S.No</th>
               <th>Image</th>
               <th className="sticky-col sticky-col-1">PPC ID</th>
@@ -1142,7 +1292,7 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
                     <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan="46" className="text-center">
+                <td colSpan="47" className="text-center">
                   No properties found.
                 </td>
               </tr>
@@ -1156,6 +1306,15 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
 
                 return (
                   <tr key={prop._id} className={prop.isDeleted ? "table-danger" : ""}>
+                    <td className="no-print text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedPpcIds.includes(prop.ppcId)}
+                        onChange={() => toggleSelectOne(prop.ppcId)}
+                        disabled={prop.isDeleted}
+                        style={checkboxStyle}
+                      />
+                    </td>
                     <td>{idx + 1}</td>
                     <td>
                       <img
@@ -1354,6 +1513,102 @@ const taggedFree = freeData.map((item) => ({ ...item, _paymentType: "Free" }));
             </Button> */}
           </div>
         </Modal.Body>
+      </Modal>
+
+      {/* Yearly Dashboard Modal — month-wise property counts for a selected year */}
+      <Modal show={showDashboard} onHide={() => setShowDashboard(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Approved Properties — Yearly Dashboard</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
+            <label className="mb-0 fw-bold">Select Year:</label>
+            <select
+              className="form-control"
+              style={{ maxWidth: "160px" }}
+              value={selectedDashboardYear}
+              onChange={(e) => setDashboardYear(e.target.value)}
+            >
+              {dashboardYears.length === 0 && <option value="">No data</option>}
+              {dashboardYears.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <span className="badge bg-primary" style={{ fontSize: "13px" }}>
+              Total in {selectedDashboardYear || "-"}: {dashboardYearTotal}
+            </span>
+          </div>
+
+          <div className="row g-3">
+            {dashboardMonthly.map((mData) => (
+              <div className="col-6 col-sm-4 col-md-3" key={mData.mm}>
+                <div
+                  onClick={() => {
+                    if (mData.count === 0) return;
+                    setMonthFilter(mData.ym);
+                    setShowDashboard(false);
+                  }}
+                  style={{
+                    cursor: mData.count > 0 ? "pointer" : "default",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    padding: "16px",
+                    textAlign: "center",
+                    background: mData.count > 0 ? "#f0f6ff" : "#f5f5f5",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                    opacity: mData.count > 0 ? 1 : 0.55,
+                  }}
+                  title={mData.count > 0 ? `Click to filter ${MONTH_NAMES[mData.month]} ${selectedDashboardYear}` : "No properties"}
+                >
+                  <div style={{ fontSize: "14px", color: "#555", fontWeight: 600 }}>
+                    {MONTH_NAMES[mData.month]}
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: 700, color: "#0d6efd" }}>
+                    {mData.count}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#888" }}>properties</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-muted mt-3 mb-0" style={{ fontSize: "12px" }}>
+            Tip: click any month card to filter the table below to that month.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDashboard(false)}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Bulk Expire Confirmation Modal */}
+      <Modal show={showExpireModal} onHide={() => !expiring && setShowExpireModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Mark as Expired</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            You are about to mark <strong>{selectedPpcIds.length}</strong>{" "}
+            propert{selectedPpcIds.length === 1 ? "y" : "ies"} as <strong>Expired</strong>.
+          </p>
+          <p className="text-muted" style={{ fontSize: "13px" }}>
+            They will be removed from the Approved list and will appear under Expired
+            Property, where they can be moved back to Active.
+          </p>
+          {selectedPpcIds.length > 0 && (
+            <p className="mb-0" style={{ fontSize: "13px" }}>
+              <strong>PPC IDs:</strong> {selectedPpcIds.slice(0, 20).join(", ")}
+              {selectedPpcIds.length > 20 ? ` … +${selectedPpcIds.length - 20} more` : ""}
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowExpireModal(false)} disabled={expiring}>
+            Cancel
+          </Button>
+          <Button variant="warning" onClick={handleBulkExpire} disabled={expiring}>
+            {expiring ? "Expiring..." : "Confirm Expire"}
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

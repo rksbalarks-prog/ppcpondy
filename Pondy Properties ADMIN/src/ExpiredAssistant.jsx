@@ -10,6 +10,8 @@ import PhoneCell from "./components/PhoneCell";
 
 const ExpiredBuyerPlans = ({ item }) => {
   const [data, setData] = useState([]);
+  // Records expired by hand from the Approved Buyer Assistance page.
+  const [manualExpired, setManualExpired] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [baIdFilter, setBaIdFilter] = useState("");
@@ -73,8 +75,37 @@ const ExpiredBuyerPlans = ({ item }) => {
     }
   };
 
+  // Records an admin expired by hand from the Approved Buyer Assistance page.
+  // Kept separate from the plan-driven list above because the two are found
+  // differently: that one derives expiry from the plan's end date, this one is
+  // an explicit action recorded on the record itself (baExpiredAt / baExpiredBy).
+  const fetchManuallyExpired = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/manually-expired-buyerAssistance`
+      );
+      setManualExpired(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch manually expired assistance:', error.message);
+    }
+  };
+
+  const handleRestoreExpired = async (ba_id) => {
+    if (!window.confirm(`Restore BA ID ${ba_id} back to Approved?`)) return;
+    try {
+      await axios.put(`${process.env.REACT_APP_API_URL}/unmark-buyerAssistance-expired`, {
+        baIds: [ba_id],
+      });
+      setMessage(`BA ID ${ba_id} restored to Approved.`);
+      setManualExpired((prev) => prev.filter((rec) => rec.ba_id !== ba_id));
+    } catch (error) {
+      setMessage(`Error restoring BA ID ${ba_id}: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   useEffect(() => {
     fetchExpiredPlans();
+    fetchManuallyExpired();
   }, []);
 
   const handleSoftDelete = async (id) => {
@@ -156,6 +187,15 @@ const filteredRequests =
         return matchesBaId && matchesPhone;
       })
     : [];
+
+  // Same BA ID / phone search boxes also narrow the manually-expired list.
+  const filteredManualExpired = manualExpired.filter((rec) => {
+    const matchesBaId =
+      baIdFilter.trim() === "" || String(rec.ba_id ?? "").includes(baIdFilter.trim());
+    const matchesPhone =
+      phoneFilter.trim() === "" || String(rec.phoneNumber ?? "").includes(phoneFilter.trim());
+    return matchesBaId && matchesPhone;
+  });
   if (loading) return <p>Loading...</p>;
 
   if (!allowedRoles.includes(fileName)) {
@@ -286,6 +326,74 @@ const filteredRequests =
             </div>
           </div>
         ))
+      )}
+
+      {/* Manually expired — marked from the Approved Buyer Assistance page */}
+      <h5 className="mt-5 mb-3 text-center">Manually Expired Buyer Assistance</h5>
+      {filteredManualExpired.length === 0 ? (
+        <div className="text-center text-muted">
+          No records have been marked as expired by hand.
+        </div>
+      ) : (
+        <div className="card mb-4 shadow-sm">
+          <div className="card-header bg-warning">
+            <strong>{filteredManualExpired.length}</strong> record
+            {filteredManualExpired.length === 1 ? '' : 's'} expired by an admin. Restore puts one
+            back on the Approved list.
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-bordered table-striped mb-0">
+                <thead className="table-secondary">
+                  <tr>
+                    <th>#</th>
+                    <th>BA ID</th>
+                    <th>Buyer Name</th>
+                    <th>Phone</th>
+                    <th>City</th>
+                    <th>Area</th>
+                    <th>Min Price</th>
+                    <th>Max Price</th>
+                    <th>Property Mode</th>
+                    <th>Type</th>
+                    <th>Created</th>
+                    <th>Expired On</th>
+                    <th>Expired By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredManualExpired.map((rec, idx) => (
+                    <tr key={rec._id || rec.ba_id}>
+                      <td>{idx + 1}</td>
+                      <td>{rec.ba_id}</td>
+                      <td>{rec.baName}</td>
+                      <td><PhoneCell phone={rec.phoneNumber} type="tenant" ba_id={rec.ba_id} /></td>
+                      <td>{rec.city}</td>
+                      <td>{rec.area}</td>
+                      <td>{rec.minPrice}</td>
+                      <td>{rec.maxPrice}</td>
+                      <td>{rec.propertyMode}</td>
+                      <td>{rec.propertyType}</td>
+                      <td>{rec.createdAt ? new Date(rec.createdAt).toLocaleDateString() : 'N/A'}</td>
+                      <td>{rec.baExpiredAt ? new Date(rec.baExpiredAt).toLocaleString() : 'N/A'}</td>
+                      <td>{rec.baExpiredBy || '—'}</td>
+                      <td>
+                        <button
+                          onClick={() => handleRestoreExpired(rec.ba_id)}
+                          className="d-flex align-items-center btn btn-outline-primary btn-sm"
+                          title="Restore to Approved"
+                        >
+                          <FaUndo className="me-1" /> Restore
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

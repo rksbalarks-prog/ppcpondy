@@ -411,9 +411,9 @@ export default function AdExpressImport() {
           The importer is switched off on the server (ADEXPRESS_ENABLED).
         </Alert>
       )}
-      {status && status.enabled && !status.apiKeyConfigured && (
+      {status && status.enabled && status.readerReady === false && (
         <Alert variant="warning" className="py-2">
-          OPENAI_API_KEY is not set on the server, so scanned pages cannot be read yet.
+          ADEXPRESS_READER is set to openai but OPENAI_API_KEY is not set on the server, so scanned pages cannot be read yet.
         </Alert>
       )}
 

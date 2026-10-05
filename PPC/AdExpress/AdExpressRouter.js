@@ -141,6 +141,8 @@ router.get('/adexpress/status', (req, res) => {
     // when you are checking whether the local reader took effect.
     reader: config.reader,
     apiKeyConfigured: !!config.openaiApiKey,
+    // Whether pages can be read at all — the local reader needs no key.
+    readerReady: config.readerReady,
     // Only meaningful for reader=openai.
     visionModel: config.reader === 'openai' ? config.visionModel : null,
     site: config.site,
@@ -294,8 +296,8 @@ router.post(
 router.post(
   '/adexpress/issues/:id/process',
   guard(async (req, res) => {
-    if (!config.openaiApiKey) {
-      return fail(res, 400, 'OPENAI_API_KEY is not set on the server, so pages cannot be read.');
+    if (!config.readerReady) {
+      return fail(res, 400, 'ADEXPRESS_READER=openai but OPENAI_API_KEY is not set on the server, so pages cannot be read.');
     }
     const issue = await AdExpressIssue.findById(req.params.id);
     if (!issue) throw new Error('Issue not found.');
@@ -630,8 +632,8 @@ router.get('/adexpress/cron/status', (req, res) => res.json(schedule.state()));
 router.post(
   '/adexpress/cron/run-now',
   guard(async (req, res) => {
-    if (!config.openaiApiKey) {
-      return fail(res, 400, 'OPENAI_API_KEY is not set on the server, so pages cannot be read.');
+    if (!config.readerReady) {
+      return fail(res, 400, 'ADEXPRESS_READER=openai but OPENAI_API_KEY is not set on the server, so pages cannot be read.');
     }
     // Reading an issue takes minutes, so answer straight away and let the
     // screen poll, exactly like pressing Read on an issue.

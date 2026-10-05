@@ -103,6 +103,12 @@ ba_status: {
   isDeleted: { type: Boolean, default: false },   // Soft delete flag
   deletedAt: { type: Date, default: null },
 
+  // Manual "Mark as Expired" from the admin Approved Buyer Assistance page.
+  // Only set when an admin expires a record by hand, which is how the Expired
+  // screen tells a hand-expired record apart from a plan-expired one.
+  baExpiredAt: { type: Date, default: null },
+  baExpiredBy: { type: String, default: '' },
+
   // ✅ City base: 'PY' = Pondicherry (default), 'CH' = Chennai. Legacy records
   // without this field are treated as 'PY' by the base filter.
   base: {
