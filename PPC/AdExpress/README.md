@@ -112,7 +112,7 @@ rather than guessed. Zero wrong numbers presented as trustworthy.
 
 ## The weekly job
 
-`schedule.js` arms a cron at boot (`ADEXPRESS_CRON`, default **Saturday 16:30 IST**, after the paper is out):
+`schedule.js` arms a cron at boot (`ADEXPRESS_CRON`, default **Tuesday 16:00 IST**; the paper comes out on Saturday, and RentPondy reads it Saturday, PondyJob Monday):
 
 1. ask the site for the latest issues;
 2. take THE NEWEST one and only that one — if it has already been read the run stops, rather than working backwards into an older paper (`ADEXPRESS_CRON_LATEST_ONLY`);
@@ -229,7 +229,7 @@ OpenAI key, which the AI assistant already needs.
 | `ADEXPRESS_OCR_MIN_CONFIDENCE` | `30` | below this a digits pass cannot carry a number to unanimity |
 | `ADEXPRESS_ENABLED` | `true` | `false` makes every route answer 503 |
 | `ADEXPRESS_CRON_ENABLED` | `true` | arm the weekly pickup |
-| `ADEXPRESS_CRON` | `30 16 * * 6` | Saturday afternoon, after the paper is out |
+| `ADEXPRESS_CRON` | `0 16 * * 2` | Tuesday 16:00 IST (paper is out Saturday) |
 | `ADEXPRESS_CRON_TZ` | `Asia/Kolkata` | schedule timezone |
 | `ADEXPRESS_CRON_LATEST_ONLY` | `true` | read only the newest issue; never work backwards into old papers |
 | `ADEXPRESS_CRON_AUTO_IMPORT` | `true` | `false` = read and stage only |

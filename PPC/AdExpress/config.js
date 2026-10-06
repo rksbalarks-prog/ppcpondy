@@ -153,9 +153,10 @@ const config = {
   // is allowed to publish without a person confirming each number.
   cron: {
     enabled: bool(process.env.ADEXPRESS_CRON_ENABLED, true),
-    // Saturday 16:30 IST. The paper is published on Saturday, so the job runs
-    // once a week, after it is out — the same schedule the Rent Pondy copy runs.
-    expression: process.env.ADEXPRESS_CRON || '30 16 * * 6',
+    // Tuesday 16:00 IST. The paper is published on Saturday; the three apps
+    // take turns on the same issue (RentPondy Saturday, PondyJob Monday,
+    // Pondy Properties Tuesday) so their OCR runs never overlap.
+    expression: process.env.ADEXPRESS_CRON || '0 16 * * 2',
     timezone: process.env.ADEXPRESS_CRON_TZ || 'Asia/Kolkata',
     // How many recent issues to list when working out which one is newest.
     lookBack: int(process.env.ADEXPRESS_CRON_LOOKBACK, 4),

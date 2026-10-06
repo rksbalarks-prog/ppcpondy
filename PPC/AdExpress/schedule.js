@@ -1,5 +1,5 @@
 // Weekly job: pick up the newest Pondicherry issue, read it, publish the ads.
-// Runs Saturday afternoon, after the paper comes out.
+// Runs Tuesday afternoon; the paper comes out on Saturday.
 //
 //   1. ask adexpressonline.in for the latest issues
 //   2. take THE NEWEST one, and only that one — if it has already been read the

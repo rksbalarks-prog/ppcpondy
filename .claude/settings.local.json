@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*plink.exe*)",
+      "Bash(*pscp.exe*)",
+      "Bash(node --check:*)"
+    ]
+  }
+}
