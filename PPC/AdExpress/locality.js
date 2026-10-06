@@ -110,7 +110,9 @@ const AREA_PINCODE = {
   Thengaithittu: '605004',
   Thondamanatham: '605502',
   Thirubuvanai: '605107',
-  Thirukanchi: '605009',
+  // Was 605009. Every live listing that names it (3 of 3, Oct 2026) says
+  // 605110, the Villianur commune pincode it sits in.
+  Thirukanchi: '605110',
   Thiruthani: '605006',
   Vaithikuppam: '605012',
   Vadhanur: '605111',
@@ -142,6 +144,12 @@ const AREA_PINCODE = {
   Sedarapet: '605111',
   Manapet: '605111',
   Suthukeny: '605502',
+  // Added 2026-10-05 for places the 3 Oct issue printed that nothing here knew.
+  // Pincodes are the ones this app's own live listings already carry
+  // (odiyampet / Odiyampattu 605110 x4; thirukanur / thirukkanur 605501 x3,
+  // which the user app's own area list agrees with as "Tirukkanur").
+  Odiyampet: '605110',
+  Thirukanur: '605501',
 };
 
 /**
@@ -202,15 +210,53 @@ const ALIASES = {
   // Spellings this app's own area list uses for places Rent Pondy already places.
   Aryankuppam: 'Ariyankuppam',
   Maducarai: 'Madukarai',
+  // Spellings from the 3 Oct 2026 issue that resolved to nothing (or, worse,
+  // to White Town via the bare city name).
+  'ஒதியம்பட்டு': 'Odiyampet',
+  Othiyampet: 'Odiyampet',
+  Odiyampattu: 'Odiyampet',
+  Othiyampattu: 'Odiyampet',
+  'திருக்கனூர்': 'Thirukanur',
+  Thirukkanur: 'Thirukanur',
+  Tirukkanur: 'Thirukanur',
+  'திருக்காஞ்சி': 'Thirukanchi',
+  'அரும்பார்த்தபுரம்': 'Arumbarthapuram',
+  Arumathapuram: 'Arumbarthapuram',
 };
 
-/** Fold case, strip punctuation, squeeze whitespace — for loose comparison. */
+/**
+ * Fold case, strip punctuation, squeeze whitespace — for loose comparison.
+ *
+ * Tamil is folded too, because Tesseract drops the pulli (the dot that kills a
+ * vowel) and confuses long and short vowel signs: the paper's மூலக்குளம்
+ * (Moolakulam) came back as முலககுளம. Both sides of every comparison go
+ * through here, so folding loses nothing an exact match would have found.
+ */
 const normalise = (s) =>
   String(s || '')
     .toLowerCase()
+    .replace(/்/g, '') // pulli
+    .replace(/ீ/g, 'ி') // ீ -> ி
+    .replace(/ூ/g, 'ு') // ூ -> ு
+    .replace(/ே/g, 'ெ') // ே -> ெ
+    .replace(/ோ/g, 'ொ') // ோ -> ொ
     .replace(/[.,/\\()\-–—:;|]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+/**
+ * Tamil inflects place names: அரியாங்குப்பம் (Ariyankuppam) is printed
+ * அரியாங்குப்பத்தில் ("in Ariyankuppam"), and the final ம் is what changes. So
+ * a Tamil name ending in ம் is also matched on the stem before it — but only
+ * a long stem, or சாரம் (Saram) would match half the words in the paper.
+ */
+const TAMIL = /[஀-௿]/;
+const STEM_MIN = 6;
+function withTamilStem(entry) {
+  if (!TAMIL.test(entry.match) || !entry.match.endsWith('ம')) return [entry];
+  const stem = entry.match.slice(0, -1);
+  return stem.length >= STEM_MIN ? [entry, { ...entry, match: stem }] : [entry];
+}
 
 // The bare city name is not a locality. It has to be tried LAST, or it wins on
 // length alone: "Balaji Nagar, New Saram, Puducherry-13" would resolve to White
@@ -237,7 +283,7 @@ const ALL = [
     name: ALIASES[alias],
     match: normalise(alias),
   })),
-];
+].flatMap(withTamilStem);
 
 /**
  * Area names learned from the app's own listings.
@@ -259,11 +305,13 @@ let LEARNED = [];
  */
 function learn(pairs) {
   const tally = new Map(); // normalised name -> { pin -> count }
+  const spelling = new Map(); // normalised name -> a spelling staff actually typed
   for (const { area, pinCode } of pairs || []) {
     const name = normalise(area);
     const pin = String(pinCode || '').trim();
     if (!name || name === 'undefined' || !/^\d{6}$/.test(pin)) continue;
     if (!tally.has(name)) tally.set(name, new Map());
+    if (!spelling.has(name)) spelling.set(name, String(area).replace(/\s+/g, ' ').trim());
     const pins = tally.get(name);
     pins.set(pin, (pins.get(pin) || 0) + 1);
   }
@@ -273,7 +321,10 @@ function learn(pairs) {
     if (GENERIC.has(name)) continue; // never let "pondicherry" become specific
     // The pincode most of that area's listings agree on.
     const [pin] = [...pins.entries()].sort((a, b) => b[1] - a[1])[0];
-    LEARNED.push({ name: titleCase(name), match: name, pinCode: pin });
+    // A Tamil name keeps the spelling staff typed: the folded form exists only
+    // for matching and would read as misspelt on a listing.
+    const display = TAMIL.test(name) ? spelling.get(name) : titleCase(name);
+    LEARNED.push(...withTamilStem({ name: display, match: name, pinCode: pin }));
   }
   buildTiers();
   return LEARNED.length;
@@ -406,4 +457,20 @@ function resolveArea(...texts) {
   return scan(FALLBACK);
 }
 
-module.exports = { resolveArea, learn, AREA_PINCODE, ALIASES };
+/**
+ * resolveArea without the bare-city fallback: a named locality or a
+ * "Pondy-13" pincode, otherwise null.
+ *
+ * This is what a published listing uses. On the 3 Oct 2026 issue the fallback
+ * filed plots in Arumbarthapuram, Brindavanam and Thirukanur under White Town
+ * because each ad also said "புதுவை" — wrong in the area search both ways (not
+ * found under its real area, and found under White Town). An empty area is
+ * honest; the listing still carries city Pondicherry.
+ */
+function resolveNamedArea(...texts) {
+  const hit = resolveArea(...texts);
+  if (!hit) return null;
+  return FALLBACK.some((c) => c.match === hit.matched) ? null : hit;
+}
+
+module.exports = { resolveArea, resolveNamedArea, learn, normalise, AREA_PINCODE, ALIASES };

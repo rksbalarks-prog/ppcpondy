@@ -19,7 +19,7 @@
 // turns a null dealType into an issue and the ad goes to a person — which is
 // the right outcome, and much better than a confident guess.
 
-const { resolveArea } = require('./locality');
+const { resolveNamedArea } = require('./locality');
 
 const TAMIL = /[஀-௿]/;
 
@@ -376,6 +376,13 @@ const NOT_PROPERTY = [
   /\bTUITION\b|\bCOACHING\b|\bADMISSION\b/i,
   /\bCAR\s+FOR\s+SALE\b|\bBIKE\b|\bSCOOTY\b|\bAUTO\s+FOR\s+SALE\b/i,
   /\bWANTED\b\s+(?:DRIVER|STAFF|SALES|TEACHER|NURSE|COOK|WORKER)/i,
+  // Job ads read as sale ads because they say SALES / விற்பனை — the 3 Oct 2026
+  // issue published "SALES STAFF For Jewellery Showroom" (twice) and
+  // "விற்பனையாளர் தேவை" (salesperson wanted) as properties.
+  /\bSALES\s+(?:STAFF|EXECUTIVES?|GIRLS?|BOYS?|MAN|MEN|PERSONS?|REPRESENTATIVES?)\b/i,
+  /\bSALARY\b/i,
+  /விற்பனையாளர்/,
+  /ஆட்கள்\s*தேவை|பணியாளர்கள்?\s*தேவை/,
 ];
 
 // ── locality ───────────────────────────────────────────────────────────────
@@ -383,16 +390,16 @@ const NOT_PROPERTY = [
 // says "Pondicherry", because for area resolution that is the best guess for
 // "somewhere in town". For THIS field it is wrong: `locality` means the area
 // the ad actually named, and letting the fallback through would file a
-// Murungapakkam plot under White Town. So a match on the bare city name is
-// treated as no locality, and the later area resolution does its own job
-// unchanged.
+// Murungapakkam plot under White Town. resolveNamedArea leaves the fallback
+// out; CITY_ONLY stays as a second guard in case the bare name ever gets into
+// the specific tier.
 const CITY_ONLY = new Set([
   'pondicherry', 'puducherry', 'pondy', 'cuddalore',
   'புதுச்சேரி', 'புதுவை', 'புதுவை நகர்', 'காரைக்கால்', 'கடலூர்',
 ]);
 
 function detectLocality(text) {
-  const hit = resolveArea(text);
+  const hit = resolveNamedArea(text);
   if (!hit || !hit.area) return null;
   if (CITY_ONLY.has(String(hit.matched || '').trim().toLowerCase())) return null;
   return hit.area;
@@ -400,9 +407,14 @@ function detectLocality(text) {
 
 function looksLikeProperty(text, type, dealType) {
   for (const re of NOT_PROPERTY) if (re.test(text)) return false;
-  // A property word, or a deal word plus something to deal in.
   if (type) return true;
-  return dealType === 'rent' || dealType === 'sale';
+  if (dealType === 'rent') return true;
+  // A sale box with no property word in it is usually selling something else —
+  // the 3 Oct 2026 issue's were a running supermarket, a food company's
+  // machinery and a massage chair. It still counts when it states a land or
+  // floor size ("கோர்க்காடு ... 900சதுரடி விற்பனைக்கு"); with no type it is only
+  // staged for a person, since the cron publishes typed ads alone.
+  return dealType === 'sale' && detectArea(text) != null;
 }
 
 // ── main ───────────────────────────────────────────────────────────────────

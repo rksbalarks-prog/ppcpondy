@@ -131,6 +131,10 @@ async function publishableAds(issue) {
     status: { $nin: ['imported', 'ignored'] },
     phoneStatus: { $in: allowed },
     primaryPhone: { $ne: '' },
+    // An ad that never said what it sells is not published unattended. On the
+    // 3 Oct 2026 run every one of these was a job or a business, never a
+    // property; they stay in the review queue for a person instead.
+    propertyType: { $nin: ['', null] },
   }).lean();
 }
 

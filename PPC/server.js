@@ -85,6 +85,7 @@ const adExpressSchedule = require('./AdExpress/schedule');
 const dataAddedMail = require('./DataAddedMail');   // monthly Data Added summary
 const adminReportMail = require('./AdminReportMail'); // daily Admin Report PDF
 const adminExcelMail = require('./AdminExcelMail');   // daily Admin Detail xlsx
+const autoExpire = require('./AutoExpire');           // nightly auto-expire (own collections + /auto-expire/* routes)
 
 const app = express();
 const PORT = process.env.PORT || 5006;
@@ -478,6 +479,7 @@ app.use('/PPC', FcmTokenRouter);
 app.use('/PPC', dataAddedMail.router);
 app.use('/PPC', adminReportMail.router);
 app.use('/PPC', adminExcelMail.router);
+app.use('/PPC', autoExpire.router); // Auto-expire: /auto-expire/status, /preview, /run-now, /mode
 app.use('/PPC', SingleSendRouter)
 app.use('/PPC', EditBuyerBillRouter);
 app.use('/PPC', messageRoutes);
@@ -503,6 +505,8 @@ app.listen(PORT, () => {
   adminExcelMail.start();
   // Nightly Adexpress pickup: newest issue -> sale ads -> PreApproved.
   adExpressSchedule.start();
+  // Nightly auto-expire (03:00 IST). Starts in dry-run: reports only.
+  autoExpire.start();
 });
 
 

@@ -7,7 +7,7 @@
 // Indian number is dropped and the ad is flagged for review instead of being
 // silently imported with a wrong contact.
 
-const { resolveArea } = require('./locality');
+const { resolveNamedArea } = require('./locality');
 
 // Indian mobile numbers are 10 digits starting 6-9. Anything else (landlines,
 // half-read numbers) is kept aside so the reviewer can still see it.
@@ -419,7 +419,7 @@ function toBulkUploadRow(ad, defaults = {}) {
   // `ad.resolvedLocality` is set by publish.js for the few ads the gazetteer
   // could not place, from public records. The local map still wins.
   const located =
-    resolveArea(ad.locality, ad.address, ad.rawText) || ad.resolvedLocality || null;
+    resolveNamedArea(ad.locality, ad.address, ad.rawText) || ad.resolvedLocality || null;
   // No contact numbers, and no mention of where the listing was sourced from —
   // this text is public.
   const descriptionBits = [

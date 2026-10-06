@@ -10,8 +10,8 @@
 //      PPC-ID allocation, same completeness gate, same revertable batch;
 //   3. draw a details card for each new property and attach it as the photo.
 //
-// Step 3 writes `photos` directly onto the rows this batch just created, keyed
-// by their bulkUploadId. That is the one direct write in the module and it is
+// Step 3 writes `photos` (and `onDemand` when no price was printed) directly
+// onto the rows this batch just created, keyed by their bulkUploadId. That is the one direct write in the module and it is
 // deliberately narrow: the bulk endpoint has no photo field, and putting a
 // partial payload through the big edit route risks side effects on fields it
 // also owns.
@@ -106,7 +106,7 @@ async function primeLocalities() {
  */
 async function fillUnknownLocalities(ads) {
   for (const ad of ads) {
-    if (locality.resolveArea(ad.locality, ad.address, ad.rawText)) continue;
+    if (locality.resolveNamedArea(ad.locality, ad.address, ad.rawText)) continue;
     const text = ad.locality || ad.address;
     if (!text) continue;
     const found = await geocode.lookup(text);
@@ -162,11 +162,15 @@ async function publishAds(ads, options = {}) {
     const row = created[i];
     const ad = ads[i];
     if (!row || !ad || row.phoneNumber !== ad.primaryPhone) continue;
+    // No price printed (or the two readings of it disagreed): use the app's
+    // own "On Demand" flag, which the web and Flutter cards and detail pages
+    // already render, instead of showing the stored 0 as "N/A".
+    const priceOnRequest = ad.rentAmount == null ? { onDemand: true } : {};
     try {
       const photoPath = await writeCard(ad, row.ppcId);
       await AddModel.collection.updateOne(
         { _id: row._id, bulkUploadId: result.bulkUploadId },
-        { $set: { photos: [photoPath] } }
+        { $set: { photos: [photoPath], ...priceOnRequest } }
       );
       cards += 1;
       ad.importedListingId = row.ppcId;
