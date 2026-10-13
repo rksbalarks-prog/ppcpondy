@@ -3,7 +3,10 @@
     "allow": [
       "Bash(*plink.exe*)",
       "Bash(*pscp.exe*)",
-      "Bash(node --check:*)"
-    ]
+      "Bash(node --check:*)",
+      "Bash(curl -s -o /dev/null -w \"auto-expire/status: %{http_code}\\\\n\" https://ppcpondy.com/PPC/PPC/auto-expire/status)",
+      "Bash(curl -s -o /dev/null -w \"noresponse list: %{http_code}\\\\n\" https://ppcpondy.com/PPC/PPC/noresponse-followup-list)"
+    ],
+    "defaultMode": "acceptEdits"
   }
 }
