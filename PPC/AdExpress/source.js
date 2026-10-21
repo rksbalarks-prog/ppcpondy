@@ -1,10 +1,12 @@
 // Talks to adexpressonline.in — the publisher's site — to find issues and fetch
 // the ones that are published openly.
 //
-// The site runs WordPress, so the issue list comes from its public REST API
-// (/wp-json/wp/v2/posts) rather than from scraping rendered HTML: fewer
-// requests, nothing to re-learn when they restyle the site, and the response
-// tells us plainly whether an issue is public.
+// Until Oct 2026 the site ran WordPress and the issue list came from its REST
+// API (/wp-json/wp/v2/posts). The rebuilt site has no such API (it 404s); its
+// public library page /issues links every open issue as
+// /issues/<edition>/<YYYY-MM-DD>, and each issue's PDF is served at
+// /api/file/paper/<edition>/<YYYY-MM-DD>/paper.pdf. The date in that path is
+// the paper's own date, so issue keys stay the same as before.
 //
 // Two things this module deliberately does NOT do:
 //   * it never touches an issue behind the publisher's subscriber paywall — a
@@ -44,27 +46,12 @@ async function politeFetch(url, init = {}) {
   }
 }
 
-/** Resolve the WordPress category id for an edition, by slug, with a fallback. */
-async function categoryId(edition) {
+function assertEdition(edition) {
   if (!config.editions.includes(edition)) {
     throw new Error(
       `This importer only reads the ${config.editions.join(' / ')} edition of Adexpress.`
     );
   }
-  const known = config.categories[edition];
-  try {
-    const res = await politeFetch(
-      `${config.site}/wp-json/wp/v2/categories?slug=${encodeURIComponent(edition.toLowerCase())}`
-    );
-    if (res.ok) {
-      const list = await res.json();
-      if (Array.isArray(list) && list[0]?.id) return list[0].id;
-    }
-  } catch {
-    /* fall through to the configured id */
-  }
-  if (!known) throw new Error(`Unknown Adexpress edition "${edition}".`);
-  return known;
 }
 
 const decodeEntities = (s) =>
@@ -114,80 +101,74 @@ function issueKeyFor(edition, date) {
  * @returns {Promise<Array<{edition,issueKey,issueLabel,issueDate,postId,postLink,pdfUrl,paywalled}>>}
  */
 async function discoverIssues({ edition = 'Pondicherry', limit = 12 } = {}) {
-  const catId = await categoryId(edition);
-  const perPage = Math.min(50, Math.max(1, limit));
-  const url =
-    `${config.site}/wp-json/wp/v2/posts?categories=${catId}&per_page=${perPage}` +
-    `&_fields=id,date,link,title,content`;
+  assertEdition(edition);
+  const slug = edition.toLowerCase();
 
-  const res = await politeFetch(url);
+  const res = await politeFetch(`${config.site}/issues`, { accept: 'text/html,*/*' });
   if (!res.ok) throw new Error(`Adexpress site returned ${res.status} for the issue list.`);
-  const posts = await res.json();
-  if (!Array.isArray(posts)) throw new Error('Unexpected response from the Adexpress issue list.');
+  const html = await res.text();
 
-  return posts.map((post) => {
-    const html = post?.content?.rendered || '';
-    // The issue PDF is linked from the page image at the top of the post.
-    const pdfUrl = (html.match(/https:\/\/[^"'\s]+?\.pdf/i) || [])[0] || '';
-    const paywalled =
-      !pdfUrl && (/jetpack-paywall/i.test(html) || /Subscribe to keep reading/i.test(html));
+  const linkRe = new RegExp(`/issues/${slug}/(\\d{4}-\\d{2}-\\d{2})`, 'g');
+  const dates = [...new Set([...html.matchAll(linkRe)].map((m) => m[1]))]
+    .sort()
+    .reverse()
+    .slice(0, Math.min(50, Math.max(1, limit)));
+  if (!dates.length && !/\/issues\//.test(html)) {
+    throw new Error('Unexpected response from the Adexpress issue list.');
+  }
 
-    const clean = pdfUrl ? pdfUrl.replace(/&#0?38;/g, '&') : '';
-    const fromName = clean ? parseIssueFileName(clean) : null;
-    const issueDate = fromName ? fromName.date : post.date ? new Date(post.date) : null;
-
-    return {
+  const issues = [];
+  for (const iso of dates) {
+    const issueDate = new Date(`${iso}T00:00:00Z`);
+    const postLink = `${config.site}/issues/${slug}/${iso}`;
+    const meta = await issueMeta(postLink);
+    issues.push({
       edition,
       issueKey: issueKeyFor(edition, issueDate),
-      issueLabel:
-        decodeEntities(post?.title?.rendered).replace(/^Adexpress\s+\w+\s+/i, '') ||
-        (fromName ? fromName.label : ''),
+      issueLabel: meta ? meta.label : `Issue of ${iso}`,
       issueDate,
-      issueNumber: fromName ? fromName.issue : null,
-      postId: post.id,
-      postLink: post.link || '',
-      pdfUrl: clean,
-      paywalled,
-    };
-  });
+      issueNumber: meta ? meta.issue : null,
+      postId: null,
+      postLink,
+      pdfUrl: `${config.site}/api/file/paper/${slug}/${iso}/paper.pdf`,
+      paywalled: false,
+    });
+  }
+  return issues;
 }
 
 /**
- * The edition's "your local issues" page, which carries the CURRENT issue —
- * often a week ahead of the newest category post. Without this the importer
- * simply never sees the paper that came out this week.
+ * Volume / issue number from an issue page's title, e.g.
+ * "Adexpress Pondicherry 17 October 2026 — Vol 41 · No 29 | Read Online or PDF".
+ */
+async function issueMeta(pageUrl) {
+  try {
+    const res = await politeFetch(pageUrl, { accept: 'text/html,*/*' });
+    if (!res.ok) return null;
+    const title = decodeEntities((/<title[^>]*>([^<]*)<\/title>/i.exec(await res.text()) || [])[1]);
+    const m = /Vol\.?\s*(\d+)\D{1,6}No\.?\s*(\d+)/i.exec(title);
+    if (!m) return null;
+    return {
+      volume: Number(m[1]),
+      issue: Number(m[2]),
+      label: `Volume ${Number(m[1])}, Issue ${String(m[2]).padStart(2, '0')}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The newest open issue of the edition. On the old WordPress site this lived on
+ * a separate page ahead of the category posts; on the rebuilt site /issues
+ * already lists it first, so this is just the head of that list.
  */
 async function discoverCurrentIssue(edition = 'Pondicherry') {
   if (!config.editions.includes(edition)) return null;
-
-  const url = `${config.site}/your-local-issues-2/${edition.toLowerCase()}/`;
-  const res = await politeFetch(url, { accept: 'text/html,*/*' });
-  if (!res.ok) return null;
-
-  const html = await res.text();
-  const pdfUrl = (html.match(/https:\/\/[^"'\s]+?\.pdf/i) || [])[0];
-  if (!pdfUrl) return null;
-
-  const fromName = parseIssueFileName(pdfUrl);
-  if (!fromName) return null;
-
-  const heading = decodeEntities((html.match(/<h[12][^>]*>([^<]{3,90})<\/h[12]>/g) || [])
-    .map((h) => h.replace(/<[^>]*>/g, ''))
-    .find((h) => /volume|vol|N\.\d/i.test(h)) || '');
-
-  return {
-    edition,
-    issueKey: issueKeyFor(edition, fromName.date),
-    issueLabel: fromName.label,
-    issueDate: fromName.date,
-    issueNumber: fromName.issue,
-    postId: null,
-    postLink: url,
-    pdfUrl,
-    paywalled: false,
-    heading,
-  };
+  const [newest] = await discoverIssues({ edition, limit: 1 });
+  return newest || null;
 }
+
 
 /**
  * Download an issue PDF to the module's storage directory.
