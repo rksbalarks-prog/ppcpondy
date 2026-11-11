@@ -127,7 +127,7 @@ const Carousel = () => {
       return pic;
     }
     const imgIdx = propertyImageIndex[property._id] || 0;
-    return `https://ppcpondy.com/PPC/${property.photos[imgIdx].replace(/\\/g, "/").replace(/^\/+/, "")}`;
+    return `https://pondyproperty.com/PPC/${property.photos[imgIdx].replace(/\\/g, "/").replace(/^\/+/, "")}`;
   };
 
   // Auto-play image slideshow automatically

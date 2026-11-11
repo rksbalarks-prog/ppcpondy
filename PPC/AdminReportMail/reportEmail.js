@@ -110,7 +110,7 @@ function renderAdminReportEmail(report, { attachmentName } = {}) {
       <tr><td style="padding:14px 24px 20px;border-top:1px solid ${LINE};font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${MUTED};line-height:1.6;">
         ${attachmentName ? `📎 The full report is attached as <strong>${esc(attachmentName)}</strong>.<br>` : ''}
         Automated from the admin panel — live view at
-        <a href="https://ppcpondy.com/process/dashboard/adminreport" style="color:${BRAND};">ppcpondy.com/process/dashboard/adminreport</a>.
+        <a href="https://pondyproperty.com/process/dashboard/adminreport" style="color:${BRAND};">pondyproperty.com/process/dashboard/adminreport</a>.
       </td></tr>
     </table>
   </td></tr>
@@ -132,7 +132,7 @@ function renderAdminReportEmail(report, { attachmentName } = {}) {
     ]),
     ...(report.notes && report.notes.length ? ['NOTES', ...report.notes.map((n) => `  - ${n}`), ''] : []),
     attachmentName ? `Attached: ${attachmentName}` : '',
-    'https://ppcpondy.com/process/dashboard/adminreport',
+    'https://pondyproperty.com/process/dashboard/adminreport',
   ].join('\n');
 
   return { subject, html, text };

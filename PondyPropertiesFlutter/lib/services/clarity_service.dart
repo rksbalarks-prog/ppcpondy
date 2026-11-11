@@ -80,7 +80,7 @@ class ClarityService {
 
     if (phone.isNotEmpty) {
       // Matches the web app's identity so a session here and a session on
-      // ppcpondy.com line up to the same person.
+      // pondyproperty.com line up to the same person.
       //
       // NOTE: Microsoft advises against putting PII in this field. Swapping to
       // a hash (or an internal user id) is a one-line change here and nothing

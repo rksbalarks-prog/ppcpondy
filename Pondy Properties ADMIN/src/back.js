@@ -15,7 +15,7 @@ const LoginReport = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('https://ppcpondy.com/PPC/user/all');
+        const response = await axios.get('https://pondyproperty.com/PPC/user/all');
         
         if (response.status === 200 && Array.isArray(response.data.data)) {
           // Ensure the response data is an array

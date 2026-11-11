@@ -1401,12 +1401,12 @@ useEffect(() => {
         if (Array.isArray(propertyDetails.video)) {
           videoUrls = [...new Set(
             propertyDetails.video.map(video =>
-              `https://ppcpondy.com/PPC/${video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
+              `https://pondyproperty.com/PPC/${video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
             )
           )];
         } else if (typeof propertyDetails.video === "string" && propertyDetails.video.trim()) {
           videoUrls = [
-            `https://ppcpondy.com/PPC/${propertyDetails.video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
+            `https://pondyproperty.com/PPC/${propertyDetails.video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
           ];
         }
 
@@ -1420,7 +1420,7 @@ useEffect(() => {
 
 
         if (data?.video?.video) {
-          const cleanUrl = `https://ppcpondy.com/PPC/${data.video.video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`;
+          const cleanUrl = `https://pondyproperty.com/PPC/${data.video.video.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`;
           setVideos([cleanUrl]);
         }
       }
@@ -1512,7 +1512,7 @@ const getMimeType = (filename) => {
  const images = propertyDetails.photos && propertyDetails.photos.length > 0
   ? [...new Set(
       propertyDetails.photos.map(photo =>
-        `https://ppcpondy.com/PPC/${photo.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
+        `https://pondyproperty.com/PPC/${photo.replace(/\\/g, "/").replace(/^\/+/, "").trim()}`
       )
     )]
   : [];
@@ -3632,7 +3632,7 @@ Home</button>
         <Carousel interval={3000} pause={false}>
           {uploads.flatMap((upload) =>
             upload.images.map((imgPath, idx) => {
-              const imageUrl = `https://ppcpondy.com/PPC/${imgPath.replace(/\\/g, '/')}`;
+              const imageUrl = `https://pondyproperty.com/PPC/${imgPath.replace(/\\/g, '/')}`;
  
               return (
                 <Carousel.Item key={upload._id + idx}>

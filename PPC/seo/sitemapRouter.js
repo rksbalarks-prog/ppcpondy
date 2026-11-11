@@ -1,5 +1,5 @@
 /**
- * XML sitemaps for https://ppcpondy.com
+ * XML sitemaps for https://pondyproperty.com
  *
  * The public site is a client-rendered SPA, so a crawler has no links to
  * follow until JavaScript runs — the sitemap is how Google discovers the
@@ -21,7 +21,7 @@ const AddModel = require('../AddModel');
 
 const router = express.Router();
 
-const SITE_URL = (process.env.SEO_SITE_URL || 'https://ppcpondy.com').replace(/\/+$/, '');
+const SITE_URL = (process.env.SEO_SITE_URL || 'https://pondyproperty.com').replace(/\/+$/, '');
 
 /**
  * Public path prefix these sitemaps are reachable at.
@@ -29,7 +29,7 @@ const SITE_URL = (process.env.SEO_SITE_URL || 'https://ppcpondy.com').replace(/\
  * Apache proxies the site's /PPC/* to this app and the app mounts its routers
  * under /PPC again, so a route Express sees as /PPC/sitemap.xml is served to
  * the world at /PPC/PPC/sitemap.xml — the same doubling the frontend's
- * REACT_APP_API_URL (https://ppcpondy.com/PPC/PPC) already relies on. The
+ * REACT_APP_API_URL (https://pondyproperty.com/PPC/PPC) already relies on. The
  * sitemap index has to advertise the URL Google can actually fetch, not the
  * internal one. Override with SEO_PUBLIC_PREFIX if the vhost is ever changed
  * to serve these at the root.

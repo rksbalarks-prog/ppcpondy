@@ -161,7 +161,7 @@ const handleSubmit = async (e) => {
                   <p><strong>Landline:</strong> +91-0413 - 2914409 </p>
                   <p><strong>Mobile:</strong> +91-91505 24409</p>
                   <p><strong>Email:</strong> inf.ppcpdy@gmail.com</p>
-                  <p><strong>Website:</strong>   www.ppcpondy.com</p>
+                  <p><strong>Website:</strong>   pondyproperty.com</p>
                   <p><strong>Working Hours:</strong>  09:30 AM - 08:30 PM (Monday – Saturday)
                   10:30 AM - 06:30 PM (Sunday)</p>
                   <p><strong>Confirm office opening hours on government and local holidays.</strong></p>

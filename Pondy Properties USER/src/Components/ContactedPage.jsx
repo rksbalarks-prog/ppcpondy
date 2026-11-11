@@ -114,7 +114,7 @@ const location = useLocation();
       id: 3,
       icon: <FaGlobe size={50} color='grey' />,
       title: 'Website',
-      text: 'Visit: www.ppcpondy.com',
+      text: 'Visit: pondyproperty.com',
     },
     {
       id: 4,

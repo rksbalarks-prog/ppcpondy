@@ -12,14 +12,14 @@
  */
 
 export const SITE = {
-  url: 'https://ppcpondy.com',
+  url: 'https://pondyproperty.com',
   name: 'Pondy Properties',
   shortName: 'Pondy Properties',
   twitter: '@pondyproperty',
-  logo: 'https://ppcpondy.com/logo512.png',
+  logo: 'https://pondyproperty.com/logo512.png',
   // Default social share image. Replace with a purpose-built 1200x630 banner
   // (see SEO.md) — logo512 works but renders as a small square in previews.
-  defaultImage: 'https://ppcpondy.com/logo512.png',
+  defaultImage: 'https://pondyproperty.com/logo512.png',
   phone: '+91-9150524409',
   landline: '+91-413-2914409',
   email: 'inf.ppcpdy@gmail.com',

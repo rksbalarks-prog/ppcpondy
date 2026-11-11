@@ -170,7 +170,7 @@ const handlePropertyImagePrev = (propertyId, totalPhotos) => {
 const getPropertyImage = (property) => {
   if (property.photos && property.photos.length > 0) {
     const currentImageIndex = propertyImageIndex[property._id] || 0;
-    return `https://ppcpondy.com/PPC/${property.photos[currentImageIndex].replace(/\\/g, "/").replace(/^\/+/, "")}`;
+    return `https://pondyproperty.com/PPC/${property.photos[currentImageIndex].replace(/\\/g, "/").replace(/^\/+/, "")}`;
   }
   return pic;
 };

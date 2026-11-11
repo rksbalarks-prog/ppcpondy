@@ -1,5 +1,5 @@
 # https://www.robotstxt.org/robotstxt.html
-# Pondy Properties — https://ppcpondy.com
+# Pondy Properties — https://pondyproperty.com
 #
 # Public pages (home, city feeds, category pages, property details, policy
 # pages) are open to every crawler. Everything below is a logged-in account
@@ -90,5 +90,5 @@ Crawl-delay: 10
 
 # Static core pages (regenerated at build time by `npm run sitemap`), plus the
 # live property sitemap served by the backend from MongoDB.
-Sitemap: https://ppcpondy.com/sitemap.xml
-Sitemap: https://ppcpondy.com/PPC/PPC/sitemap.xml
+Sitemap: https://pondyproperty.com/sitemap.xml
+Sitemap: https://pondyproperty.com/PPC/PPC/sitemap.xml

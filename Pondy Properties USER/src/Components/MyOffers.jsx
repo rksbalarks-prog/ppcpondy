@@ -145,7 +145,7 @@ const formatPrice = (price) => {
                             <div className="img-container" style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
                               <img
                                 src={property.photos && property.photos.length > 0
-                                  ? `https://ppcpondy.com/PPC/${property.photos[0]}`
+                                  ? `https://pondyproperty.com/PPC/${property.photos[0]}`
                                   : pic}
                                     alt={
     `${property.ppcId || 'N/A'}-${property.propertyMode || 'N/A'}-${property.propertyType || 'N/A'}-rs-${property.price || '0'}
@@ -271,7 +271,7 @@ const formatPrice = (price) => {
                                 <img
   src={
     property.photos && property.photos.length > 0
-      ? `https://ppcpondy.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
+      ? `https://pondyproperty.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
       : pic
   }
   alt={(

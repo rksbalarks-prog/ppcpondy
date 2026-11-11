@@ -218,7 +218,7 @@ const formatPrice = (price) => {
 <img
   src={
     user.photos && user.photos.length > 0
-      ? `https://ppcpondy.com/PPC/${user.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
+      ? `https://pondyproperty.com/PPC/${user.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
       : pic
   }
   alt={(

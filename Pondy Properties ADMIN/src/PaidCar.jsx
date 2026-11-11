@@ -366,7 +366,7 @@ const handleReset = () => {
         <img
           src={
             property.photos?.length
-              ? `https://ppcpondy.com/PPC/${property.photos[0]}`
+              ? `https://pondyproperty.com/PPC/${property.photos[0]}`
               : "https://d17r9yv50dox9q.cloudfront.net/car_gallery/default.jpg"
           }
           alt="Property"

@@ -146,7 +146,7 @@ const formatPrice = (price) => {
 <img
   src={
     property.photos && property.photos.length > 0
-      ? `https://ppcpondy.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
+      ? `https://pondyproperty.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
       : pic
   }
   alt={(
@@ -282,7 +282,7 @@ const formatPrice = (price) => {
 <img
   src={
     property.photos && property.photos.length > 0
-      ? `https://ppcpondy.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
+      ? `https://pondyproperty.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
       : pic
   }
   alt={(

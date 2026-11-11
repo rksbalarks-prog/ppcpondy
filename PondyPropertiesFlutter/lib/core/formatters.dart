@@ -112,7 +112,7 @@ class Fmt {
   }
 
   /// Build an absolute media URL from a backend-relative path.
-  /// The web app does: `https://ppcpondy.com/PPC/${path.replace(/\\/g,'/')}`.
+  /// The web app does: `https://pondyproperty.com/PPC/${path.replace(/\\/g,'/')}`.
   static String? mediaUrl(dynamic rawPath) {
     if (rawPath == null) return null;
     var p = rawPath.toString().trim();

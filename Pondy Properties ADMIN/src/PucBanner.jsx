@@ -37,7 +37,7 @@ const UploadedImagesViewer = () => {
           upload.images.map((imgPath, idx) => (
             <img
               key={upload._id + idx}
-              src={`https://ppcpondy.com/PPC/${imgPath.replace(/\\/g, '/')}`}
+              src={`https://pondyproperty.com/PPC/${imgPath.replace(/\\/g, '/')}`}
               alt="Uploaded"
               style={{
                 width: '120px',

@@ -174,7 +174,7 @@ function renderReportEmail(report, { baseLabel = 'All Cities', now = new Date(),
       <tr><td style="padding:14px 24px 20px;border-top:1px solid ${PALETTE.line};font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${PALETTE.muted};line-height:1.6;">
         ${attachmentName ? `📎 The full year summary is attached as <strong>${esc(attachmentName)}</strong>.<br>` : ''}
         Automated report from the Pondy Properties admin panel —
-        <a href="https://ppcpondy.com/process/dashboard" style="color:${PALETTE.brand};">ppcpondy.com/process/dashboard</a>.
+        <a href="https://pondyproperty.com/process/dashboard" style="color:${PALETTE.brand};">pondyproperty.com/process/dashboard</a>.
       </td></tr>
 
     </table>
@@ -200,7 +200,7 @@ function renderReportEmail(report, { baseLabel = 'All Cities', now = new Date(),
     '',
     ...(staff.length ? ['ADDED BY', ...staff.map((s) => `  ${s.name} — ${num(s.count)}`), ''] : []),
     attachmentName ? `Attached: ${attachmentName}` : '',
-    'https://ppcpondy.com/process/dashboard',
+    'https://pondyproperty.com/process/dashboard',
   ]
     .filter((line) => line !== undefined)
     .join('\n');

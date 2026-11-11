@@ -1777,7 +1777,7 @@ const isReadOnly = true; // set true to make it readonly
         if (photo instanceof File || photo instanceof Blob) {
           photoUrl = URL.createObjectURL(photo);
         } else if (typeof photo === "string") {
-           photoUrl = `https://ppcpondy.com/PPC/${photo}`;
+           photoUrl = `https://pondyproperty.com/PPC/${photo}`;
 
         } else {
           return null;
@@ -3524,7 +3524,7 @@ onClick={() => removePhoto(index)}>
           photoUrl = URL.createObjectURL(photo);
         } else if (typeof photo === "string") {
           // photoUrl = photo; // Direct URL from the backend
-          photoUrl = `https://ppcpondy.com/PPC/${photo}`;
+          photoUrl = `https://pondyproperty.com/PPC/${photo}`;
   
         } else {
           return null; // Skip rendering if the format is invalid
@@ -3568,7 +3568,7 @@ onClick={() => removePhoto(index)}>
                src = URL.createObjectURL(videoItem);
                type = videoItem.type || "video/mp4";
              } else if (typeof videoItem === "string") {
-               src = `https://ppcpondy.com/PPC/${videoItem}`;
+               src = `https://pondyproperty.com/PPC/${videoItem}`;
                type = getMimeType(videoItem);
              }
      

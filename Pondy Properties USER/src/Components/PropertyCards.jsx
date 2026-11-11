@@ -2995,7 +2995,7 @@ useEffect(() => {
           <div key={`upload-${property._id}-${index}`} className="col-12 p-0 mb-3">
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               <img
-                                src={`https://ppcpondy.com/PPC/${property.img.replace(/\\/g, '/')}`}
+                                src={`https://pondyproperty.com/PPC/${property.img.replace(/\\/g, '/')}`}
 
                 // src={`${process.env.REACT_APP_IMAGE_URL}/${property.img}`}
                 alt="Ad"
@@ -3046,7 +3046,7 @@ useEffect(() => {
       <img
   src={
     property.photos && property.photos.length > 0
-      ? `https://ppcpondy.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
+      ? `https://pondyproperty.com/PPC/${property.photos[0].replace(/\\/g, "/").replace(/^\/+/, "")}`
       : pic
   }
   alt={(

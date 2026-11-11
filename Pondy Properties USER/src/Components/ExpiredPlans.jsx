@@ -221,7 +221,7 @@ useEffect(() => {
   </div>
     <div style={{ position: "relative", width: "100%", height: '200px' }}>
       <img
-        src={property.photos?.length ? `https://ppcpondy.com/PPC/${property.photos[0]}` : pic}
+        src={property.photos?.length ? `https://pondyproperty.com/PPC/${property.photos[0]}` : pic}
         alt="Property"
         className="img-fluid"
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}

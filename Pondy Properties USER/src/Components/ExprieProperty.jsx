@@ -281,7 +281,7 @@ const formatPrice = (price) => {
   </div>
     <div style={{ position: "relative", width: "100%", height: '200px' }}>
       <img
-        src={property.photos?.length ? `https://ppcpondy.com/PPC/${property.photos[0]}` : pic}
+        src={property.photos?.length ? `https://pondyproperty.com/PPC/${property.photos[0]}` : pic}
           alt={
     `${property.ppcId || 'N/A'}-${property.propertyMode || 'N/A'}-${property.propertyType || 'N/A'}-rs-${property.price || '0'}
     -in-${property.city || ''}-${property.area || ''}-${property.state || ''}`

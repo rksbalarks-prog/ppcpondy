@@ -515,7 +515,7 @@ onClick={() => handleCardClick(user.ppcId)}
 
   <div style={{ position: "relative", width: "100%", height: "180px" }}>
     <img
-      src={user.photos?.length ? `https://ppcpondy.com/PPC/${user.photos[0]}` : pic}
+      src={user.photos?.length ? `https://pondyproperty.com/PPC/${user.photos[0]}` : pic}
 
                alt={
     `${user.ppcId || 'N/A'}-${user.propertyMode || 'N/A'}-${user.propertyType || 'N/A'}-rs-${user.price || '0'}

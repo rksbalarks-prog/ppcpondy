@@ -38,7 +38,7 @@ const formatValue = (val) => {
 
 // Build the PPC photo URL the same way the Approved page does.
 const photoUrl = (photo) =>
-  `https://ppcpondy.com/PPC/${String(photo).replace(/\\/g, "/")}`;
+  `https://pondyproperty.com/PPC/${String(photo).replace(/\\/g, "/")}`;
 
 // The per-phone activity counts from /get-user-activity-counts (carstatics),
 // with the label shown in the Statistics column.

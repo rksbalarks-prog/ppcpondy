@@ -94,7 +94,7 @@ const Groom = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
           {uploads.map((upload) =>
             upload.images.map((imgPath, idx) => {
-              const imageUrl = `https://ppcpondy.com/PPC/${imgPath.replace(/\\/g, '/')}`;
+              const imageUrl = `https://pondyproperty.com/PPC/${imgPath.replace(/\\/g, '/')}`;
               return (
                 <img
                   key={upload._id + idx}

@@ -25,7 +25,7 @@ const AddModel = require('../AddModel');
 
 const router = express.Router();
 
-const SITE_URL = (process.env.SEO_SITE_URL || 'https://ppcpondy.com').replace(/\/+$/, '');
+const SITE_URL = (process.env.SEO_SITE_URL || 'https://pondyproperty.com').replace(/\/+$/, '');
 const SITE_NAME = 'Pondy Properties';
 
 const esc = (s) =>

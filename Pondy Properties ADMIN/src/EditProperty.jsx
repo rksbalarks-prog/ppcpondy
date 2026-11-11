@@ -1194,7 +1194,7 @@ const shouldHideField = (fieldName) =>
           photoUrl = URL.createObjectURL(photo);
         } else if (typeof photo === "string") {
           // photoUrl = photo; // Direct URL from the backend
-          photoUrl = `https://ppcpondy.com/PPC/${photo}`;
+          photoUrl = `https://pondyproperty.com/PPC/${photo}`;
 
         } else {
           return null;

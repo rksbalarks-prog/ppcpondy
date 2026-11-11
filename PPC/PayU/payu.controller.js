@@ -46,8 +46,8 @@ exports.createPayment = async (req, res) => {
     phone,
     // surl: 'http://localhost:5000/PPC/payu/success', 
     // furl: 'http://localhost:5000/PPC/payu/failure',
-    surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-    furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+    surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+    furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
     service_provider: 'payu_paisa',
     hash
   });
@@ -146,7 +146,7 @@ exports.savePayLater = async (req, res) => {
 //     // ✅ Step 4: Redirect
 //     const encodedDate = encodeURIComponent(payUdate.toISOString());
 //     return res.redirect(
-//       `https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //         //  `http://localhost:3000/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 
 //     );
@@ -215,7 +215,7 @@ exports.handlePaymentSuccess = async (req, res) => {
 
     // Redirect to success page
     const encodedDate = encodeURIComponent(new Date().toISOString());
-    const redirectUrl = `https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname || payment.firstname}&status=success&amount=${amount || payment.amount}&email=${email || payment.email}&phone=${phone || payment.phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName || payment.planName}`;
+    const redirectUrl = `https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname || payment.firstname}&status=success&amount=${amount || payment.amount}&email=${email || payment.email}&phone=${phone || payment.phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName || payment.planName}`;
     
     console.log('Redirecting to:', redirectUrl);
     return res.redirect(redirectUrl);
@@ -272,7 +272,7 @@ exports.handlePaymentSuccess = async (req, res) => {
 
 //     // Redirect to success page
 //     const encodedDate = encodeURIComponent(payUdate);
-//     return res.redirect(`https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+//     return res.redirect(`https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 //   } catch (err) {
 //     console.error('Payment Success Error:', err);
 //     return res.status(500).json({ message: 'Payment success processing failed.' });
@@ -301,7 +301,7 @@ exports.handlePaymentFailure = async (req, res) => {
   );
 
   const encodedDate = encodeURIComponent(payUdate);
-  res.redirect(`https://ppcpondy.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+  res.redirect(`https://pondyproperty.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 };
 
 // ✅ Utility APIs
@@ -530,8 +530,8 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 //     phone,
 //     // surl: 'http://localhost:5000/PPC/payu/success', 
 //     // furl: 'http://localhost:5000/PPC/payu/failure',
-//     surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-//     furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+//     surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+//     furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 //     service_provider: 'payu_paisa',
 //     hash
 //   });
@@ -630,7 +630,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 //     // ✅ Step 4: Redirect
 //     const encodedDate = encodeURIComponent(payUdate.toISOString());
 //     return res.redirect(
-//       `https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //         //  `http://localhost:3000/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 
 //     );
@@ -686,7 +686,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 // //     // Redirect to success page
 // //     const encodedDate = encodeURIComponent(payUdate);
-// //     return res.redirect(`https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+// //     return res.redirect(`https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 // //   } catch (err) {
 // //     console.error('Payment Success Error:', err);
 // //     return res.status(500).json({ message: 'Payment success processing failed.' });
@@ -715,7 +715,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 //   );
 
 //   const encodedDate = encodeURIComponent(payUdate);
-//   res.redirect(`https://ppcpondy.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+//   res.redirect(`https://pondyproperty.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 // };
 
 // // ✅ Utility APIs
@@ -927,8 +927,8 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 //       firstname,
 //       email,
 //       phone,
-//       surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-//       furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+//       surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+//       furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 //       service_provider: 'payu_paisa',
 //       hash,
 //     });
@@ -1018,7 +1018,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 //     const encodedDate = encodeURIComponent(payUdate);
 //     res.redirect(
-//       `https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //     );
 //   } catch (error) {
 //     console.error("handlePaymentSuccess error:", error);
@@ -1059,7 +1059,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 //     const encodedDate = encodeURIComponent(payUdate);
 //     res.redirect(
-//       `https://ppcpondy.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //     );
 //   } catch (error) {
 //     console.error("handlePaymentFailure error:", error);
@@ -1134,8 +1134,8 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //     // furl: 'http://localhost:5000/PPC/payu/failure',
 
 
-// //     surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-// // furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+// //     surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+// // furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 
 // //     service_provider: 'payu_paisa',
 // //   };
@@ -1238,7 +1238,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 // //   const encodedDate = encodeURIComponent(payUdate);
 // //   res.redirect(
-// //     `https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+// //     `https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 // //   );
 // // };
 
@@ -1274,7 +1274,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 // //   const encodedDate = encodeURIComponent(payUdate);
 // //   res.redirect(
-// //     `https://ppcpondy.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+// //     `https://pondyproperty.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 // //   );
 // // };
 
@@ -1475,8 +1475,8 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //       firstname,
 // //       email,
 // //       phone,
-// //       surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-// //       furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+// //       surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+// //       furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 // //       service_provider: 'payu_paisa',
 // //       hash
 // //     });
@@ -1572,7 +1572,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //         });
 // //       } else {
 // //         // For GET requests (direct browser access), redirect to failure page
-// //         return res.redirect(`https://ppcpondy.com/payment-failure?error=missing_details`);
+// //         return res.redirect(`https://pondyproperty.com/payment-failure?error=missing_details`);
 // //       }
 // //     }
 
@@ -1609,19 +1609,19 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //         <html>
 // //         <head>
 // //           <title>Payment Successful</title>
-// //           <meta http-equiv="refresh" content="0; url=https://ppcpondy.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}" />
+// //           <meta http-equiv="refresh" content="0; url=https://pondyproperty.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}" />
 // //         </head>
 // //         <body>
 // //           <p>Payment successful! Redirecting...</p>
 // //           <script>
-// //             window.location.href = "https://ppcpondy.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}";
+// //             window.location.href = "https://pondyproperty.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}";
 // //           </script>
 // //         </body>
 // //         </html>
 // //       `);
 // //     } else {
 // //       // For GET requests, redirect directly
-// //       return res.redirect(`https://ppcpondy.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}`);
+// //       return res.redirect(`https://pondyproperty.com/payment-success?txnid=${encodeURIComponent(txnid)}&firstname=${encodeURIComponent(firstname || '')}&status=success&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid)}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}`);
 // //     }
 // //   } catch (err) {
 // //     console.error('handlePaymentSuccess error:', err);
@@ -1629,7 +1629,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //     if (req.method === 'POST') {
 // //       return res.status(500).json({ message: 'Payment success processing failed.', error: err.message });
 // //     } else {
-// //       return res.redirect(`https://ppcpondy.com/payment-failure?error=server_error`);
+// //       return res.redirect(`https://pondyproperty.com/payment-failure?error=server_error`);
 // //     }
 // //   }
 // // };
@@ -1683,18 +1683,18 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //         <html>
 // //         <head>
 // //           <title>Payment Failed</title>
-// //           <meta http-equiv="refresh" content="0; url=https://ppcpondy.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}" />
+// //           <meta http-equiv="refresh" content="0; url=https://pondyproperty.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}" />
 // //         </head>
 // //         <body>
 // //           <p>Payment failed! Redirecting...</p>
 // //           <script>
-// //             window.location.href = "https://ppcpondy.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}";
+// //             window.location.href = "https://pondyproperty.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}";
 // //           </script>
 // //         </body>
 // //         </html>
 // //       `);
 // //     } else {
-// //       return res.redirect(`https://ppcpondy.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}`);
+// //       return res.redirect(`https://pondyproperty.com/payment-failure?txnid=${encodeURIComponent(txnid || '')}&firstname=${encodeURIComponent(firstname || '')}&status=${encodeURIComponent(status || 'failure')}&amount=${encodeURIComponent(amount || '')}&email=${encodeURIComponent(email || '')}&phone=${encodeURIComponent(phone || '')}&mihpayid=${encodeURIComponent(mihpayid || '')}&payUdate=${encodedDate}&planName=${encodeURIComponent(planName || '')}&error=${encodeURIComponent(error || '')}`);
 // //     }
 // //   } catch (err) {
 // //     console.error('handlePaymentFailure error:', err);
@@ -1702,7 +1702,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //     if (req.method === 'POST') {
 // //       return res.status(500).json({ message: 'Payment failure processing failed.', error: err.message });
 // //     } else {
-// //       return res.redirect(`https://ppcpondy.com/payment-failure?error=server_error`);
+// //       return res.redirect(`https://pondyproperty.com/payment-failure?error=server_error`);
 // //     }
 // //   }
 // // };
@@ -1829,8 +1829,8 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //     phone,
 // //     // surl: 'http://localhost:5000/PPC/payu/success', 
 // //     // furl: 'http://localhost:5000/PPC/payu/failure',
-// //     surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-// //     furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+// //     surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+// //     furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 // //     service_provider: 'payu_paisa',
 // //     hash
 // //   });
@@ -1931,7 +1931,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 
 // //     // Redirect to success page
 // //     const encodedDate = encodeURIComponent(payUdate);
-// //     return res.redirect(`https://ppcpondy.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+// //     return res.redirect(`https://pondyproperty.com/payment-success?txnid=${txnid}&firstname=${firstname}&status=success&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 // //   } catch (err) {
 // //     console.error('Payment Success Error:', err);
 // //     return res.status(500).json({ message: 'Payment success processing failed.' });
@@ -1960,7 +1960,7 @@ exports.getUsedAndRemainingCars = async (req, res) => {
 // //   );
 
 // //   const encodedDate = encodeURIComponent(payUdate);
-// //   res.redirect(`https://ppcpondy.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
+// //   res.redirect(`https://pondyproperty.com/payment-failure?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`);
 // // };
 
 // // // ✅ Utility APIs

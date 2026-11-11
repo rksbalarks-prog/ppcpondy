@@ -211,7 +211,7 @@ const MatchedProperties = () => {
     <img
   src={
     item.propertyDetails.photos?.length
-      ? `https://ppcpondy.com/PPC/${item.propertyDetails.photos[0]
+      ? `https://pondyproperty.com/PPC/${item.propertyDetails.photos[0]
           .replace(/\\/g, "/")
           .replace(/^\/+/, "")
           .trim()}`

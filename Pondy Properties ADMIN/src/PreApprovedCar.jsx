@@ -813,7 +813,7 @@ const PreApprovedCar = () => {
                     <img
                       src={
                         prop.photos?.[0]
-                          ? `https://ppcpondy.com/PPC/${prop.photos[0].replace(/\\/g, "/")}`
+                          ? `https://pondyproperty.com/PPC/${prop.photos[0].replace(/\\/g, "/")}`
                           : "https://d17r9yv50dox9q.cloudfront.net/car_gallery/default.jpg"
                       }
                       alt="Property"

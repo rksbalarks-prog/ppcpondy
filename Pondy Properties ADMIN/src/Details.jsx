@@ -438,9 +438,9 @@ const handleSubmit = async ({ price, phoneNumber, ppcId }) => {
   useEffect(() => {
     // Ensure propertyDetails is not null or undefined before accessing `video`
     if (propertyDetails?.video) {
-      setVideoUrl(`https://ppcpondy.com/PPC/${propertyDetails.video}`);
+      setVideoUrl(`https://pondyproperty.com/PPC/${propertyDetails.video}`);
     } else {
-      setVideoUrl("https://ppcpondy.com/PPC/default-video-url.mp4"); // Fallback to a default video
+      setVideoUrl("https://pondyproperty.com/PPC/default-video-url.mp4"); // Fallback to a default video
     }
   }, [propertyDetails?.video]); // Runs when `propertyDetails.video` changes
   const handleVideoPlay = () => {
@@ -499,7 +499,7 @@ const handleSubmit = async ({ price, phoneNumber, ppcId }) => {
 
 
   const images = propertyDetails.photos && propertyDetails.photos.length > 0
-  ? propertyDetails.photos.map((photo) => `https://ppcpondy.com/PPC/${photo}`)
+  ? propertyDetails.photos.map((photo) => `https://pondyproperty.com/PPC/${photo}`)
   : []; // Leave empty, handle default in the component
 
 

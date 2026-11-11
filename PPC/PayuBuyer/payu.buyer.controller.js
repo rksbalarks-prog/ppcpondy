@@ -54,8 +54,8 @@ exports.createPaymentBuyer = async (req, res) => {
       firstname,
       email,
       phone,
-      surl: 'https://ppcpondy.com/PPC/PPC/payu/success-buyer',
-      furl: 'https://ppcpondy.com/PPC/PPC/payu/failure-buyer',
+      surl: 'https://pondyproperty.com/PPC/PPC/payu/success-buyer',
+      furl: 'https://pondyproperty.com/PPC/PPC/payu/failure-buyer',
     //    surl: 'http://localhost:5000/PPC/payu/success',
     // furl: 'http://localhost:5000/PPC/payu/failure',
       service_provider: 'payu_paisa',
@@ -149,7 +149,7 @@ exports.handlePaymentSuccessBuyer = async (req, res) => {
 
     const encodedDate = encodeURIComponent(payUdate);
     res.redirect(
-      `https://ppcpondy.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+      `https://pondyproperty.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
     );
   } catch (error) {
     console.error("handlePaymentSuccessBuyer error:", error);
@@ -190,7 +190,7 @@ exports.handlePaymentFailureBuyer = async (req, res) => {
 
     const encodedDate = encodeURIComponent(payUdate);
     res.redirect(
-      `https://ppcpondy.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+      `https://pondyproperty.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
     );
   } catch (error) {
     console.error("handlePaymentFailureBuyer error:", error);
@@ -274,8 +274,8 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 // //     phone,
 // //     // surl: 'http://localhost:5000/PPC/payu/success',
 // //     // furl: 'http://localhost:5000/PPC/payu/failure',
-// //     surl: 'https://ppcpondy.com/PPC/payu/success',
-// // furl: 'https://ppcpondy.com/PPC/payu/failure',
+// //     surl: 'https://pondyproperty.com/PPC/payu/success',
+// // furl: 'https://pondyproperty.com/PPC/payu/failure',
 
 // //     service_provider: 'payu_paisa',
 // //   };
@@ -379,7 +379,7 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 
 // //   const encodedDate = encodeURIComponent(payUdate);
 // //   res.redirect(
-// //     `https://ppcpondy.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+// //     `https://pondyproperty.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 // //   );
 // // };
 
@@ -415,7 +415,7 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 
 // //   const encodedDate = encodeURIComponent(payUdate);
 // //   res.redirect(
-// //     `https://ppcpondy.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+// //     `https://pondyproperty.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 // //   );
 // // };
 
@@ -497,8 +497,8 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 //       firstname,
 //       email,
 //       phone,
-//       surl: 'https://ppcpondy.com/PPC/PPC/payu/success',
-//       furl: 'https://ppcpondy.com/PPC/PPC/payu/failure',
+//       surl: 'https://pondyproperty.com/PPC/PPC/payu/success',
+//       furl: 'https://pondyproperty.com/PPC/PPC/payu/failure',
 //     //    surl: 'http://localhost:5000/PPC/payu/success',
 //     // furl: 'http://localhost:5000/PPC/payu/failure',
 //       service_provider: 'payu_paisa',
@@ -592,7 +592,7 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 
 //     const encodedDate = encodeURIComponent(payUdate);
 //     res.redirect(
-//       `https://ppcpondy.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-success-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //     );
 //   } catch (error) {
 //     console.error("handlePaymentSuccessBuyer error:", error);
@@ -633,7 +633,7 @@ exports.getFailedPaymentsBuyer = async (req, res) => {
 
 //     const encodedDate = encodeURIComponent(payUdate);
 //     res.redirect(
-//       `https://ppcpondy.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
+//       `https://pondyproperty.com/payment-failure-buyer?txnid=${txnid}&firstname=${firstname}&status=${status}&amount=${amount}&email=${email}&phone=${phone}&mihpayid=${mihpayid}&payUdate=${encodedDate}&planName=${planName}`
 //     );
 //   } catch (error) {
 //     console.error("handlePaymentFailureBuyer error:", error);

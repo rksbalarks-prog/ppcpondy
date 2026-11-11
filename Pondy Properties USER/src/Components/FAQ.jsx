@@ -21,7 +21,7 @@ const FAQ = () => {
         {
           question: 'Which platforms is the app available on?',
           answer:
-            'The app is available for Android (Google Play). A web version is also accessible via browser www.ppcpondy.com. iOS (App Store) is under development.',
+            'The app is available for Android (Google Play). A web version is also accessible via browser pondyproperty.com. iOS (App Store) is under development.',
         },
       ],
     },

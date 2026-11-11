@@ -35,11 +35,11 @@ const SALT = process.env.PAYU_SALT || 'WUEzPab2A977ygBtkE6dSzsB65ebLsOc';
 // Backend base URL (used for PayU surl/furl callbacks).
 // PayU hits these URLs; they then redirect the user's browser to the frontend.
 const BACKEND_BASE_URL =
-  process.env.BACKEND_BASE_URL || 'https://ppcpondy.com/PPC/PPC';
+  process.env.BACKEND_BASE_URL || 'https://pondyproperty.com/PPC/PPC';
 
 // Frontend base URL (used when redirecting user back after PayU callback).
 const FRONTEND_BASE_URL =
-  process.env.FRONTEND_BASE_URL || 'https://ppcpondy.com';
+  process.env.FRONTEND_BASE_URL || 'https://pondyproperty.com';
 
 // -----------------------------------------------------------
 // Helpers

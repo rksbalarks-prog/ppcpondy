@@ -172,7 +172,7 @@ if (combinedFiles.length > 50) {
                   {upload.images.map((img, i) => (
                     <img
                       key={i}
-                      src={`https://ppcpondy.com/PPC/${img.replace(/\\/g, '/')}`}
+                      src={`https://pondyproperty.com/PPC/${img.replace(/\\/g, '/')}`}
                     // src={`http://localhost:5000/${img.replace(/\\/g, '/')}`}
                       alt="upload"
                       style={{ width: '80px', height: '80px', objectFit: 'cover', margin: '3px' }}

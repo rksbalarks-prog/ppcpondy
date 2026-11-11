@@ -2132,7 +2132,7 @@ const SearchProperty = () => {
           <img
             src={
               property.photos && property.photos.length > 0
-                ? `https://ppcpondy.com/PPC/${property.photos[0].replace(/\\/g, "/")}`
+                ? `https://pondyproperty.com/PPC/${property.photos[0].replace(/\\/g, "/")}`
                 : "https://d17r9yv50dox9q.cloudfront.net/car_gallery/default.jpg"
             }
             alt="Property"

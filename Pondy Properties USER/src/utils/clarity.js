@@ -1,7 +1,7 @@
 /**
  * Microsoft Clarity — public user-site behaviour tracking.
  * ------------------------------------------------------------------
- * Session replays + heatmaps for ppcpondy.com (the visitor-facing app).
+ * Session replays + heatmaps for pondyproperty.com (the visitor-facing app).
  * Sessions are tied to the logged-in phone number so a recording can be
  * lined up with the same person elsewhere in the admin tools.
  *

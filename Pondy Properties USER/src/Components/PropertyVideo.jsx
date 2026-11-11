@@ -65,7 +65,7 @@ const [selectedPpcId, setSelectedPpcId] = useState(null);
                   }}
                 >
                   <source
-                    src={`https://ppcpondy.com/PPC/${video.video}`}
+                    src={`https://pondyproperty.com/PPC/${video.video}`}
                     type="video/mp4"
                   />
                   Your browser does not support the video tag.

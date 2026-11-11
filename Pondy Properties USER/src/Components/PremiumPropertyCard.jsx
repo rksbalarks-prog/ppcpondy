@@ -87,7 +87,7 @@ export default function PremiumPropertyCard({
     : 'ppc-status-pending';
 
   const imageSrc = user.photos?.length
-    ? `https://ppcpondy.com/PPC/${user.photos[0]}`
+    ? `https://pondyproperty.com/PPC/${user.photos[0]}`
     : pic;
 
   const dateLabel =

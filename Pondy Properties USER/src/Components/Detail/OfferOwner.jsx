@@ -514,7 +514,7 @@ const PropertyCard = ({ property, onRemove, onUndo, onAccept, onReject }) => {
                                       <img
   src={
     property.photos?.length
-      ? `https://ppcpondy.com/PPC/${property.photos[0]
+      ? `https://pondyproperty.com/PPC/${property.photos[0]
           .replace(/\\/g, "/")  
           .replace(/^\/+/, "") 
           .trim()}`

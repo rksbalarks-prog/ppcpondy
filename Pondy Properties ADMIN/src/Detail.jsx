@@ -443,9 +443,9 @@ const handleSubmit = async ({ price, phoneNumber, ppcId }) => {
   useEffect(() => {
     // Ensure propertyDetails is not null or undefined before accessing `video`
     if (propertyDetails?.video) {
-      setVideoUrl(`https://ppcpondy.com/PPC/${propertyDetails.video}`);
+      setVideoUrl(`https://pondyproperty.com/PPC/${propertyDetails.video}`);
     } else {
-      setVideoUrl("https://ppcpondy.com/PPC/default-video-url.mp4"); // Fallback to a default video
+      setVideoUrl("https://pondyproperty.com/PPC/default-video-url.mp4"); // Fallback to a default video
     }
   }, [propertyDetails?.video]); // Runs when `propertyDetails.video` changes
   const handleVideoPlay = () => {
@@ -504,7 +504,7 @@ const handleSubmit = async ({ price, phoneNumber, ppcId }) => {
 
 
   const images = propertyDetails.photos && propertyDetails.photos.length > 0
-  ? propertyDetails.photos.map((photo) => `https://ppcpondy.com/PPC/${photo}`)
+  ? propertyDetails.photos.map((photo) => `https://pondyproperty.com/PPC/${photo}`)
   : []; // Leave empty, handle default in the component
 
   // ──────────────────────────────────────────────────────────────
@@ -515,7 +515,7 @@ const handleSubmit = async ({ price, phoneNumber, ppcId }) => {
   // available, fall back to downloading every image so the admin can attach
   // them in WhatsApp manually.
   //
-  // Note on CORS: this fetches https://ppcpondy.com/PPC/<photo>. If that host
+  // Note on CORS: this fetches https://pondyproperty.com/PPC/<photo>. If that host
   // doesn't return Access-Control-Allow-Origin, the fetch will fail and the
   // user sees the error toast. Add `Access-Control-Allow-Origin: *` (or the
   // admin's origin) on the image host for this to work cross-origin.
