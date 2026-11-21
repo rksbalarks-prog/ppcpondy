@@ -1,11 +1,11 @@
 const express = require("express");
 const axios = require("axios");
+const { logWhatsApp } = require("./WhatsAppActivity/logWhatsApp");
 const router = express.Router();
 
 router.post("/send-message", async (req, res) => {
+  const { to, message } = req.body || {};
   try {
-    const { to, message } = req.body;
-
     if (!to || !message) {
       return res.status(400).json({ error: "Missing 'to' or 'message'" });
     }
@@ -25,8 +25,10 @@ router.post("/send-message", async (req, res) => {
       }
     );
 
+    logWhatsApp(req, { to, message, data: response.data });
     res.json(response.data);
   } catch (err) {
+    logWhatsApp(req, { to, message, data: err.response && err.response.data, error: err.message });
     res.status(500).json({ error: err.message });
   }
 });

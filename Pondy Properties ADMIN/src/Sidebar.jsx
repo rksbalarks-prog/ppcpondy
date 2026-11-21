@@ -9,7 +9,7 @@ import {
   FaListAlt, FaTrashAlt, FaSearch, FaPlusCircle, FaUserShield,
   FaFileAlt, FaUserCheck, FaUserClock, FaUserTimes, FaDownload,
   FaChartLine, FaUser, FaMoneyBillAlt, FaPhone, FaRegQuestionCircle,
-  FaEye, FaCity, FaUserCog, FaRobot, FaFire,
+  FaEye, FaCity, FaUserCog, FaRobot, FaFire, FaWhatsapp,
 } from "react-icons/fa";
 import {
   RiAccountCircleFill, RiBankCard2Fill, RiBarChart2Fill, RiCaravanFill,
@@ -205,9 +205,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </>
           )}
 
-          {/* ── WORKSPACE ── (My Assistant, AI Handled, Hot Clients; WhatsApp/Social
-              Activity, Daily Work and Ads will join this section) */}
-          {sectionVisible(["My Assistant", "AI Handled", "Hot Clients"]) && (
+          {/* ── WORKSPACE ── (My Assistant, AI Handled, Hot Clients, WhatsApp Activity;
+              Social Activity, Daily Work and Ads will join this section) */}
+          {sectionVisible(["My Assistant", "AI Handled", "Hot Clients", "WhatsApp Activity"]) && (
             <>
               <li className="p-3 mt-2 text-white" onClick={() => toggleSection("Workspace")}
                 style={{ borderRadius: "5px", background: "#8BC34A", cursor: "pointer" }}>
@@ -232,6 +232,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <li className="p-0 mt-2">
                     <NavLink to="/dashboard/hot-clients" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
                       <FaFire /> Hot Clients
+                    </NavLink>
+                  </li>
+                )}
+                {can("WhatsApp Activity") && (
+                  <li className="p-0 mt-2">
+                    <NavLink to="/dashboard/whatsapp-activity" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
+                      <FaWhatsapp /> WhatsApp Activity
                     </NavLink>
                   </li>
                 )}
