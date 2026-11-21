@@ -182,6 +182,11 @@ const ALL_FILES = [
   { key: "Points Refunds", label: "Points Refund Requests", section: "Points Pricing" },
   { key: "Points Settings", label: "Points Settings", section: "Points Pricing" },
 
+  // Workspace
+  { key: "My Assistant", label: "My Assistant (AI chats, owner leads, settings)", section: "Workspace" },
+  { key: "AI Handled", label: "AI Handled (chat outcomes & follow-ups)", section: "Workspace" },
+  { key: "Hot Clients", label: "Hot Clients (ranked buyer leads & call log)", section: "Workspace" },
+
   // Settings
   { key: "User Roles", label: "User Rolls", section: "Settings" },
   { key: "Admin OTP Number", label: "Admin OTP Number", section: "Settings" },
@@ -192,6 +197,7 @@ const ALL_FILES = [
 
 const SECTION_COLORS = {
   "Dashboard": "#3B82F6",
+  "Workspace": "#0D9488",
   "Report": "#8B5CF6",
   "Login Direct": "#EC4899",
   "Notification": "#F59E0B",
@@ -225,6 +231,7 @@ const groupBySection = (files) => {
 // Roles & Access page lists sections in the same order the menu shows them.
 const SECTION_ORDER = [
   "Dashboard",
+  "Workspace",
   "Report",
   "Login Direct",
   "Notification",

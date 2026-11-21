@@ -98,6 +98,8 @@ import MoreComponent from './MoreComponent';
 import DetailProperty from './DetailProperty';
 import FAQ from './FAQ';
 import PrivacyPolicyWeb from './PrivacyPolicyWeb';
+import DeleteAccount from './DeleteAccount';
+import AfterLoginRedirect from './AfterLoginRedirect';
 import PropertyAssistance from './BuyerAssistance';
 import MyInterestSend from './MyInterestSend';
 import FormComponent from './FormComponent';
@@ -190,6 +192,7 @@ export default function RouterPage() {
   return (
     <BrowserRouter>
     <ClarityTracker />
+    <AfterLoginRedirect />
     <RouteSeo />
     <Routes>
     <Route path="/" element={<App />} />
@@ -218,6 +221,7 @@ export default function RouterPage() {
         <Route path='/about-mobile' element={<AboutMobile  />} />
         <Route path='/refund-mobile' element={< RefundMobile/>} />
         <Route path='/privacy-policy' element={< PrivacyPolicy/>} />
+        <Route path='/delete-account' element={<DeleteAccount />} />
         <Route path='/interest' element={ <InterestStatus  /> } />
         <Route path='/business' element={< BusinessOpportunity />} />
         <Route path='/our-support' element={< OurSupport  />} />

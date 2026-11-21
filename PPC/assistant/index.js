@@ -11,6 +11,7 @@ const adminLeadRoute = require('./adminLeadRoute');
 const adminChatHistoryRoute = require('./adminChatHistoryRoute');
 const adminGuardrailRoute = require('./adminGuardrailRoute');
 const adminSettingsRoute = require('./adminSettingsRoute');
+const adminAiHandledRoute = require('./adminAiHandledRoute');
 const { getSettings } = require('./settings');
 const { apiGetCached } = require('./tools/httpClient');
 
@@ -51,6 +52,10 @@ function mount(app) {
   // -> /PPC/assistant/admin/settings. Warm the cache so the first request is fast.
   app.use('/PPC', adminSettingsRoute);
   getSettings(true).catch(() => {});
+
+  // Admin "AI Handled" report (read-only): each chat session, what the AI offered,
+  // and whether the user followed through -> /PPC/assistant/admin/ai-handled
+  app.use('/PPC', adminAiHandledRoute);
 
   // Assistant API surface.
   app.use('/api/assistant', AssistantRouter);

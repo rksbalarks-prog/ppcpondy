@@ -9,7 +9,7 @@ import {
   FaListAlt, FaTrashAlt, FaSearch, FaPlusCircle, FaUserShield,
   FaFileAlt, FaUserCheck, FaUserClock, FaUserTimes, FaDownload,
   FaChartLine, FaUser, FaMoneyBillAlt, FaPhone, FaRegQuestionCircle,
-  FaEye, FaCity, FaUserCog,
+  FaEye, FaCity, FaUserCog, FaRobot, FaFire,
 } from "react-icons/fa";
 import {
   RiAccountCircleFill, RiBankCard2Fill, RiBarChart2Fill, RiCaravanFill,
@@ -198,6 +198,40 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <li className="p-0 mt-2">
                     <NavLink to="/dashboard/assist-subscriber" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
                       <FaUsers /> BA Daily Report
+                    </NavLink>
+                  </li>
+                )}
+              </ul>
+            </>
+          )}
+
+          {/* ── WORKSPACE ── (My Assistant, AI Handled, Hot Clients; WhatsApp/Social
+              Activity, Daily Work and Ads will join this section) */}
+          {sectionVisible(["My Assistant", "AI Handled", "Hot Clients"]) && (
+            <>
+              <li className="p-3 mt-2 text-white" onClick={() => toggleSection("Workspace")}
+                style={{ borderRadius: "5px", background: "#8BC34A", cursor: "pointer" }}>
+                <FaRobot size={20} style={{ marginRight: "10px" }} />Workspace
+              </li>
+              <ul className={openSection === "Workspace" ? "show" : "collapse"}>
+                {can("My Assistant") && (
+                  <li className="p-0 mt-2">
+                    <NavLink to="/dashboard/my-assistant" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
+                      <FaRobot /> My Assistant
+                    </NavLink>
+                  </li>
+                )}
+                {can("AI Handled") && (
+                  <li className="p-0 mt-2">
+                    <NavLink to="/dashboard/ai-handled" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
+                      <FaUserCheck /> AI Handled
+                    </NavLink>
+                  </li>
+                )}
+                {can("Hot Clients") && (
+                  <li className="p-0 mt-2">
+                    <NavLink to="/dashboard/hot-clients" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}>
+                      <FaFire /> Hot Clients
                     </NavLink>
                   </li>
                 )}
