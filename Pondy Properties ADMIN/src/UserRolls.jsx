@@ -187,6 +187,7 @@ const ALL_FILES = [
   { key: "AI Handled", label: "AI Handled (chat outcomes & follow-ups)", section: "Workspace" },
   { key: "Hot Clients", label: "Hot Clients (ranked buyer leads & call log)", section: "Workspace" },
   { key: "WhatsApp Activity", label: "WhatsApp Activity (messages sent & failures)", section: "Workspace" },
+  { key: "WhatsApp Bot", label: "WhatsApp Bot (Buyer / Seller forms)", section: "Workspace" },
 
   // Settings
   { key: "User Roles", label: "User Rolls", section: "Settings" },

@@ -32,6 +32,7 @@ import MyAssistant from "./MyAssistant";
 import AiHandled from "./AiHandled";
 import HotClients from "./HotClients";
 import WhatsAppActivity from "./WhatsAppActivity";
+import WhatsAppBot from "./WhatsAppBot";
 import BuyersShortlized from "./BuyersShortlized";
 import BuyersStatics from "./BuyersStatics";
 import CallBackForm from "./CallBackForm";
@@ -228,6 +229,7 @@ const routes = [
   { path: "/ai-handled", element: <AiHandled /> },
   { path: "/hot-clients", element: <HotClients /> },
   { path: "/whatsapp-activity", element: <WhatsAppActivity /> },
+  { path: "/whatsapp-bot", element: <WhatsAppBot /> },
   { path: "/buyers-shortlisted", element: <BuyersShortlized /> },
   { path: "/buyers-statics", element: <BuyersStatics /> },
   { path: "/callback-form", element: <CallBackForm /> },

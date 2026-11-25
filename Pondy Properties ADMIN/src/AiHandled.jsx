@@ -13,6 +13,10 @@ import {
  * owner-lead records by GET /assistant/admin/ai-handled). "Needs follow-up" rows
  * are the ones staff should call: the AI offered a next step and the user didn't
  * take it.
+ *
+ * Two channels, like the PM admin's AI Handled: Website (the site / app assistant)
+ * and WhatsApp (the Pondy Property WhatsApp number - the AI answers typed messages,
+ * and the Buyer / Seller forms; backend PPC/WhatsAppBot).
  */
 
 const OUTCOMES = {
@@ -28,6 +32,12 @@ const OFFER_LABEL = {
   request_contact_owner: 'Owner contact',
   send_interest: 'Sent interest',
   report_property: 'Reported property',
+  wa_buyer_saved: 'WhatsApp: buyer form saved',
+  wa_property_saved: 'WhatsApp: property saved',
+};
+const CHANNELS = {
+  web: { label: 'Website', bg: 'info' },
+  whatsapp: { label: 'WhatsApp', bg: 'success' },
 };
 
 const rupees = (v) => {
@@ -52,6 +62,8 @@ function Results({ results }) {
   if (results.pointsBoughtCount) items.push(`Bought points${results.pointsBought ? ` (₹${fmtNum(results.pointsBought)})` : ''}`);
   if (results.buyerRequirement) items.push('Registered buyer requirement');
   if (results.ownerLead) items.push('Left property details (owner lead)');
+  if (results.propertiesPosted?.length) items.push(`Posted property (PPC-ID ${results.propertiesPosted.join(', ')})`);
+  if (results.buyerRequirement && results.buyerIds?.length) items[items.indexOf('Registered buyer requirement')] = `Registered buyer requirement (ID ${results.buyerIds.join(', ')})`;
   if (!items.length) return <span className="text-muted">—</span>;
   return items.map((t) => <div key={t} className="text-success small">✔ {t}</div>);
 }
@@ -60,6 +72,7 @@ function AiHandledPage() {
   const [days, setDays] = useState(30);
   const [state, setState] = useState({ loading: true, error: '', sessions: [], followWindowDays: 7 });
   const [outcome, setOutcome] = useState('');
+  const [channel, setChannel] = useState('');
   const [search, setSearch] = useState('');
   const [viewing, setViewing] = useState(null); // { phone, sessionId }
 
@@ -74,16 +87,26 @@ function AiHandledPage() {
   }, [days]);
   useEffect(() => { load(); }, [load]);
 
-  const counts = useMemo(() => {
-    const c = { all: state.sessions.length, converted: 0, needs_followup: 0, answered: 0 };
-    state.sessions.forEach((s) => { c[s.outcome] = (c[s.outcome] || 0) + 1; });
+  const inChannel = useMemo(
+    () => state.sessions.filter((s) => !channel || (s.channel || 'web') === channel),
+    [state.sessions, channel]
+  );
+  const channelCount = useMemo(() => {
+    const c = { web: 0, whatsapp: 0 };
+    state.sessions.forEach((s) => { c[s.channel || 'web'] = (c[s.channel || 'web'] || 0) + 1; });
     return c;
   }, [state.sessions]);
 
+  const counts = useMemo(() => {
+    const c = { all: inChannel.length, converted: 0, needs_followup: 0, answered: 0 };
+    inChannel.forEach((s) => { c[s.outcome] = (c[s.outcome] || 0) + 1; });
+    return c;
+  }, [inChannel]);
+
   const shown = useMemo(() => {
     const q = search.replace(/\D/g, '');
-    return state.sessions.filter((s) => (!outcome || s.outcome === outcome) && (!q || s.phone.includes(q)));
-  }, [state.sessions, outcome, search]);
+    return inChannel.filter((s) => (!outcome || s.outcome === outcome) && (!q || s.phone.includes(q)));
+  }, [inChannel, outcome, search]);
 
   const rate = counts.all ? Math.round((counts.converted / counts.all) * 100) : 0;
   const toggle = (o) => setOutcome(outcome === o ? '' : o);
@@ -93,7 +116,7 @@ function AiHandledPage() {
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
           <h4 className="mb-0">AI Handled</h4>
-          <div className="text-muted small">Chats the AI assistant handled, and whether the user followed through</div>
+          <div className="text-muted small">Chats the AI assistant handled on the website and on WhatsApp, and whether the user followed through</div>
         </div>
         <div className="d-flex gap-1 align-items-center">
           {PERIODS.map((p) => (
@@ -120,8 +143,20 @@ function AiHandledPage() {
       </Row>
 
       <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2">
-        <Form.Control style={{ maxWidth: 260 }} placeholder="Search phone number" value={search}
-          onChange={(e) => setSearch(e.target.value)} />
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          <Form.Control style={{ maxWidth: 260 }} placeholder="Search phone number" value={search}
+            onChange={(e) => setSearch(e.target.value)} />
+          <div className="btn-group" role="group" aria-label="Channel">
+            <Button size="sm" variant={!channel ? 'dark' : 'outline-dark'} onClick={() => setChannel('')}>
+              All {fmtNum(state.sessions.length)}
+            </Button>
+            {Object.entries(CHANNELS).map(([key, c]) => (
+              <Button key={key} size="sm" variant={channel === key ? 'dark' : 'outline-dark'} onClick={() => setChannel(channel === key ? '' : key)}>
+                {c.label} {fmtNum(channelCount[key] || 0)}
+              </Button>
+            ))}
+          </div>
+        </div>
         <div className="small text-muted">
           Showing {shown.length}{outcome ? ` · ${OUTCOMES[outcome].label}` : ''}
           {outcome && <Button size="sm" variant="link" onClick={() => setOutcome('')}>clear filter</Button>}
@@ -146,7 +181,10 @@ function AiHandledPage() {
                 <tr key={s.sessionId}>
                   <td>{i + 1}</td>
                   <td className="text-nowrap">{fmtDateTime(s.startedAt)}</td>
-                  <td className="text-nowrap"><a href={`tel:+91${s.phone}`}>{s.phone}</a></td>
+                  <td className="text-nowrap">
+                    <a href={`tel:+91${s.phone}`}>{s.phone}</a>
+                    <div><Badge bg={CHANNELS[s.channel || 'web'].bg}>{CHANNELS[s.channel || 'web'].label}</Badge></div>
+                  </td>
                   <td>
                     <div>{s.firstQuestion || <span className="text-muted">—</span>}</div>
                     {s.lastQuestion && <div className="small text-muted">Last: {s.lastQuestion}</div>}

@@ -6,6 +6,8 @@ const ConversationSchema = new mongoose.Schema(
     sessionId: { type: String, required: true, unique: true, index: true },
     phone: { type: String, required: true, index: true },
     title: { type: String, default: '' },
+    // 'web' (the site / app assistant) or 'whatsapp' (WhatsAppBot/ai.js). Older rows have none = web.
+    channel: { type: String, default: 'web', index: true },
     // Cumulative model tokens spent across this session's turns (for admin usage view).
     tokens: { type: Number, default: 0 },
     lastMessageAt: { type: Date, default: Date.now },

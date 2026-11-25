@@ -8,7 +8,11 @@
 // Outcome per session (first match wins):
 //   converted       the user did something after the chat started: unlocked an
 //                   owner contact, bought points, registered a buyer requirement,
-//                   or left an owner (sell/rent) lead
+//                   left an owner (sell/rent) lead, or posted a property
+//
+// Two channels: 'web' (the site / app assistant) and 'whatsapp' (WhatsAppBot - the
+// Pondy Property WhatsApp number: AI answers to typed messages + the Buyer / Seller
+// forms; sessionId "wa_<phone>_<time>"). Same outcome rules for both.
 //   needs_followup  the AI offered a next step (buy points, buyer assistance,
 //                   post property) but nothing happened — staff should call
 //   answered        the AI answered and nothing further was needed/offered
@@ -22,6 +26,7 @@ const Message = require('./store/MessageModel');
 const OwnerLead = require('./store/OwnerLeadModel');
 const BuyerAssistance = require('../BuyerAssistance/BuyerAssistanceModel');
 const { PointsTransaction } = require('../Points/PointsModel');
+const AddModel = require('../AddModel');
 
 const router = express.Router();
 
@@ -57,14 +62,16 @@ async function buildAiHandled(days) {
     const phoneRe = new RegExp(`^(\\+?91|0)?(${phones.map(escapeRe).join('|')})$`);
     const earliest = new Date(Math.min(...convs.map((c) => new Date(c.createdAt || c.lastMessageAt).getTime())));
 
-    const [buyerReqs, pointTx, ownerLeads] = phones.length ? await Promise.all([
+    const [buyerReqs, pointTx, ownerLeads, properties] = phones.length ? await Promise.all([
       BuyerAssistance.find({ phoneNumber: phoneRe, createdAt: { $gte: earliest } })
         .select('phoneNumber createdAt ba_id').lean(),
       PointsTransaction.find({ phoneNumber: phoneRe, createdAt: { $gte: earliest } })
         .select('phoneNumber type points amount reason createdAt rentId').lean(),
       OwnerLead.find({ phone: { $in: phones }, createdAt: { $gte: earliest } })
         .select('phone createdAt status ppcId').lean(),
-    ]) : [[], [], []];
+      AddModel.find({ phoneNumber: phoneRe, createdAt: { $gte: earliest } })
+        .select('phoneNumber createdAt ppcId addedBy').lean(),
+    ]) : [[], [], [], []];
 
     const group = (rows, key) => {
       const m = new Map();
@@ -78,6 +85,7 @@ async function buildAiHandled(days) {
     const baByPhone = group(buyerReqs, 'phoneNumber');
     const txByPhone = group(pointTx, 'phoneNumber');
     const leadByPhone = group(ownerLeads, 'phone');
+    const propByPhone = group(properties, 'phoneNumber');
 
     const inWindow = (d, start, end) => {
       const t = new Date(d).getTime();
@@ -88,6 +96,8 @@ async function buildAiHandled(days) {
       const phone = last10(c.phone);
       const items = bySession.get(c.sessionId) || [];
       const userMsgs = items.filter((m) => m.role === 'user');
+      // "What they asked" = what they typed; a WhatsApp button tap / form note is not a question.
+      const typed = userMsgs.filter((m) => !/^\[/.test(m.content || '') && !/^(buyer|seller)$/i.test((m.content || '').trim()));
       const start = new Date(c.createdAt || items[0]?.createdAt || c.lastMessageAt).getTime();
       const end = new Date(c.lastMessageAt || start).getTime();
 
@@ -99,33 +109,39 @@ async function buildAiHandled(days) {
           if (!a || !a.tool) continue;
           if (!offered.has(a.tool)) offered.set(a.tool, { tool: a.tool, label: a.label || a.tool });
           if (a.tool === 'offer_buyer_assistance' && a.prefill) requirement = a.prefill;
+          // WhatsApp: the Buyer form's own answers are the requirement (wins over a guess).
+          if (a.tool === 'wa_buyer_saved' && a.prefill) requirement = a.prefill;
         }
       }
 
       const ba = (baByPhone.get(phone) || []).filter((r) => inWindow(r.createdAt, start, end));
       const tx = (txByPhone.get(phone) || []).filter((r) => inWindow(r.createdAt, start, end));
       const leads = (leadByPhone.get(phone) || []).filter((r) => inWindow(r.createdAt, start, end));
+      const props = (propByPhone.get(phone) || []).filter((r) => inWindow(r.createdAt, start, end));
       const results = {
         buyerRequirement: ba.length > 0,
         pointsBought: tx.filter((t) => t.type === 'credit').reduce((s, t) => s + (t.amount || 0), 0),
         pointsBoughtCount: tx.filter((t) => t.type === 'credit').length,
         contactsUnlocked: tx.filter((t) => t.type === 'deduct' && t.reason === 'view-owner-contact').length,
         ownerLead: leads.length > 0,
+        propertiesPosted: props.map((p) => p.ppcId).filter(Boolean),
+        buyerIds: ba.map((b) => b.ba_id).filter(Boolean),
       };
       const converted = results.buyerRequirement || results.pointsBoughtCount > 0
-        || results.contactsUnlocked > 0 || results.ownerLead;
+        || results.contactsUnlocked > 0 || results.ownerLead || results.propertiesPosted.length > 0;
       const madeOffer = [...offered.keys()].some((t) => OFFER_TOOLS.has(t));
 
       return {
         sessionId: c.sessionId,
+        channel: c.channel === 'whatsapp' || /^wa_/.test(c.sessionId) ? 'whatsapp' : 'web',
         phone,
         startedAt: new Date(start),
         lastMessageAt: c.lastMessageAt,
         userMessages: userMsgs.length,
         totalMessages: items.length,
         tokens: c.tokens || 0,
-        firstQuestion: (userMsgs[0]?.content || '').slice(0, 300),
-        lastQuestion: userMsgs.length > 1 ? (userMsgs[userMsgs.length - 1].content || '').slice(0, 300) : '',
+        firstQuestion: ((typed[0] || userMsgs[0])?.content || '').slice(0, 300),
+        lastQuestion: typed.length > 1 ? (typed[typed.length - 1].content || '').slice(0, 300) : '',
         offered: [...offered.values()],
         requirement,
         results,

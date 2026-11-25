@@ -33,6 +33,9 @@ const UserRouter = require('./user/UserRouter');
 const AccountDeletionRouter = require('./user/AccountDeletionRouter');
 const HotClientsRouter = require('./HotClients/HotClientsRouter');
 const WhatsAppActivityRouter = require('./WhatsAppActivity/WhatsAppActivityRouter');
+const WhatsAppBotRouter = require('./WhatsAppBot/WhatsAppBotRouter');
+const WhatsAppTemplatesRouter = require('./WhatsAppTemplates/WhatsAppTemplatesRouter');
+const whatsAppBot = require('./WhatsAppBot/schedule');
 const BuyerAssistanceRouter = require('./BuyerAssistance/BuyerAssistanceRouter');
 const PhotoRequestRouter = require('./Photo/PhotoRequestRouter');
 const ProfileRouter = require('./MyProfile/ProfileRouter');
@@ -431,6 +434,8 @@ app.use('/PPC', UserRouter);
 app.use('/PPC', AccountDeletionRouter);
 app.use('/PPC', HotClientsRouter);
 app.use('/PPC', WhatsAppActivityRouter);
+app.use('/PPC', WhatsAppBotRouter); // WhatsApp Buyer / Seller forms bot: /wa-bot/*
+app.use('/PPC', WhatsAppTemplatesRouter); // WhatsApp templates (Meta-approved): /wa-templates/*
 app.use('/PPC', BuyerAssistanceRouter);
 app.use('/PPC', PhotoRequestRouter);
 app.use('/PPC', ProfileRouter);
@@ -513,6 +518,8 @@ app.listen(PORT, () => {
   adExpressSchedule.start();
   // Nightly auto-expire (03:00 IST). Starts in dry-run: reports only.
   autoExpire.start();
+  // WhatsApp Buyer / Seller bot: polls SmartGrowth every minute while switched on in the admin.
+  whatsAppBot.start();
 });
 
 
