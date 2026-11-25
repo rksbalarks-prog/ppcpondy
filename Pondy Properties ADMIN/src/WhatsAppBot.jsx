@@ -209,8 +209,8 @@ function AccountCard({ settings, onSwitched }) {
       <Alert variant="success" className="py-1 small mb-2">
         <b>Connected</b> ({t.which === 'saved' ? 'saved account' : 'new credentials, not saved yet'}): {t.templates} templates
         {t.ppTemplates ? ` (${t.ppTemplates} Pondy Properties, ${t.approvedPp} approved)` : ' (no Pondy Properties templates yet)'} · {t.flows} forms
-        {t.ppForms.length ? ` (${t.ppForms.join(', ')})` : ''} · {t.chats == null ? 'chats not readable' : `${t.chats} chats`}
-        {t.otherTemplates.length > 0 && <div className="text-muted">Other templates on it: {t.otherTemplates.join(', ')}{t.templates > t.otherTemplates.length + t.ppTemplates ? '…' : ''}</div>}
+        {t.ppForms?.length ? ` (${t.ppForms.join(', ')})` : ''} · {t.chats == null ? 'chats not readable' : `${t.chats} chats`}
+        {t.otherTemplates?.length > 0 && <div className="text-muted">Other templates on it: {t.otherTemplates.join(', ')}{t.templates > t.otherTemplates.length + t.ppTemplates ? '…' : ''}</div>}
         {t.which === 'new' && !t.apiCodeGiven && <div className="text-danger">Add the API code too - templates cannot be sent without it.</div>}
       </Alert>
     ) : <Alert variant="danger" className="py-1 small mb-2">{t.error}</Alert>
@@ -281,7 +281,7 @@ function AccountCard({ settings, onSwitched }) {
         </div>
       )}
       {msg && <Alert variant={msg.ok ? 'success' : 'danger'} className="py-1 small mt-2 mb-0">{msg.text}</Alert>}
-      {settings.accountHistory.length > 1 && (
+      {(settings.accountHistory?.length || 0) > 1 && (
         <details className="small mt-2">
           <summary className="text-muted">Account history</summary>
           {settings.accountHistory.map((h, i) => (
@@ -334,7 +334,7 @@ function TemplatesCard() {
   if (st.loading && !st.data) return <Card className="mb-3"><Card.Body><Loading /></Card.Body></Card>;
   if (!st.data) return <Card className="mb-3"><Card.Body><ErrorBox error={st.error} onRetry={() => load()} /></Card.Body></Card>;
   const s = st.data.settings;
-  const tpls = st.data.templates;
+  const tpls = st.data.templates || [];
   const approved = tpls.filter((t) => t.status === 'APPROVED').length;
 
   return (
@@ -402,7 +402,7 @@ function TemplatesCard() {
                 <td>
                   {t.preview}
                   {t.note && <div className="text-warning-emphasis mt-1">{t.note}</div>}
-                  {t.problems.length > 0 && <div className="text-danger">{t.problems.join('; ')}</div>}
+                  {t.problems?.length > 0 && <div className="text-danger">{t.problems.join('; ')}</div>}
                 </td>
                 <td><div>{t.when}</div><div className="text-muted">{SOURCE_LABEL[t.source] || t.source}</div></td>
                 <td><Badge bg={TPL_STATUS[t.status] || 'secondary'}>{t.status}</Badge></td>
@@ -537,8 +537,8 @@ function WhatsAppBotPage() {
           <Table striped bordered hover size="sm" className="align-middle">
             <thead className="table-light"><tr><th>Time</th><th>Phone</th><th>What</th><th>Result</th><th>Record</th><th style={{ minWidth: 260 }}>Details</th></tr></thead>
             <tbody>
-              {leads.data.items.length === 0 && <tr><td colSpan={6} className="text-center text-muted p-3">Nothing yet in this period.</td></tr>}
-              {leads.data.items.map((x) => (
+              {(leads.data.items || []).length === 0 && <tr><td colSpan={6} className="text-center text-muted p-3">Nothing yet in this period.</td></tr>}
+              {(leads.data.items || []).map((x) => (
                 <tr key={x._id}>
                   <td className="small text-nowrap">{fmtDateTime(x.createdAt)}</td>
                   <td className="text-nowrap"><a href={`tel:+91${x.phone}`}>{x.phone}</a></td>
@@ -559,8 +559,8 @@ function WhatsAppBotPage() {
               ))}
             </tbody>
           </Table>
-          {leads.data.matching > leads.data.items.length && (
-            <div className="small text-muted">Showing the latest {leads.data.items.length} of {fmtNum(leads.data.matching)}.</div>
+          {leads.data.matching > (leads.data.items || []).length && (
+            <div className="small text-muted">Showing the latest {(leads.data.items || []).length} of {fmtNum(leads.data.matching)}.</div>
           )}
         </div>
       )}
