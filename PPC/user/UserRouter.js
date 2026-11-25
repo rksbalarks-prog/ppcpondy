@@ -22,16 +22,18 @@ const formatPhoneNumber = (phone, countryCode) => {
   return `${countryCode}${phone}`;
 };
 
-// ─── Helper: find and update user by phone (tries raw then normalized 10-digit) ─
-const findAndUpdateByPhone = async (phone, update, options = { new: true, runValidators: true }) => {
+// ─── Helper: update every login record of a phone (raw or normalized 10-digit) ─
+// UserLogin keeps one document per login, so a remark / conversion status set
+// on just one of them is lost when the phone logs in again. Returns the
+// phone's latest record, or null if the phone has none.
+const updateAllByPhone = async (phone, update) => {
   const raw = String(phone || '');
   const normalized = raw.replace(/\D/g, '').slice(-10);
+  const filter = { phone: { $in: [...new Set([raw, normalized])] } };
 
-  let updated = await UserLogin.findOneAndUpdate({ phone: raw }, update, options);
-  if (!updated && normalized !== raw) {
-    updated = await UserLogin.findOneAndUpdate({ phone: normalized }, update, options);
-  }
-  return updated;
+  const { matchedCount } = await UserLogin.updateMany(filter, update, { runValidators: true });
+  if (!matchedCount) return null;
+  return UserLogin.findOne(filter).sort({ loginDate: -1 });
 };
 
 
@@ -839,7 +841,7 @@ router.put('/set-active-status', async (req, res) => {
 });
 
 
-// ─── Remarks & Conversion (FIXED: phone lookup tries raw then normalized) ────
+// ─── Remarks & Conversion (applied to every login record of the phone) ──────
 
 // POST: Update Remarks
 router.post('/user/update-remarks', async (req, res) => {
@@ -850,7 +852,7 @@ router.post('/user/update-remarks', async (req, res) => {
       return res.status(400).json({ message: 'Phone number is required' });
     }
 
-    const updatedUser = await findAndUpdateByPhone(
+    const updatedUser = await updateAllByPhone(
       phone,
       {
         remarks,
@@ -889,7 +891,7 @@ router.post('/user/update-conversion-status', async (req, res) => {
       conversionDate: conversionStatus !== 'pending' ? new Date() : null,
     };
 
-    const updatedUser = await findAndUpdateByPhone(phone, updatePayload);
+    const updatedUser = await updateAllByPhone(phone, updatePayload);
 
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
@@ -909,4 +911,4 @@ const sendOtpToPhone = async (phone, otp) => {
 };
 
 
-module.exports = router;
+module.exports = router;

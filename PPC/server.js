@@ -255,7 +255,15 @@ app.post('/PPC/send-otp', async (req, res) => {
       });
     }
 
+    // Every login is a new record — carry the phone's admin remark and
+    // conversion status over so it doesn't show up blank again. Never let
+    // this lookup block a login.
+    const classification = await UserLogin
+      .getClassification(smsMobile)
+      .catch(() => ({}));
+
      await UserLogin.create({
+      ...classification,
       phone: phoneNumber.replace(/\D/g, '').slice(-10),
       otp,
       loginDate: new Date(),

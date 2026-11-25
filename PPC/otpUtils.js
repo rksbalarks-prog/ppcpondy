@@ -20,8 +20,13 @@ const storeOTP = async (phoneNumber, otp, loginMode, version, countryCode = '+91
       ? `+91${cleanedPhone}`
       : phoneNumber;
 
+    const phoneDigits = formattedPhone.replace(/\D/g, '').slice(-10);
+    // Carry the phone's admin remark / conversion status onto the new login.
+    const classification = await UserLogin.getClassification(phoneDigits).catch(() => ({}));
+
     await UserLogin.create({
-      phone: formattedPhone.replace(/\D/g, '').slice(-10), // Store only last 10 digits
+      ...classification,
+      phone: phoneDigits, // Store only last 10 digits
       otp,
       loginDate: new Date(),
       otpStatus: 'pending',

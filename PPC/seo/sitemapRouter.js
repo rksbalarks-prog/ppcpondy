@@ -114,33 +114,35 @@ const sendXml = (res, xml) => {
  *
  * Deliberately excluded: /pondicherry, /chennai and /mobileviews. Those feeds
  * redirect anonymous visitors to /login, so submitting them would hand Google
- * a login page under a property URL.
+ * a login page under a property URL. Also excluded: /house-below,
+ * /house-average, /plot-below, /land-property and /loan-property — they render
+ * the same pages as the /sort/... URLs the site links to, and canonicalise
+ * there.
+ *
+ * `feed: true` pages list properties, so they change whenever a listing does;
+ * their lastmod is the latest listing change. The rest are static and carry
+ * no lastmod — a date that is always "today" teaches Google to ignore it.
  */
 const CORE_PAGES = [
-  { path: '/', priority: '1.0', changefreq: 'daily' },
-  { path: '/all-property', priority: '0.9', changefreq: 'hourly' },
-  { path: '/sale-property', priority: '0.9', changefreq: 'daily' },
-  { path: '/py-property', priority: '0.9', changefreq: 'daily' },
-  { path: '/chennai-property', priority: '0.9', changefreq: 'daily' },
-  { path: '/new-property', priority: '0.8', changefreq: 'hourly' },
-  { path: '/feature-property', priority: '0.8', changefreq: 'daily' },
-  { path: '/most-viewed', priority: '0.7', changefreq: 'daily' },
-  { path: '/property-map', priority: '0.7', changefreq: 'weekly' },
-  { path: '/house-below', priority: '0.8', changefreq: 'daily' },
-  { path: '/house-average', priority: '0.8', changefreq: 'daily' },
-  { path: '/plot-below', priority: '0.8', changefreq: 'daily' },
-  { path: '/land-property', priority: '0.8', changefreq: 'daily' },
-  { path: '/loan-property', priority: '0.7', changefreq: 'daily' },
-  { path: '/sort/property-with-location', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/bank-loan', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/house-below-30L', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/house-30L-50L', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/plot-below-15L', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/agricultural-land', priority: '0.6', changefreq: 'daily' },
-  { path: '/sort/low-to-high', priority: '0.5', changefreq: 'daily' },
-  { path: '/sort/high-to-low', priority: '0.5', changefreq: 'daily' },
-  { path: '/sort/new-to-old', priority: '0.5', changefreq: 'daily' },
-  { path: '/sort/with-image', priority: '0.5', changefreq: 'daily' },
+  { path: '/', priority: '1.0', changefreq: 'daily', feed: true },
+  { path: '/all-property', priority: '0.9', changefreq: 'hourly', feed: true },
+  { path: '/sale-property', priority: '0.9', changefreq: 'daily', feed: true },
+  { path: '/py-property', priority: '0.9', changefreq: 'daily', feed: true },
+  { path: '/chennai-property', priority: '0.9', changefreq: 'daily', feed: true },
+  { path: '/new-property', priority: '0.8', changefreq: 'hourly', feed: true },
+  { path: '/feature-property', priority: '0.8', changefreq: 'daily', feed: true },
+  { path: '/most-viewed', priority: '0.7', changefreq: 'daily', feed: true },
+  { path: '/property-map', priority: '0.7', changefreq: 'weekly', feed: true },
+  { path: '/sort/house-below-30L', priority: '0.8', changefreq: 'daily', feed: true },
+  { path: '/sort/house-30L-50L', priority: '0.8', changefreq: 'daily', feed: true },
+  { path: '/sort/plot-below-15L', priority: '0.8', changefreq: 'daily', feed: true },
+  { path: '/sort/agricultural-land', priority: '0.8', changefreq: 'daily', feed: true },
+  { path: '/sort/bank-loan', priority: '0.7', changefreq: 'daily', feed: true },
+  { path: '/sort/property-with-location', priority: '0.6', changefreq: 'daily', feed: true },
+  { path: '/sort/low-to-high', priority: '0.5', changefreq: 'daily', feed: true },
+  { path: '/sort/high-to-low', priority: '0.5', changefreq: 'daily', feed: true },
+  { path: '/sort/new-to-old', priority: '0.5', changefreq: 'daily', feed: true },
+  { path: '/sort/with-image', priority: '0.5', changefreq: 'daily', feed: true },
   { path: '/about', priority: '0.5', changefreq: 'monthly' },
   { path: '/contact-web', priority: '0.5', changefreq: 'monthly' },
   { path: '/our-support', priority: '0.4', changefreq: 'monthly' },
@@ -166,6 +168,16 @@ const ACTIVE_QUERY = {
 
 const countActive = () => AddModel.countDocuments(ACTIVE_QUERY);
 
+/** Day any live listing last changed — the honest lastmod for listing feeds. */
+const latestListingDay = () =>
+  cached('latest', async () => {
+    const latest = await AddModel.findOne(ACTIVE_QUERY)
+      .sort({ updatedAt: -1 })
+      .select('updatedAt createdAt')
+      .lean();
+    return latest ? iso(latest.updatedAt || latest.createdAt) : null;
+  });
+
 /* --------------------------------------------------------------- */
 /* /PPC/sitemap.xml — the index                                     */
 /* --------------------------------------------------------------- */
@@ -174,7 +186,8 @@ router.get('/sitemap.xml', async (req, res) => {
     const xml = await cached('index', async () => {
       const total = await countActive();
       const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      const today = iso();
+      // Every child sitemap changes only when a listing does.
+      const lastmod = await latestListingDay();
 
       const entries = [PUBLIC_PREFIX + '/sitemap-core.xml'];
       for (let i = 1; i <= pages; i += 1) {
@@ -191,7 +204,7 @@ router.get('/sitemap.xml', async (req, res) => {
             (p) =>
               '  <sitemap>\n' +
               '    <loc>' + esc(SITE_URL + p) + '</loc>\n' +
-              '    <lastmod>' + today + '</lastmod>\n' +
+              (lastmod ? '    <lastmod>' + lastmod + '</lastmod>\n' : '') +
               '  </sitemap>'
           )
           .join('\n') +
@@ -208,17 +221,22 @@ router.get('/sitemap.xml', async (req, res) => {
 /* --------------------------------------------------------------- */
 /* /PPC/sitemap-core.xml — static pages                             */
 /* --------------------------------------------------------------- */
-router.get('/sitemap-core.xml', (req, res) => {
-  const today = iso();
-  const nodes = CORE_PAGES.map((p) =>
-    urlNode({
-      loc: SITE_URL + p.path,
-      lastmod: today,
-      changefreq: p.changefreq,
-      priority: p.priority,
-    })
-  );
-  sendXml(res, urlSet(nodes));
+router.get('/sitemap-core.xml', async (req, res) => {
+  try {
+    const feedDay = await latestListingDay();
+    const nodes = CORE_PAGES.map((p) =>
+      urlNode({
+        loc: SITE_URL + p.path,
+        lastmod: p.feed ? feedDay : null,
+        changefreq: p.changefreq,
+        priority: p.priority,
+      })
+    );
+    sendXml(res, urlSet(nodes));
+  } catch (err) {
+    console.error('[seo] core sitemap failed:', err.message);
+    res.status(500).send('sitemap generation failed');
+  }
 });
 
 /* --------------------------------------------------------------- */

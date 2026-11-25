@@ -238,6 +238,39 @@ UserLogin.pre('save', function (next) {
   next();
 });
 
+// UserLogin stores one document per login, but the admin's remark and
+// conversion status describe the phone, not a single login. New login records
+// copy them from the phone's earlier records (so a re-login isn't blank in the
+// Login Report), and admin updates write them to every record of the phone.
+// findOne is used on purpose: it is not city-scoped (see cityScopePlugin), so
+// a phone keeps its classification across cities.
+UserLogin.statics.getClassification = async function (phone) {
+  const [remarked, converted] = await Promise.all([
+    this.findOne({ phone, remarks: { $nin: ['', null] } })
+      .sort({ updateDate: -1 })
+      .select('remarks updatedBy updateDate')
+      .lean(),
+    this.findOne({ phone, conversionStatus: { $in: ['free', 'paid'] } })
+      .sort({ conversionDate: -1 })
+      .select('conversionStatus conversionDate conversionUpdatedBy')
+      .lean(),
+  ]);
+
+  return {
+    ...(remarked && {
+      remarks: remarked.remarks,
+      updatedBy: remarked.updatedBy,
+      updateDate: remarked.updateDate,
+    }),
+    ...(converted && {
+      conversionStatus: converted.conversionStatus,
+      conversion: true,
+      conversionDate: converted.conversionDate,
+      conversionUpdatedBy: converted.conversionUpdatedBy,
+    }),
+  };
+};
+
 // Auto-filter list/count/aggregate queries to the request's active base.
 UserLogin.plugin(cityScopePlugin);
 

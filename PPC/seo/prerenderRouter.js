@@ -9,17 +9,26 @@
  * and stop. Today every shared listing therefore previews as the same generic
  * "Pondy Properties" card.
  *
- * This route returns a complete, self-contained HTML page for one listing:
- * correct <title>, description, canonical, Open Graph image (the actual
- * property photo), schema.org RealEstateListing, and the listing facts as real
- * text. Point bots at it with a user-agent rewrite in the Apache vhost (see
- * SEO.md) — humans keep getting the SPA untouched, and anyone who does open
- * this URL directly gets a readable page with a link into the app.
+ * Two ways to serve a listing:
  *
- *   GET /PPC/seo/details/:ppcId
- *   GET /PPC/seo/preview/:ppcId    same page, plus a debug JSON dump
+ *   GET /PPC/seo/shell/details/:ppcId   the SPA's own index.html with this
+ *       listing's <head> (title, description, canonical, Open Graph image,
+ *       schema.org RealEstateListing) written in, and the facts as text in
+ *       <noscript>. Apache sends EVERY request for /details/:id and
+ *       /detail/:id here (see SEO.md) — people get the normal app, and every
+ *       crawler and link-preview bot gets the same document with the right
+ *       head. No user-agent sniffing, so nothing that looks like cloaking.
+ *   GET /PPC/seo/details/:ppcId         a complete, self-contained HTML page
+ *       for one listing (used when the SPA's index.html can't be read).
+ *   GET /PPC/seo/preview/:ppcId         that page, plus a debug JSON dump
+ *
+ * Only `status: 'active'` listings are indexable. Expired, sold, pending and
+ * removed listings still render (owners and old shared links land on them)
+ * but carry `noindex`, and a ppcId that doesn't exist is a real 404.
  */
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const AddModel = require('../AddModel');
 
@@ -214,6 +223,33 @@ const jsonLdOf = (p, canonical, images) => {
   return graph;
 };
 
+/** Same trail the SPA builds (src/utils/propertySeo.js propertyBreadcrumb). */
+const breadcrumbOf = (p, canonical) => {
+  const city = String(p.city || p.district || 'Pondicherry').trim();
+  const type = String(p.propertyType || 'Property').trim();
+  const crumbs = [
+    ['Home', SITE_URL + '/'],
+    ['Properties in ' + city, SITE_URL + '/all-property'],
+    [type + ' - PPC ' + (p.ppcId || ''), canonical],
+  ];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map(([name, item], i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name,
+      item,
+    })),
+  };
+};
+
+/** Only live listings belong in search results. */
+const isLive = (p) => p.status === 'active';
+
+const ROBOTS_INDEX = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const ROBOTS_NOINDEX = 'noindex, follow';
+
 /** The visible facts table — same fields the SPA shows, minus owner contact. */
 const FACT_FIELDS = [
   ['Property Mode', 'propertyMode'],
@@ -232,12 +268,9 @@ const FACT_FIELDS = [
   ['Posted By', 'postedBy'],
 ];
 
-const renderPage = (p) => {
+/** Listing facts as plain HTML — the standalone page body and the SPA's <noscript>. */
+const renderFacts = (p, title, description, images) => {
   const canonical = SITE_URL + '/details/' + p.ppcId;
-  const images = Array.from(new Set((p.photos || []).map(photoUrl).filter(Boolean)));
-  const title = titleOf(p);
-  const description = descriptionOf(p);
-  const ogImage = images[0] || SITE_URL + '/logo512.png';
   const place = locationOf(p);
   const price = p.onDemand ? 'Price on request' : formatPrice(p.price);
 
@@ -264,6 +297,30 @@ const renderPage = (p) => {
     .join('\n      ');
 
   return (
+    '  <h1>' + esc(title) + '</h1>\n' +
+    (place ? '  <p>' + esc(place) + '</p>\n' : '') +
+    (price ? '  <p class="price">' + esc(price) + '</p>\n' : '') +
+    '  <p>' + esc(description) + '</p>\n' +
+    (rows ? '  <table>\n      ' + rows + '\n  </table>\n' : '') +
+    (p.description
+      ? '  <h2>About this property</h2>\n  <p>' + esc(p.description) + '</p>\n'
+      : '') +
+    (gallery ? '  <h2>Photos</h2>\n      ' + gallery + '\n' : '') +
+    '  <p><a class="cta" href="' + esc(canonical) + '">View full details on ' +
+    SITE_NAME + '</a></p>\n' +
+    '  <p><small>PPC ID ' + esc(p.ppcId) + ' &middot; ' + SITE_NAME +
+    ' &middot; +91 91505 24409</small></p>\n'
+  );
+};
+
+const renderPage = (p) => {
+  const canonical = SITE_URL + '/details/' + p.ppcId;
+  const images = Array.from(new Set((p.photos || []).map(photoUrl).filter(Boolean)));
+  const title = titleOf(p);
+  const description = descriptionOf(p);
+  const ogImage = images[0] || SITE_URL + '/logo512.png';
+
+  return (
     '<!DOCTYPE html>\n' +
     '<html lang="en-IN">\n' +
     '<head>\n' +
@@ -271,7 +328,7 @@ const renderPage = (p) => {
     '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
     '<title>' + esc(title) + ' | ' + SITE_NAME + '</title>\n' +
     '<meta name="description" content="' + esc(description) + '" />\n' +
-    '<meta name="robots" content="index, follow, max-image-preview:large" />\n' +
+    '<meta name="robots" content="' + (isLive(p) ? ROBOTS_INDEX : ROBOTS_NOINDEX) + '" />\n' +
     '<link rel="canonical" href="' + esc(canonical) + '" />\n' +
     '<meta property="og:site_name" content="' + SITE_NAME + '" />\n' +
     '<meta property="og:type" content="article" />\n' +
@@ -285,9 +342,11 @@ const renderPage = (p) => {
     '<meta name="twitter:title" content="' + esc(title) + '" />\n' +
     '<meta name="twitter:description" content="' + esc(description) + '" />\n' +
     '<meta name="twitter:image" content="' + esc(ogImage) + '" />\n' +
-    '<script type="application/ld+json">' +
-    jsonLdScript(jsonLdOf(p, canonical, images)) +
-    '</script>\n' +
+    (isLive(p)
+      ? '<script type="application/ld+json">' +
+        jsonLdScript([jsonLdOf(p, canonical, images), breadcrumbOf(p, canonical)]) +
+        '</script>\n'
+      : '') +
     '<style>body{font-family:Inter,Arial,sans-serif;margin:0;padding:24px;color:#1b1b1b;max-width:900px}' +
     'h1{font-size:22px;margin:0 0 8px}table{border-collapse:collapse;width:100%;margin:16px 0}' +
     'th,td{border:1px solid #e3eef0;padding:8px 10px;text-align:left;font-size:14px}' +
@@ -296,42 +355,175 @@ const renderPage = (p) => {
     'background:#004E9D;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none}</style>\n' +
     '</head>\n' +
     '<body>\n' +
-    '  <h1>' + esc(title) + '</h1>\n' +
-    (place ? '  <p>' + esc(place) + '</p>\n' : '') +
-    (price ? '  <p class="price">' + esc(price) + '</p>\n' : '') +
-    '  <p>' + esc(description) + '</p>\n' +
-    (rows ? '  <table>\n      ' + rows + '\n  </table>\n' : '') +
-    (p.description
-      ? '  <h2>About this property</h2>\n  <p>' + esc(p.description) + '</p>\n'
-      : '') +
-    (gallery ? '  <h2>Photos</h2>\n      ' + gallery + '\n' : '') +
-    '  <p><a class="cta" href="' + esc(canonical) + '">View full details on ' +
-    SITE_NAME + '</a></p>\n' +
-    '  <p><small>PPC ID ' + esc(p.ppcId) + ' &middot; ' + SITE_NAME +
-    ' &middot; +91 91505 24409</small></p>\n' +
+    renderFacts(p, title, description, images) +
     '</body>\n</html>\n'
   );
 };
 
-const findActive = (ppcId) =>
+const NOT_FOUND_TITLE = 'Property not found';
+const NOT_FOUND_HTML =
+  '<h1>This property is no longer listed</h1>' +
+  '<p><a href="' + SITE_URL + '/all-property">Browse current listings</a></p>';
+
+const findListing = (ppcId) =>
   AddModel.findOne({
     ppcId: Number(ppcId),
     isDeleted: { $ne: true },
   }).lean();
 
+/* --------------------------------------------------------------- */
+/* The SPA shell with a listing's head written in                   */
+/* --------------------------------------------------------------- */
+
+/**
+ * The user app's built index.html. On the VPS the backend lives in
+ * public_html/PPC and the user build in public_html, so it is two levels up
+ * from this file. Re-read whenever the file changes, so a frontend deploy
+ * needs no backend restart.
+ */
+const SPA_INDEX =
+  process.env.SEO_SPA_INDEX || path.join(__dirname, '..', '..', 'index.html');
+let shellCache = { mtimeMs: 0, html: null };
+
+const readShell = () => {
+  try {
+    const { mtimeMs } = fs.statSync(SPA_INDEX);
+    if (mtimeMs !== shellCache.mtimeMs) {
+      shellCache = { mtimeMs, html: fs.readFileSync(SPA_INDEX, 'utf8') };
+    }
+    return shellCache.html;
+  } catch (err) {
+    return null;
+  }
+};
+
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const metaRe = (attr, key) =>
+  new RegExp('<meta\\s+' + attr + '="' + reEsc(key) + '"[^>]*>', 'i');
+const CANONICAL_RE = /<link\s+rel="canonical"[^>]*>/i;
+
+// Replacements use a function so `$` in listing text is never read as a
+// replacement pattern.
+const upsert = (html, re, tag) =>
+  re.test(html) ? html.replace(re, () => tag) : html.replace('</head>', () => tag + '</head>');
+
+const setMeta = (html, attr, key, content) =>
+  content
+    ? upsert(html, metaRe(attr, key), '<meta ' + attr + '="' + key + '" content="' + esc(content) + '"/>')
+    : html.replace(metaRe(attr, key), '');
+
+/**
+ * Write a page's head into the SPA shell. Tags the shell already has are
+ * replaced in place; missing ones are added. The SPA's own head code
+ * (src/utils/seo.js) finds these same tags by the same selectors once it
+ * boots, so nothing is duplicated.
+ */
+const injectHead = (html, { title, description, robots, canonical, image, imageAlt, jsonLd, body }) => {
+  let out = html.replace(/<title>[^<]*<\/title>/i, () => '<title>' + esc(title) + '</title>');
+  out = setMeta(out, 'name', 'description', description);
+  out = setMeta(out, 'name', 'robots', robots);
+  // index.html's static googlebot tag would contradict a noindex.
+  out = setMeta(out, 'name', 'googlebot', null);
+  out = canonical
+    ? upsert(out, CANONICAL_RE, '<link rel="canonical" href="' + esc(canonical) + '"/>')
+    : out.replace(CANONICAL_RE, '');
+  out = setMeta(out, 'property', 'og:type', 'article');
+  out = setMeta(out, 'property', 'og:title', title);
+  out = setMeta(out, 'property', 'og:description', description);
+  out = setMeta(out, 'property', 'og:url', canonical);
+  out = setMeta(out, 'property', 'og:image', image);
+  out = setMeta(out, 'property', 'og:image:alt', imageAlt);
+  out = setMeta(out, 'name', 'twitter:title', title);
+  out = setMeta(out, 'name', 'twitter:description', description);
+  out = setMeta(out, 'name', 'twitter:image', image);
+  if (jsonLd) {
+    // Same data-seo id the listing page uses, so the SPA replaces it in place.
+    const script =
+      '<script type="application/ld+json" data-seo="property">' + jsonLdScript(jsonLd) + '</script>';
+    out = out.replace('</head>', () => script + '</head>');
+  }
+  if (body) {
+    out = /<noscript>[\s\S]*?<\/noscript>/i.test(out)
+      ? out.replace(/<noscript>[\s\S]*?<\/noscript>/i, () => '<noscript>' + body + '</noscript>')
+      : out.replace('<div id="root">', () => '<noscript>' + body + '</noscript><div id="root">');
+  }
+  return out;
+};
+
+const sendHtml = (res, status, html) =>
+  res
+    .status(status)
+    .header('Content-Type', 'text/html; charset=utf-8')
+    // Same freshness as index.html itself: it names the current JS bundle.
+    .header('Cache-Control', 'no-cache')
+    .send(html);
+
+router.get('/seo/shell/details/:ppcId', async (req, res) => {
+  const shell = readShell();
+  let property;
+  try {
+    property = await findListing(req.params.ppcId);
+  } catch (err) {
+    // Never break the page for people over an SEO lookup.
+    console.error('[seo] shell lookup failed:', err.message);
+    if (shell) return sendHtml(res, 200, shell);
+    return res.status(500).send('lookup failed');
+  }
+
+  if (!shell) {
+    console.error('[seo] SPA index.html not readable at', SPA_INDEX);
+    return property
+      ? sendHtml(res, 200, renderPage(property))
+      : sendHtml(res, 404, '<!DOCTYPE html><title>' + NOT_FOUND_TITLE + '</title>' + NOT_FOUND_HTML);
+  }
+
+  if (!property) {
+    // The SPA still boots and shows its own "not found" state.
+    return sendHtml(
+      res,
+      404,
+      injectHead(shell, {
+        title: NOT_FOUND_TITLE + ' | ' + SITE_NAME,
+        description: 'This property is no longer listed on ' + SITE_NAME + '.',
+        robots: ROBOTS_NOINDEX,
+        body: NOT_FOUND_HTML,
+      })
+    );
+  }
+
+  const canonical = SITE_URL + '/details/' + property.ppcId;
+  const images = Array.from(new Set((property.photos || []).map(photoUrl).filter(Boolean)));
+  const title = titleOf(property);
+  const description = descriptionOf(property);
+  const live = isLive(property);
+  return sendHtml(
+    res,
+    200,
+    injectHead(shell, {
+      title: title + ' | ' + SITE_NAME,
+      description,
+      robots: live ? ROBOTS_INDEX : ROBOTS_NOINDEX,
+      canonical,
+      image: images[0] || SITE_URL + '/logo512.png',
+      imageAlt: title,
+      jsonLd: live ? [jsonLdOf(property, canonical, images), breadcrumbOf(property, canonical)] : null,
+      body: renderFacts(property, title, description, images),
+    })
+  );
+});
+
 router.get('/seo/details/:ppcId', async (req, res) => {
   try {
-    const property = await findActive(req.params.ppcId);
+    const property = await findListing(req.params.ppcId);
     if (!property) {
       res
         .status(404)
         .header('Content-Type', 'text/html; charset=utf-8')
         .send(
           '<!DOCTYPE html><html lang="en-IN"><head><meta charset="utf-8">' +
-            '<title>Property not found | ' + SITE_NAME + '</title>' +
+            '<title>' + NOT_FOUND_TITLE + ' | ' + SITE_NAME + '</title>' +
             '<meta name="robots" content="noindex"></head><body>' +
-            '<h1>This property is no longer listed</h1>' +
-            '<p><a href="' + SITE_URL + '/all-property">Browse current listings</a></p>' +
+            NOT_FOUND_HTML +
             '</body></html>'
         );
       return;
@@ -348,7 +540,7 @@ router.get('/seo/details/:ppcId', async (req, res) => {
 /** Same render plus the raw record — for checking what a bot will see. */
 router.get('/seo/preview/:ppcId', async (req, res) => {
   try {
-    const property = await findActive(req.params.ppcId);
+    const property = await findListing(req.params.ppcId);
     if (!property) return res.status(404).json({ message: 'Property not found' });
     const canonical = SITE_URL + '/details/' + property.ppcId;
     const images = Array.from(
