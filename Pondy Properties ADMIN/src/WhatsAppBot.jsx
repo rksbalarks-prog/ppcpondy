@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import { Alert, Badge, Button, Card, Col, Form, Row, Table } from 'react-bootstrap';
+import { Alert, Badge, Button, Card, Col, Form, Modal, Row, Table } from 'react-bootstrap';
 import { ErrorBox, Kpi, Loading, PermissionGate, errMsg, fmtDateTime, fmtNum } from './AssistantShared';
 
 /*
@@ -293,11 +293,159 @@ function AccountCard({ settings, onSwitched }) {
   );
 }
 
-const TPL_STATUS = { APPROVED: 'success', PENDING: 'warning', REJECTED: 'danger', 'NOT SUBMITTED': 'secondary' };
-const AUDIENCE_LABEL = { owner: 'To owner', user: 'To buyer', account: 'Account' };
+const TPL_STATUS = { APPROVED: 'success', PENDING: 'warning', SUBMITTED: 'warning', REJECTED: 'danger', 'NOT SUBMITTED': 'secondary' };
+const AUDIENCE_LABEL = { owner: 'To owner', user: 'To buyer', account: 'Account', custom: 'Office template' };
 const SOURCE_LABEL = {
   'send-message': 'Website / app alert', login: 'First login', bot: 'WhatsApp bot (if its text cannot go)', admin: 'Not automatic yet',
 };
+
+const TPL_LANGS = [
+  { v: 'en', label: 'English (en)' }, { v: 'en_US', label: 'English US (en_US)' }, { v: 'en_GB', label: 'English UK (en_GB)' },
+  { v: 'ta', label: 'Tamil (ta)' }, { v: 'hi', label: 'Hindi (hi)' }, { v: 'te', label: 'Telugu (te)' }, { v: 'ml', label: 'Malayalam (ml)' },
+];
+
+// Highest {{n}} used in the body = how many variables it has.
+const varCount = (body) => {
+  const nums = (String(body).match(/\{\{(\d+)\}\}/g) || []).map((v) => Number(v.replace(/\D/g, '')));
+  return nums.length ? Math.max(...nums) : 0;
+};
+
+// The same checks Meta/the backend make, shown live while the office types.
+function tplProblems(f) {
+  const out = [];
+  if (!/^[a-z0-9_]{1,512}$/.test(f.name || '')) out.push('Name: lowercase letters, digits and _ only (e.g. pp_offer_made).');
+  if (f.category === 'AUTHENTICATION') return out; // Meta writes the wording
+  const n = varCount(f.body);
+  const nums = (String(f.body).match(/\{\{(\d+)\}\}/g) || []).map((v) => Number(v.replace(/\D/g, '')));
+  nums.forEach((x, i) => { if (x !== i + 1) out.push('Variables must read {{1}}, {{2}} … in order with none skipped.'); });
+  if (!String(f.body).trim()) out.push('Write the message body.');
+  if ((f.example || []).slice(0, n).some((v) => !String(v || '').trim())) out.push('Give an example value for every variable.');
+  if (/^\s*\{\{/.test(f.body) || /\{\{\d+\}\}\W*$/.test(f.body)) out.push('A variable cannot be the very first or last thing in the body.');
+  if (String(f.body).length > 1024) out.push('Body is over 1024 characters.');
+  if (f.footer && f.footer.length > 60) out.push('Footer is over 60 characters.');
+  if (f.buttonUrl && !/^https?:\/\//i.test(f.buttonUrl)) out.push('Button URL must start with http:// or https://');
+  if (f.buttonUrl && !String(f.buttonText || '').trim()) out.push('Give the button some text.');
+  return [...new Set(out)];
+}
+
+const BLANK_TPL = { name: '', category: 'UTILITY', language: 'en', body: '', example: [], footer: 'Pondy Properties', buttonText: '', buttonUrl: '', label: '' };
+
+// The "+ New template" / "Edit" builder. Writes a template and sends it to Meta.
+function TemplateBuilder({ editing, onClose, onSaved }) {
+  const isEdit = !!(editing && editing.id);
+  const [f, setF] = useState(() => (isEdit
+    ? { name: editing.name, category: editing.category, language: editing.language, body: editing.body || '',
+      example: editing.example || [], footer: editing.footer || '', buttonText: editing.buttonText || '', buttonUrl: editing.buttonUrl || '', label: editing.label || '' }
+    : BLANK_TPL));
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  const n = varCount(f.body);
+  const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
+  const setExample = (i, v) => setF((x) => { const e = [...(x.example || [])]; e[i] = v; return { ...x, example: e }; });
+  const problems = tplProblems(f);
+  const preview = String(f.body).replace(/\{\{(\d+)\}\}/g, (m, i) => (f.example || [])[i - 1] || m);
+
+  const save = async () => {
+    setBusy(true); setErr('');
+    try {
+      const payload = { ...f, example: (f.example || []).slice(0, n) };
+      if (isEdit) await axios.put(`${API}/wa-templates/custom/${editing.id}`, payload);
+      else await axios.post(`${API}/wa-templates/create`, payload);
+      onSaved(isEdit ? `"${f.name}" updated and resent to Meta.` : `"${f.name}" sent to Meta for approval.`);
+    } catch (e) { setErr(errMsg(e)); } finally { setBusy(false); }
+  };
+
+  return (
+    <Modal show onHide={onClose} size="lg" backdrop="static" scrollable>
+      <Modal.Header closeButton><Modal.Title className="h6">{isEdit ? `Edit template — ${editing.name}` : 'New WhatsApp template'}</Modal.Title></Modal.Header>
+      <Modal.Body>
+        <Row className="g-2">
+          <Col md={6}>
+            <Form.Label className="small mb-0">Template name {isEdit && <span className="text-muted">(locked)</span>}</Form.Label>
+            <Form.Control size="sm" value={f.name} disabled={isEdit}
+              onChange={(e) => set('name', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))} placeholder="pp_offer_made" />
+            <div className="form-text">Meta locks the name once submitted. Lowercase, digits and _ only.</div>
+          </Col>
+          <Col md={3}>
+            <Form.Label className="small mb-0">Category</Form.Label>
+            <Form.Select size="sm" value={f.category} onChange={(e) => set('category', e.target.value)}>
+              <option value="UTILITY">Utility</option>
+              <option value="MARKETING">Marketing</option>
+              <option value="AUTHENTICATION">Authentication (OTP)</option>
+            </Form.Select>
+          </Col>
+          <Col md={3}>
+            <Form.Label className="small mb-0">Language {isEdit && <span className="text-muted">(locked)</span>}</Form.Label>
+            <Form.Select size="sm" value={f.language} disabled={isEdit} onChange={(e) => set('language', e.target.value)}>
+              {TPL_LANGS.map((l) => <option key={l.v} value={l.v}>{l.label}</option>)}
+            </Form.Select>
+          </Col>
+          <Col md={12}>
+            <Form.Label className="small mb-0">A name for the office (optional)</Form.Label>
+            <Form.Control size="sm" value={f.label} onChange={(e) => set('label', e.target.value)} placeholder="e.g. Offer made to buyer" />
+          </Col>
+        </Row>
+
+        {f.category === 'AUTHENTICATION' ? (
+          <Alert variant="info" className="small mt-3 mb-0">
+            For an OTP template, Meta writes the wording and the "Copy code" button itself — just give it a name and submit. Test on a test number first.
+          </Alert>
+        ) : (
+          <>
+            <div className="mt-3">
+              <Form.Label className="small mb-0">Message body</Form.Label>
+              <Form.Control as="textarea" rows={4} size="sm" value={f.body} onChange={(e) => set('body', e.target.value)}
+                placeholder="Hi {{1}}, your property {{2}} is now live on Pondy Properties." />
+              <div className="form-text">Put variables as {'{{1}}'}, {'{{2}}'} … in order. A variable can't be the very first or last thing.</div>
+            </div>
+            {n > 0 && (
+              <div className="mt-2">
+                <Form.Label className="small mb-1">Example value for each variable (Meta needs these)</Form.Label>
+                <Row className="g-2">
+                  {Array.from({ length: n }).map((_, i) => (
+                    <Col md={4} key={i}>
+                      <Form.Control size="sm" value={(f.example || [])[i] || ''} onChange={(e) => setExample(i, e.target.value)} placeholder={`{{${i + 1}}} example`} />
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            )}
+            <Row className="g-2 mt-1">
+              <Col md={12}>
+                <Form.Label className="small mb-0">Footer (optional, ≤ 60 chars)</Form.Label>
+                <Form.Control size="sm" value={f.footer} onChange={(e) => set('footer', e.target.value)} placeholder="Pondy Properties" />
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small mb-0">Button text (optional)</Form.Label>
+                <Form.Control size="sm" value={f.buttonText} onChange={(e) => set('buttonText', e.target.value)} placeholder="Open Pondy Properties" />
+              </Col>
+              <Col md={8}>
+                <Form.Label className="small mb-0">Button URL (optional)</Form.Label>
+                <Form.Control size="sm" value={f.buttonUrl} onChange={(e) => set('buttonUrl', e.target.value)} placeholder="https://pondyproperty.com" />
+              </Col>
+            </Row>
+            <div className="border rounded p-2 mt-3" style={{ background: '#e5f7e0' }}>
+              <div className="small text-muted mb-1">Preview</div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{preview || <span className="text-muted">— your message appears here —</span>}</div>
+              {f.footer && <div className="text-muted small mt-1">{f.footer}</div>}
+              {f.buttonText && f.buttonUrl && <div className="mt-1"><Badge bg="light" text="primary" className="border">🔗 {f.buttonText}</Badge></div>}
+            </div>
+          </>
+        )}
+
+        {problems.length > 0 && <Alert variant="warning" className="small mt-3 mb-0">{problems.map((p, i) => <div key={i}>• {p}</div>)}</Alert>}
+        {err && <Alert variant="danger" className="small mt-3 mb-0">{err}</Alert>}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button size="sm" variant="outline-secondary" onClick={onClose} disabled={busy}>Cancel</Button>
+        <Button size="sm" variant="success" onClick={save} disabled={busy || problems.length > 0}>
+          {busy ? 'Submitting…' : isEdit ? 'Save & resubmit to Meta' : 'Submit to Meta'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+}
 
 /*
  * WhatsApp templates (PPC/WhatsAppTemplates): the Meta-approved versions of the
@@ -312,6 +460,7 @@ function TemplatesCard() {
   const [msg, setMsg] = useState(null);
   const [limit, setLimit] = useState('');
   const [testPhone, setTestPhone] = useState('');
+  const [builder, setBuilder] = useState(null); // null = closed, {} = new, {id,...} = editing
 
   const load = useCallback(async (refresh = false) => {
     setSt((x) => ({ ...x, loading: true, error: '' }));
@@ -347,13 +496,18 @@ function TemplatesCard() {
             {s.templateDailyLimit ? ` (limit ${fmtNum(s.templateDailyLimit)})` : ''}
           </div>
         </div>
-        <Form.Check type="switch" id="wa-tpl-on" disabled={!!busy || !s.hasToken || !s.hasApiCode}
-          label={s.templatesEnabled ? <b className="text-success">Templates ON</b> : <span className="text-muted">Templates off (all alerts by OneMsg)</span>}
-          checked={s.templatesEnabled}
-          onChange={(e) => {
-            if (e.target.checked && !window.confirm('Send the website / app alerts as approved WhatsApp templates from the official number? Each template message is charged by WhatsApp on the SmartGrowth account (shared with Pondicherry Matrimony).')) return;
-            save({ templatesEnabled: e.target.checked });
-          }} />
+        <div className="d-flex align-items-center gap-3">
+          <Form.Check type="switch" id="wa-tpl-on" disabled={!!busy || !s.hasToken || !s.hasApiCode}
+            label={s.templatesEnabled ? <b className="text-success">Templates ON</b> : <span className="text-muted">Templates off (all alerts by OneMsg)</span>}
+            checked={s.templatesEnabled}
+            onChange={(e) => {
+              if (e.target.checked && !window.confirm('Send the website / app alerts as approved WhatsApp templates from the official number? Each template message is charged by WhatsApp on the SmartGrowth account (shared with Pondicherry Matrimony).')) return;
+              save({ templatesEnabled: e.target.checked });
+            }} />
+          <Button size="sm" variant="success" disabled={!!busy || !s.hasToken} onClick={() => setBuilder({})}>
+            + New template
+          </Button>
+        </div>
       </div>
       <div className="small text-muted mb-2">
         Approved templates replace the matching OneMsg alert; switched-off, unapproved or failed ones still go by OneMsg, so nothing stops.
@@ -407,22 +561,49 @@ function TemplatesCard() {
                 <td><div>{t.when}</div><div className="text-muted">{SOURCE_LABEL[t.source] || t.source}</div></td>
                 <td><Badge bg={TPL_STATUS[t.status] || 'secondary'}>{t.status}</Badge></td>
                 <td>
-                  <Form.Check type="switch" id={`tpl-${t.key}`} disabled={!!busy} checked={t.on}
-                    onChange={(e) => save({ templateOn: { [t.key]: e.target.checked } })} />
+                  {t.custom ? <span className="text-muted">—</span> : (
+                    <Form.Check type="switch" id={`tpl-${t.key}`} disabled={!!busy} checked={t.on}
+                      onChange={(e) => save({ templateOn: { [t.key]: e.target.checked } })} />
+                  )}
                 </td>
                 <td className="text-nowrap">
-                  {(t.status === 'NOT SUBMITTED' || t.status === 'REJECTED') && (
-                    <Button size="sm" variant="outline-primary" className="me-1" disabled={!!busy || !s.hasToken}
-                      onClick={() => call(`sub-${t.key}`, () => axios.post(`${API}/wa-templates/${t.key}/submit`))}>
-                      {busy === `sub-${t.key}` ? '…' : 'Submit'}
-                    </Button>
-                  )}
-                  {t.status === 'APPROVED' && (
-                    <Button size="sm" variant="outline-success" disabled={!!busy || !s.hasApiCode || testPhone.replace(/\D/g, '').length < 10}
-                      title={testPhone ? '' : 'Type a test number above'}
-                      onClick={() => call(`test-${t.key}`, () => axios.post(`${API}/wa-templates/${t.key}/test`, { phone: testPhone }))}>
-                      {busy === `test-${t.key}` ? '…' : 'Test'}
-                    </Button>
+                  {t.custom ? (
+                    <>
+                      {(t.status === 'NOT SUBMITTED' || t.status === 'REJECTED') && (
+                        <Button size="sm" variant="outline-primary" className="me-1" disabled={!!busy || !s.hasToken}
+                          onClick={() => call(`sub-${t.key}`, () => axios.post(`${API}/wa-templates/custom/${t.id}/submit`))}>
+                          {busy === `sub-${t.key}` ? '…' : 'Submit'}
+                        </Button>
+                      )}
+                      {t.status === 'APPROVED' && (
+                        <Button size="sm" variant="outline-success" className="me-1" disabled={!!busy || !s.hasApiCode || testPhone.replace(/\D/g, '').length < 10}
+                          title={testPhone ? '' : 'Type a test number above'}
+                          onClick={() => call(`test-${t.key}`, () => axios.post(`${API}/wa-templates/custom/${t.id}/test`, { phone: testPhone }))}>
+                          {busy === `test-${t.key}` ? '…' : 'Test'}
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline-secondary" className="me-1" disabled={!!busy} onClick={() => setBuilder(t)}>Edit</Button>
+                      <Button size="sm" variant="outline-danger" disabled={!!busy}
+                        onClick={() => window.confirm(`Remove "${t.name}" from the admin?`) && call(`del-${t.key}`, () => axios.delete(`${API}/wa-templates/custom/${t.id}`))}>
+                        {busy === `del-${t.key}` ? '…' : 'Delete'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {(t.status === 'NOT SUBMITTED' || t.status === 'REJECTED') && (
+                        <Button size="sm" variant="outline-primary" className="me-1" disabled={!!busy || !s.hasToken}
+                          onClick={() => call(`sub-${t.key}`, () => axios.post(`${API}/wa-templates/${t.key}/submit`))}>
+                          {busy === `sub-${t.key}` ? '…' : 'Submit'}
+                        </Button>
+                      )}
+                      {t.status === 'APPROVED' && (
+                        <Button size="sm" variant="outline-success" disabled={!!busy || !s.hasApiCode || testPhone.replace(/\D/g, '').length < 10}
+                          title={testPhone ? '' : 'Type a test number above'}
+                          onClick={() => call(`test-${t.key}`, () => axios.post(`${API}/wa-templates/${t.key}/test`, { phone: testPhone }))}>
+                          {busy === `test-${t.key}` ? '…' : 'Test'}
+                        </Button>
+                      )}
+                    </>
                   )}
                 </td>
               </tr>
@@ -430,6 +611,13 @@ function TemplatesCard() {
           </tbody>
         </Table>
       </div>
+      {builder && (
+        <TemplateBuilder
+          editing={builder.id ? builder : null}
+          onClose={() => setBuilder(null)}
+          onSaved={(text) => { setBuilder(null); setMsg({ ok: true, text }); load(true); }}
+        />
+      )}
     </Card.Body></Card>
   );
 }
