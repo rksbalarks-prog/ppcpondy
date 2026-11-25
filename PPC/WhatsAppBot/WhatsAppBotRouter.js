@@ -8,6 +8,9 @@
 //   GET  /PPC/wa-bot/flows/:kind/json         the generated form JSON (buyer | seller)
 //   POST /PPC/wa-bot/flows/:kind/upload       create the form in SmartGrowth if needed, upload the JSON (draft)
 //   POST /PPC/wa-bot/flows/:kind/publish      publish it in Meta -> every customer gets it
+//   POST /PPC/wa-bot/account/test   {apiToken?, apiCode?, baseUrl?}   check SmartGrowth credentials (blank = saved); saves nothing
+//   POST /PPC/wa-bot/account/switch {apiToken, apiCode, baseUrl, label, sharedNumber}
+//                                             connect another SmartGrowth account (tested first; resets the old account's ids)
 //   POST /PPC/wa-bot/handoff  {phone, wamid}  SHARED NUMBER: PM's bot asks whether a message is ours
 //                                             (components/PondyPropertyShare.php) -> {taken, why}
 
@@ -17,6 +20,7 @@ const { sg, rows } = require('./smartgrowth');
 const { runOnce, handoff } = require('./bot');
 const F = require('./flows');
 const assistantConfig = require('../assistant/config');
+const { clearCache: clearTemplateCache } = require('../WhatsAppTemplates/sender');
 const { getSettings: getAssistantSettings } = require('../assistant/settings');
 
 const router = express.Router();
@@ -37,11 +41,73 @@ const publicSettings = (s) => ({
   welcomeText: s.welcomeText || '',
   aiEnabled: !!s.aiEnabled,
   sharedNumber: s.sharedNumber !== false,
+  hasApiCode: !!s.apiCode,
+  apiCodeMasked: s.apiCode ? `${'•'.repeat(6)}${String(s.apiCode).slice(-3)}` : '',
+  accountLabel: s.accountLabel || '',
+  accountChangedAt: s.accountChangedAt || null,
+  accountHistory: Array.isArray(s.accountHistory) ? s.accountHistory.slice(0, 10) : [],
   checkedAt: s.checkedAt,
   lastRun: s.lastRun,
 });
 
 const fail = (res, code, error) => res.status(code).json({ error });
+
+const DEFAULT_BASE = 'https://newapp.smartgrowthai.com';
+const cleanBase = (u) => {
+  const v = String(u || '').trim().replace(/\/+$/, '');
+  if (!v) return DEFAULT_BASE;
+  // https only - plain http just for this machine (local tests against a mock SmartGrowth)
+  return /^https:\/\/[a-z0-9.-]+(:\d+)?(\/.*)?$/i.test(v) || /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?(\/.*)?$/i.test(v) ? v : null;
+};
+
+/**
+ * Check a set of SmartGrowth credentials WITHOUT saving them: read the account's templates,
+ * forms and chats. -> { ok, error?, templates, ppTemplates, approvedPp, otherTemplates[], flows, ppForms[], chats }
+ * The names of a few templates on the account help to recognise WHICH account it is
+ * (the Pondicherry Matrimony account carries the matrimony templates).
+ */
+async function testAccount(creds) {
+  const s = { baseUrl: creds.baseUrl, apiToken: creds.apiToken };
+  const t = await sg(s, 'GET', '/api/get-all-templates', undefined, 30000);
+  if (!t.ok) return { ok: false, error: t.code === 401 || t.code === 403 ? 'SmartGrowth refused the token (wrong or expired)' : `could not read templates: ${t.error}` };
+  let list = rows(t.data);
+  if (!list.length && t.data && typeof t.data === 'object') {
+    for (const k of ['templates', 'result', 'results']) if (Array.isArray(t.data[k])) { list = t.data[k]; break; }
+  }
+  const named = list.filter((x) => x && x.name);
+  const pp = named.filter((x) => String(x.name).startsWith('pp_'));
+  const f = await sg(s, 'GET', '/api/get-flows', undefined, 30000);
+  const flows = f.ok ? rows(f.data).filter((x) => x && x.id) : [];
+  const c = await sg(s, 'GET', '/api/get-my-chats?from=&tn=', undefined, 30000);
+  const chats = c.ok ? (Array.isArray(c.data) ? c.data : rows(c.data)).length : null;
+  return {
+    ok: true,
+    templates: named.length,
+    ppTemplates: pp.length,
+    approvedPp: pp.filter((x) => String(x.status || '').toUpperCase() === 'APPROVED').length,
+    otherTemplates: named.filter((x) => !String(x.name).startsWith('pp_')).slice(0, 6).map((x) => x.name),
+    flows: flows.length,
+    ppForms: flows.filter((x) => Object.values(F.FLOW_NAMES).includes(x.name)).map((x) => `${x.name} (${x.status || '?'})`),
+    chats,
+    apiCodeGiven: !!creds.apiCode,
+  };
+}
+
+/** What belongs to the OLD account and must not be used with a new one. */
+function resetForNewAccount(prev, { token, label, by }) {
+  const history = [{ at: new Date(), label: label || '', token: token ? `…${String(token).slice(-4)}` : '', by: by || '' },
+    ...(Array.isArray(prev.accountHistory) ? prev.accountHistory : [])].slice(0, 10);
+  return {
+    // the forms live on the old account; the new one gets its own on Upload
+    buyerFlowId: '', sellerFlowId: '', buyerFlowMode: 'draft', sellerFlowMode: 'draft',
+    // off until it is set up and tested on the new account
+    enabled: false, templatesEnabled: false,
+    // never answer the new account's old messages
+    checkedAt: new Date(), lastRun: null,
+    accountChangedAt: new Date(), accountHistory: history,
+    ...(label !== undefined ? { accountLabel: String(label).slice(0, 80) } : {}),
+  };
+}
 
 async function findFlow(s, kind) {
   const r = await sg(s, 'GET', '/api/get-flows');
@@ -97,6 +163,17 @@ router.put('/wa-bot/settings', async (req, res) => {
       set.baseUrl = u || 'https://newapp.smartgrowthai.com';
     }
     if (typeof b.apiToken === 'string' && b.apiToken.trim() && !b.apiToken.includes('•')) set.apiToken = b.apiToken.trim();
+    if (typeof b.apiCode === 'string' && b.apiCode.trim() && !b.apiCode.includes('•')) set.apiCode = b.apiCode.trim().slice(0, 200);
+    {
+      const prev = await getSettings();
+      const tokenChanged = set.apiToken && set.apiToken !== prev.apiToken;
+      const baseChanged = set.baseUrl && set.baseUrl.replace(/\/+$/, '') !== String(prev.baseUrl || DEFAULT_BASE).replace(/\/+$/, '');
+      if (prev.apiToken && (tokenChanged || baseChanged)) {
+        Object.assign(set, resetForNewAccount(prev, { token: set.apiToken || prev.apiToken }));
+        delete b.enabled; delete b.buyerFlowId; delete b.sellerFlowId; // the reset wins over the rest of this form
+        clearTemplateCache();
+      }
+    }
     if (typeof b.allowList === 'string') set.allowList = b.allowList.slice(0, 2000);
     for (const k of ['buyerFlowId', 'sellerFlowId']) {
       if (typeof b[k] === 'string') {
@@ -118,6 +195,52 @@ router.put('/wa-bot/settings', async (req, res) => {
     }
     await WaBotSettings.updateOne({ key: 'main' }, { $set: set }, { upsert: true });
     res.json({ settings: publicSettings(await getSettings()) });
+  } catch (e) {
+    fail(res, 500, e.message);
+  }
+});
+
+router.post('/wa-bot/account/test', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const s = await getSettings();
+    const typed = (v) => typeof v === 'string' && v.trim() && !v.includes('•');
+    const baseUrl = cleanBase(typed(b.baseUrl) ? b.baseUrl : s.baseUrl);
+    if (!baseUrl) return fail(res, 400, 'Base URL must start with https://');
+    const apiToken = typed(b.apiToken) ? b.apiToken.trim() : s.apiToken;
+    if (!apiToken) return fail(res, 400, 'Paste an API token to test.');
+    res.json(await testAccount({ baseUrl, apiToken, apiCode: typed(b.apiCode) ? b.apiCode.trim() : s.apiCode }));
+  } catch (e) {
+    fail(res, 500, e.message);
+  }
+});
+
+router.post('/wa-bot/account/switch', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const typed = (v) => typeof v === 'string' && v.trim() && !v.includes('•');
+    if (!typed(b.apiToken)) return fail(res, 400, 'Paste the new account\'s API token.');
+    if (!typed(b.apiCode)) return fail(res, 400, 'Paste the new account\'s API code (needed to send templates).');
+    const baseUrl = cleanBase(b.baseUrl);
+    if (!baseUrl) return fail(res, 400, 'Base URL must start with https://');
+    const apiToken = b.apiToken.trim();
+    const t = await testAccount({ baseUrl, apiToken, apiCode: b.apiCode });
+    if (!t.ok) return fail(res, 400, `Not switched - ${t.error}`);
+    const prev = await getSettings();
+    if (prev.apiToken === apiToken && String(prev.baseUrl || '').replace(/\/+$/, '') === baseUrl) {
+      return fail(res, 400, 'That is the account already connected.');
+    }
+    const set = {
+      apiToken, apiCode: b.apiCode.trim().slice(0, 200), baseUrl,
+      ...resetForNewAccount(prev, { token: apiToken, label: typeof b.label === 'string' ? b.label : '', by: String(b.by || '').slice(0, 60) }),
+    };
+    if (typeof b.sharedNumber === 'boolean') set.sharedNumber = b.sharedNumber;
+    await WaBotSettings.updateOne({ key: 'main' }, { $set: set }, { upsert: true });
+    clearTemplateCache();
+    res.json({
+      settings: publicSettings(await getSettings()), test: t,
+      message: 'Switched. The bot and templates are OFF: upload the Buyer / Seller forms and submit the templates on this account, test, then switch them on.',
+    });
   } catch (e) {
     fail(res, 500, e.message);
   }

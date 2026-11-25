@@ -31,6 +31,12 @@ const WaBotSettingsSchema = new mongoose.Schema({
   templatesEnabled: { type: Boolean, default: false },
   templateOn: { type: Object, default: {} },
   templateDailyLimit: { type: Number, default: 200 },
+  // Which SmartGrowth account is connected (admin › WhatsApp Bot › SmartGrowth account).
+  // Switching accounts resets what belonged to the old one (form ids, watermark) and
+  // switches the bot + templates off until they are set up on the new account.
+  accountLabel: { type: String, default: '' },
+  accountChangedAt: { type: Date, default: null },
+  accountHistory: { type: Array, default: [] }, // [{at, label, token: '…last4', by}] newest first, max 10
   checkedAt: { type: Date, default: null }, // watermark of the last poll
   lastRun: { type: Object, default: null }, // summary of the last poll, for the admin page
 }, { timestamps: true, collection: 'wa_bot_settings' });

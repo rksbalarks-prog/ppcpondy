@@ -117,4 +117,7 @@ async function tryTemplate(to, message) {
   return { key: m.key, ok: true, data: { via: 'template', template: t.name, provider: 'smartgrowth', response: res.data }, text };
 }
 
-module.exports = { sendTemplate, tryTemplate, accountTemplates, isOn };
+/** Forget the cached template list (after switching SmartGrowth accounts). */
+function clearCache() { cache = { at: 0, byName: {}, error: '' }; }
+
+module.exports = { sendTemplate, tryTemplate, accountTemplates, isOn, clearCache };

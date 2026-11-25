@@ -84,7 +84,7 @@ function SettingsCard({ settings, ai, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   useEffect(() => {
-    setF({ baseUrl: settings.baseUrl, apiToken: '', allowList: settings.allowList, welcomeText: settings.welcomeText,
+    setF({ allowList: settings.allowList, welcomeText: settings.welcomeText,
       buyerFlowId: settings.buyerFlowId, sellerFlowId: settings.sellerFlowId });
   }, [settings]);
   if (!f) return null;
@@ -147,17 +147,6 @@ function SettingsCard({ settings, ai, onSaved }) {
       </div>
       <Row className="g-2">
         <Col md={6}>
-          <Form.Label className="small mb-0">
-            SmartGrowth API token{settings.sharedNumber ? ' (the same token as PM admin › WhatsApp › Settings)' : ' (Pondy Property number)'}
-          </Form.Label>
-          <Form.Control size="sm" type="password" autoComplete="off" value={f.apiToken} onChange={set('apiToken')}
-            placeholder={settings.hasToken ? `saved ${settings.apiTokenMasked} - type to replace` : 'paste the token'} />
-        </Col>
-        <Col md={6}>
-          <Form.Label className="small mb-0">SmartGrowth base URL</Form.Label>
-          <Form.Control size="sm" value={f.baseUrl} onChange={set('baseUrl')} />
-        </Col>
-        <Col md={6}>
           <Form.Label className="small mb-0">Test numbers only (allow-list)</Form.Label>
           <Form.Control size="sm" value={f.allowList} onChange={set('allowList')} placeholder="9876543210, 9123456789" />
           <div className="small text-muted">When filled, the bot answers ONLY these numbers. Empty = everyone.</div>
@@ -184,6 +173,126 @@ function SettingsCard({ settings, ai, onSaved }) {
   );
 }
 
+/*
+ * SmartGrowth account: which WhatsApp Business account (token + API code) this admin
+ * uses. Test checks new credentials without saving; Switch saves them and resets what
+ * belonged to the old account (form ids, poll watermark) and turns the bot and the
+ * templates OFF until the forms and templates are set up on the new account.
+ */
+function AccountCard({ settings, onSwitched }) {
+  const blank = { label: '', apiToken: '', apiCode: '', baseUrl: settings.baseUrl || 'https://newapp.smartgrowthai.com', sharedNumber: settings.sharedNumber };
+  const [open, setOpen] = useState(!settings.hasToken);
+  const [f, setF] = useState(blank);
+  const [busy, setBusy] = useState('');
+  const [test, setTest] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); setTest(null); };
+
+  const runTest = async (useSaved) => {
+    setBusy(useSaved ? 'test-saved' : 'test'); setMsg(null);
+    try {
+      const r = await axios.post(`${API}/wa-bot/account/test`, useSaved ? {} : { apiToken: f.apiToken, apiCode: f.apiCode, baseUrl: f.baseUrl });
+      setTest({ ...r.data, which: useSaved ? 'saved' : 'new' });
+    } catch (e) { setTest({ ok: false, error: errMsg(e), which: useSaved ? 'saved' : 'new' }); } finally { setBusy(''); }
+  };
+  const doSwitch = async () => {
+    if (!window.confirm(`Connect ${f.label ? `"${f.label}"` : 'this SmartGrowth account'}?\n\nThe WhatsApp bot and the templates are switched OFF, and the Buyer / Seller form ids are cleared - upload the forms and submit the templates on the new account, test, then switch them on again.`)) return;
+    setBusy('switch'); setMsg(null);
+    try {
+      const r = await axios.post(`${API}/wa-bot/account/switch`, { ...f, sharedNumber: f.sharedNumber });
+      setMsg({ ok: true, text: r.data.message }); setF(blank); setTest(null); setOpen(false); onSwitched();
+    } catch (e) { setMsg({ ok: false, text: errMsg(e) }); } finally { setBusy(''); }
+  };
+
+  const Result = ({ t }) => (
+    t.ok ? (
+      <Alert variant="success" className="py-1 small mb-2">
+        <b>Connected</b> ({t.which === 'saved' ? 'saved account' : 'new credentials, not saved yet'}): {t.templates} templates
+        {t.ppTemplates ? ` (${t.ppTemplates} Pondy Properties, ${t.approvedPp} approved)` : ' (no Pondy Properties templates yet)'} · {t.flows} forms
+        {t.ppForms.length ? ` (${t.ppForms.join(', ')})` : ''} · {t.chats == null ? 'chats not readable' : `${t.chats} chats`}
+        {t.otherTemplates.length > 0 && <div className="text-muted">Other templates on it: {t.otherTemplates.join(', ')}{t.templates > t.otherTemplates.length + t.ppTemplates ? '…' : ''}</div>}
+        {t.which === 'new' && !t.apiCodeGiven && <div className="text-danger">Add the API code too - templates cannot be sent without it.</div>}
+      </Alert>
+    ) : <Alert variant="danger" className="py-1 small mb-2">{t.error}</Alert>
+  );
+
+  return (
+    <Card className="mb-3"><Card.Body>
+      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
+        <div>
+          <h6 className="mb-0">SmartGrowth account</h6>
+          {settings.hasToken ? (
+            <div className="small">
+              <b>{settings.accountLabel || 'Connected account'}</b> · token {settings.apiTokenMasked}
+              {' · '}API code {settings.hasApiCode ? settings.apiCodeMasked : <span className="text-danger">missing</span>}
+              {' · '}<span className="text-muted">{settings.baseUrl}</span>
+              {settings.sharedNumber && <Badge bg="warning" text="dark" className="ms-2">Shared with Pondicherry Matrimony</Badge>}
+              {settings.accountChangedAt && <div className="text-muted">Connected {fmtDateTime(settings.accountChangedAt)}</div>}
+            </div>
+          ) : <div className="small text-danger">No account connected yet.</div>}
+        </div>
+        <div className="d-flex gap-2">
+          {settings.hasToken && (
+            <Button size="sm" variant="outline-secondary" disabled={!!busy} onClick={() => runTest(true)}>
+              {busy === 'test-saved' ? 'Checking…' : 'Test connection'}
+            </Button>
+          )}
+          <Button size="sm" variant={open ? 'secondary' : 'outline-primary'} onClick={() => { setOpen(!open); setTest(null); setMsg(null); }}>
+            {open ? 'Cancel' : settings.hasToken ? 'Change account' : 'Connect account'}
+          </Button>
+        </div>
+      </div>
+      {test && test.which === 'saved' && <div className="mt-2"><Result t={test} /></div>}
+      {open && (
+        <div className="border rounded p-2 mt-2" style={{ background: '#f8fafc' }}>
+          <Row className="g-2">
+            <Col md={4}>
+              <Form.Label className="small mb-0">Name (for you)</Form.Label>
+              <Form.Control size="sm" value={f.label} onChange={set('label')} placeholder="e.g. PM shared number / Pondy own number" />
+            </Col>
+            <Col md={8}>
+              <Form.Label className="small mb-0">Base URL</Form.Label>
+              <Form.Control size="sm" value={f.baseUrl} onChange={set('baseUrl')} />
+            </Col>
+            <Col md={6}>
+              <Form.Label className="small mb-0">API token (Bearer)</Form.Label>
+              <Form.Control size="sm" type="password" autoComplete="off" value={f.apiToken} onChange={set('apiToken')} placeholder="paste the new account's token" />
+            </Col>
+            <Col md={6}>
+              <Form.Label className="small mb-0">API code (for sending templates)</Form.Label>
+              <Form.Control size="sm" type="password" autoComplete="off" value={f.apiCode} onChange={set('apiCode')} placeholder="paste the new account's API code" />
+            </Col>
+            <Col md={12}>
+              <Form.Check type="switch" id="acct-shared" checked={f.sharedNumber}
+                onChange={(e) => setF({ ...f, sharedNumber: e.target.checked })}
+                label={<span className="small">This number is <b>shared with Pondicherry Matrimony</b> (same account as PM admin) — answer property messages only</span>} />
+            </Col>
+          </Row>
+          {test && test.which === 'new' && <div className="mt-2"><Result t={test} /></div>}
+          <div className="d-flex gap-2 mt-2 align-items-center">
+            <Button size="sm" variant="outline-secondary" disabled={!!busy || !f.apiToken.trim()} onClick={() => runTest(false)}>
+              {busy === 'test' ? 'Testing…' : 'Test'}
+            </Button>
+            <Button size="sm" variant="primary" disabled={!!busy || !test || test.which !== 'new' || !test.ok || !f.apiCode.trim()} onClick={doSwitch}>
+              {busy === 'switch' ? 'Switching…' : 'Switch to this account'}
+            </Button>
+            <span className="small text-muted">Test first — Switch unlocks once the test passes.</span>
+          </div>
+        </div>
+      )}
+      {msg && <Alert variant={msg.ok ? 'success' : 'danger'} className="py-1 small mt-2 mb-0">{msg.text}</Alert>}
+      {settings.accountHistory.length > 1 && (
+        <details className="small mt-2">
+          <summary className="text-muted">Account history</summary>
+          {settings.accountHistory.map((h, i) => (
+            <div key={i}>{fmtDateTime(h.at)} · {h.label || 'unnamed'} · token {h.token}{i === 0 ? ' (current)' : ''}</div>
+          ))}
+        </details>
+      )}
+    </Card.Body></Card>
+  );
+}
+
 const TPL_STATUS = { APPROVED: 'success', PENDING: 'warning', REJECTED: 'danger', 'NOT SUBMITTED': 'secondary' };
 const AUDIENCE_LABEL = { owner: 'To owner', user: 'To buyer', account: 'Account' };
 const SOURCE_LABEL = {
@@ -201,7 +310,6 @@ function TemplatesCard() {
   const [st, setSt] = useState({ loading: true, error: '', data: null });
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
-  const [apiCode, setApiCode] = useState('');
   const [limit, setLimit] = useState('');
   const [testPhone, setTestPhone] = useState('');
 
@@ -253,17 +361,12 @@ function TemplatesCard() {
       </div>
       {st.data.accountError && <Alert variant="warning" className="py-1 small">Could not read the templates on the account: {st.data.accountError}</Alert>}
       <Row className="g-2 align-items-end mb-2">
-        <Col md={4}>
-          <Form.Label className="small mb-0">SmartGrowth API code (PM admin › WhatsApp › Settings)</Form.Label>
-          <Form.Control size="sm" type="password" autoComplete="off" value={apiCode} onChange={(e) => setApiCode(e.target.value)}
-            placeholder={s.hasApiCode ? `saved ${s.apiCodeMasked} - type to replace` : 'paste the API code'} />
-        </Col>
         <Col md={2}>
           <Form.Label className="small mb-0">Daily limit (0 = none)</Form.Label>
           <Form.Control size="sm" type="number" min={0} value={limit} onChange={(e) => setLimit(e.target.value)} />
         </Col>
         <Col md="auto">
-          <Button size="sm" disabled={!!busy} onClick={() => save({ ...(apiCode ? { apiCode } : {}), templateDailyLimit: Number(limit) || 0 })}>
+          <Button size="sm" disabled={!!busy} onClick={() => save({ templateDailyLimit: Number(limit) || 0 })}>
             {busy === 'save' ? 'Saving…' : 'Save'}
           </Button>
         </Col>
@@ -387,7 +490,7 @@ function WhatsAppBotPage() {
         </div>
       </div>
 
-      {!s.hasToken && <Alert variant="info" className="py-2 small">Add the SmartGrowth API token of the Pondy Property WhatsApp number below to start.</Alert>}
+      <AccountCard key={s.accountChangedAt || "none"} settings={s} onSwitched={loadCfg} />
       {cfg.data.formsError && <Alert variant="warning" className="py-2 small">{cfg.data.formsError}</Alert>}
       {s.allowList && s.enabled && <Alert variant="warning" className="py-2 small">Test mode: the bot only answers {s.allowList}.</Alert>}
       {run.result && (
@@ -417,7 +520,7 @@ function WhatsAppBotPage() {
 
       <div className="mb-3"><SettingsCard settings={s} ai={cfg.data.ai} onSaved={loadCfg} /></div>
 
-      <TemplatesCard />
+      <TemplatesCard key={s.accountChangedAt || "none"} />
 
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
         <h6 className="mb-0">What the bot did</h6>
