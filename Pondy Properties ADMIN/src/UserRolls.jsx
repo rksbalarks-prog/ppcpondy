@@ -189,6 +189,23 @@ const ALL_FILES = [
   { key: "WhatsApp Activity", label: "WhatsApp Activity (messages sent & failures)", section: "Workspace" },
   { key: "WhatsApp Bot", label: "WhatsApp Bot (Buyer / Seller forms)", section: "Workspace" },
 
+  // WhatsApp (SmartGrowth) — ported from Rent Pondy
+  { key: "SG Chats", label: "Chats (and the WhatsApp replies alert)", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Send Message", label: "Send Message (spends credits)", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Templates", label: "Templates", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Action Messages", label: "Action Messages", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Chatbots", label: "Chatbots", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Flows", label: "Flows", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Message Status", label: "Message Status", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Recent Campaigns", label: "Recent Campaigns", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Campaign Report", label: "Campaign Report", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Limits", label: "Limits & Alerts", section: "WhatsApp (SmartGrowth)" },
+  { key: "SG Media Library", label: "Media Library", section: "WhatsApp (SmartGrowth)" },
+  { key: "Autobot WhatsApp Bot", label: "WhatsApp Bot (runs)", section: "Autobot" },
+  { key: "Autobot Reminder Bot", label: "Reminder Bot", section: "Autobot" },
+  { key: "Autobot New User Bot", label: "New User Bot", section: "Autobot" },
+  { key: "Autobot WhatsApp Report", label: "WhatsApp Bot Report", section: "Autobot" },
+
   // Settings
   { key: "User Roles", label: "User Rolls", section: "Settings" },
   { key: "Admin OTP Number", label: "Admin OTP Number", section: "Settings" },

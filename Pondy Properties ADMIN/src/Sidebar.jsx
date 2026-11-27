@@ -253,6 +253,45 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </>
           )}
 
+          {/* ── WHATSAPP (SMARTGROWTH) ── */}
+          {sectionVisible(["SG Chats", "SG Send Message", "SG Templates", "SG Action Messages", "SG Chatbots", "SG Flows", "SG Message Status", "SG Recent Campaigns", "SG Campaign Report", "SG Limits", "SG Media Library"]) && (
+            <>
+              <li className="p-3 mt-2 text-white" onClick={() => toggleSection("SmartGrowth")}
+                style={{ borderRadius: "5px", background: "#8BC34A", cursor: "pointer" }}>
+                <FaWhatsapp size={20} style={{ marginRight: "10px" }} /> WhatsApp (SmartGrowth)
+              </li>
+              <ul className={openSection === "SmartGrowth" ? "show" : "collapse"}>
+                {can("SG Chats") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-chats" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Chats</NavLink></li>)}
+                {can("SG Send Message") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-send" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Send Message</NavLink></li>)}
+                {can("SG Templates") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-templates" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Templates</NavLink></li>)}
+                {can("SG Action Messages") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-action-messages" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Action Messages</NavLink></li>)}
+                {can("SG Chatbots") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-chatbots" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Chatbots</NavLink></li>)}
+                {can("SG Flows") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-flows" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Flows</NavLink></li>)}
+                {can("SG Message Status") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-status" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Message Status</NavLink></li>)}
+                {can("SG Recent Campaigns") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-recent" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Recent Campaigns</NavLink></li>)}
+                {can("SG Campaign Report") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-report" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Campaign Report</NavLink></li>)}
+                {can("SG Limits") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-limits" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Limits &amp; Alerts</NavLink></li>)}
+                {can("SG Media Library") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-media" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaWhatsapp /> Media Library</NavLink></li>)}
+              </ul>
+            </>
+          )}
+
+          {/* ── AUTOBOT ── */}
+          {sectionVisible(["Autobot WhatsApp Bot", "Autobot Reminder Bot", "Autobot New User Bot", "Autobot WhatsApp Report"]) && (
+            <>
+              <li className="p-3 mt-2 text-white" onClick={() => toggleSection("Autobot")}
+                style={{ borderRadius: "5px", background: "#8BC34A", cursor: "pointer" }}>
+                <FaRobot size={20} style={{ marginRight: "10px" }} /> Autobot
+              </li>
+              <ul className={openSection === "Autobot" ? "show" : "collapse"}>
+                {can("Autobot WhatsApp Bot") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-bot" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaRobot /> WhatsApp Bot</NavLink></li>)}
+                {can("Autobot Reminder Bot") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-reminder" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaRobot /> Reminder Bot</NavLink></li>)}
+                {can("Autobot New User Bot") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-newuser" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaRobot /> New User Bot</NavLink></li>)}
+                {can("Autobot WhatsApp Report") && (<li className="p-0 mt-2"><NavLink to="/dashboard/sg-bot-report" onClick={toggleSidebar} className={({ isActive }) => isActive ? "active-link rounded" : ""}><FaRobot /> WhatsApp Bot Report</NavLink></li>)}
+              </ul>
+            </>
+          )}
+
           {/* ── REPORT ── */}
           {sectionVisible(["Login Report", "Login Users Datas", "Users Log", "Login Separate User", "Admin Report", "PPC Staff Report", "Download History"]) && (
             <>

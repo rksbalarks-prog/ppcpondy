@@ -33,6 +33,22 @@ import AiHandled from "./AiHandled";
 import HotClients from "./HotClients";
 import WhatsAppActivity from "./WhatsAppActivity";
 import WhatsAppBot from "./WhatsAppBot";
+// SmartGrowth WhatsApp panel (ported from Rent Pondy)
+import SgChats from './SmartGrowth/SgChats';
+import SgSend from './SmartGrowth/SgSend';
+import SgTemplates from './SmartGrowth/SgTemplates';
+import SgActionMessages from './SmartGrowth/SgActionMessages';
+import SgChatbots from './SmartGrowth/SgChatbots';
+import SgFlows from './SmartGrowth/SgFlows';
+import SgStatus from './SmartGrowth/SgStatus';
+import SgRecent from './SmartGrowth/SgRecent';
+import SgReport from './SmartGrowth/SgReport';
+import SgLimits from './SmartGrowth/SgLimits';
+import SgMedia from './SmartGrowth/SgMedia';
+import SgBotRuns from './SmartGrowth/SgBotRuns';
+import SgReminder from './SmartGrowth/SgReminder';
+import SgNewUserBot from './SmartGrowth/SgNewUserBot';
+import SgBotReport from './SmartGrowth/SgBotReport';
 import BuyersShortlized from "./BuyersShortlized";
 import BuyersStatics from "./BuyersStatics";
 import CallBackForm from "./CallBackForm";
@@ -230,6 +246,22 @@ const routes = [
   { path: "/hot-clients", element: <HotClients /> },
   { path: "/whatsapp-activity", element: <WhatsAppActivity /> },
   { path: "/whatsapp-bot", element: <WhatsAppBot /> },
+  // SmartGrowth WhatsApp panel
+  { path: "/sg-chats",           element: <SgChats /> },
+  { path: "/sg-send",            element: <SgSend /> },
+  { path: "/sg-templates",       element: <SgTemplates /> },
+  { path: "/sg-action-messages", element: <SgActionMessages /> },
+  { path: "/sg-chatbots",        element: <SgChatbots /> },
+  { path: "/sg-flows",           element: <SgFlows /> },
+  { path: "/sg-status",          element: <SgStatus /> },
+  { path: "/sg-recent",          element: <SgRecent /> },
+  { path: "/sg-report",          element: <SgReport /> },
+  { path: "/sg-limits",          element: <SgLimits /> },
+  { path: "/sg-media",           element: <SgMedia /> },
+  { path: "/sg-bot",             element: <SgBotRuns /> },
+  { path: "/sg-reminder",        element: <SgReminder /> },
+  { path: "/sg-newuser",         element: <SgNewUserBot /> },
+  { path: "/sg-bot-report",      element: <SgBotReport /> },
   { path: "/buyers-shortlisted", element: <BuyersShortlized /> },
   { path: "/buyers-statics", element: <BuyersStatics /> },
   { path: "/callback-form", element: <CallBackForm /> },

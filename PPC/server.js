@@ -36,6 +36,8 @@ const WhatsAppActivityRouter = require('./WhatsAppActivity/WhatsAppActivityRoute
 const WhatsAppBotRouter = require('./WhatsAppBot/WhatsAppBotRouter');
 const WhatsAppTemplatesRouter = require('./WhatsAppTemplates/WhatsAppTemplatesRouter');
 const whatsAppBot = require('./WhatsAppBot/schedule');
+// SmartGrowth WhatsApp panel ported from Rent Pondy / PM_Matri_Admin — own sg_* collections + /sg/* routes.
+const smartGrowth = require('./SmartGrowth');
 const BuyerAssistanceRouter = require('./BuyerAssistance/BuyerAssistanceRouter');
 const PhotoRequestRouter = require('./Photo/PhotoRequestRouter');
 const ProfileRouter = require('./MyProfile/ProfileRouter');
@@ -444,6 +446,7 @@ app.use('/PPC', HotClientsRouter);
 app.use('/PPC', WhatsAppActivityRouter);
 app.use('/PPC', WhatsAppBotRouter); // WhatsApp Buyer / Seller forms bot: /wa-bot/*
 app.use('/PPC', WhatsAppTemplatesRouter); // WhatsApp templates (Meta-approved): /wa-templates/*
+app.use('/PPC', smartGrowth); // SmartGrowth WhatsApp panel: /sg/* (Chats, Send, Templates, Action Messages, ...)
 app.use('/PPC', BuyerAssistanceRouter);
 app.use('/PPC', PhotoRequestRouter);
 app.use('/PPC', ProfileRouter);
@@ -528,6 +531,8 @@ app.listen(PORT, () => {
   autoExpire.start();
   // WhatsApp Buyer / Seller bot: polls SmartGrowth every minute while switched on in the admin.
   whatsAppBot.start();
+  // SmartGrowth Autobot / Action-message scheduler. Asleep unless env SMARTGROWTH_RUNNER=1.
+  smartGrowth.scheduler.start();
 });
 
 
